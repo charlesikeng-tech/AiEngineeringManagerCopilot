@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiEngineeringManagerCopilot.Api", "src\AiEngineeringManagerCopilot.Api\AiEngineeringManagerCopilot.Api.csproj", "{AD436389-8BAA-4B1B-ADC3-C797F323B8E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiEngineeringManagerCopilot.Application", "src\AiEngineeringManagerCopilot.Application\AiEngineeringManagerCopilot.Application.csproj", "{52DFED99-16C6-4974-ADC4-D4B354D1E5C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiEngineeringManagerCopilot.Domain", "src\AiEngineeringManagerCopilot.Domain\AiEngineeringManagerCopilot.Domain.csproj", "{4D62A855-EFD8-4793-B6AF-C8CB1AAFBD87}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiEngineeringManagerCopilot.Infrastructure", "src\AiEngineeringManagerCopilot.Infrastructure\AiEngineeringManagerCopilot.Infrastructure.csproj", "{6880A96A-5C95-434F-A7E1-6859BF7DA590}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiEngineeringManagerCopilot.UnitTests", "tests\AiEngineeringManagerCopilot.UnitTests\AiEngineeringManagerCopilot.UnitTests.csproj", "{38375BA9-D249-4B78-95EF-474215C01E6C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AiEngineeringManagerCopilot.IntegrationTests", "tests\AiEngineeringManagerCopilot.IntegrationTests\AiEngineeringManagerCopilot.IntegrationTests.csproj", "{4381818B-4121-414D-A75F-7DD4081C1574}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AD436389-8BAA-4B1B-ADC3-C797F323B8E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD436389-8BAA-4B1B-ADC3-C797F323B8E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD436389-8BAA-4B1B-ADC3-C797F323B8E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD436389-8BAA-4B1B-ADC3-C797F323B8E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52DFED99-16C6-4974-ADC4-D4B354D1E5C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52DFED99-16C6-4974-ADC4-D4B354D1E5C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52DFED99-16C6-4974-ADC4-D4B354D1E5C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52DFED99-16C6-4974-ADC4-D4B354D1E5C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D62A855-EFD8-4793-B6AF-C8CB1AAFBD87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D62A855-EFD8-4793-B6AF-C8CB1AAFBD87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D62A855-EFD8-4793-B6AF-C8CB1AAFBD87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D62A855-EFD8-4793-B6AF-C8CB1AAFBD87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6880A96A-5C95-434F-A7E1-6859BF7DA590}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6880A96A-5C95-434F-A7E1-6859BF7DA590}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6880A96A-5C95-434F-A7E1-6859BF7DA590}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6880A96A-5C95-434F-A7E1-6859BF7DA590}.Release|Any CPU.Build.0 = Release|Any CPU
+		{38375BA9-D249-4B78-95EF-474215C01E6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38375BA9-D249-4B78-95EF-474215C01E6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38375BA9-D249-4B78-95EF-474215C01E6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38375BA9-D249-4B78-95EF-474215C01E6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4381818B-4121-414D-A75F-7DD4081C1574}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4381818B-4121-414D-A75F-7DD4081C1574}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4381818B-4121-414D-A75F-7DD4081C1574}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4381818B-4121-414D-A75F-7DD4081C1574}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

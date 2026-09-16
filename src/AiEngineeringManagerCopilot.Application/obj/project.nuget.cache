@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "cRQiZZaCalM=",
+  "success": true,
+  "projectFilePath": "/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/AiEngineeringManagerCopilot.Application.csproj",
+  "expectedPackageFiles": [
+    "/Users/charles.ikeng.ext/.nuget/packages/fluentvalidation/12.1.1/fluentvalidation.12.1.1.nupkg.sha512"
+  ],
+  "logs": []
+}

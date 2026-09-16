@@ -1,0 +1,6 @@
+@AiEngineeringManagerCopilot.Api_HostAddress = http://localhost:5249
+
+GET {{AiEngineeringManagerCopilot.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

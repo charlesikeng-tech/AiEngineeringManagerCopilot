@@ -1,0 +1,15 @@
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/bin/Debug/net10.0/AiEngineeringManagerCopilot.Application.deps.json
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/bin/Debug/net10.0/AiEngineeringManagerCopilot.Application.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/bin/Debug/net10.0/AiEngineeringManagerCopilot.Application.pdb
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/bin/Debug/net10.0/AiEngineeringManagerCopilot.Domain.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/bin/Debug/net10.0/AiEngineeringManagerCopilot.Domain.pdb
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/AiEngineeringManagerCopilot.Application.csproj.AssemblyReference.cache
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/AiEngineeringManagerCopilot.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/AiEngineeringManagerCopilot.Application.AssemblyInfoInputs.cache
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/AiEngineeringManagerCopilot.Application.AssemblyInfo.cs
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/AiEngineeringManagerCopilot.Application.csproj.CoreCompileInputs.cache
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/AiEngine.4070772F.Up2Date
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/AiEngineeringManagerCopilot.Application.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/refint/AiEngineeringManagerCopilot.Application.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/AiEngineeringManagerCopilot.Application.pdb
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/ref/AiEngineeringManagerCopilot.Application.dll

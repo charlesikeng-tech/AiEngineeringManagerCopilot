@@ -1,0 +1,11 @@
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Domain/bin/Debug/net10.0/AiEngineeringManagerCopilot.Domain.deps.json
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Domain/bin/Debug/net10.0/AiEngineeringManagerCopilot.Domain.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Domain/bin/Debug/net10.0/AiEngineeringManagerCopilot.Domain.pdb
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Domain/obj/Debug/net10.0/AiEngineeringManagerCopilot.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Domain/obj/Debug/net10.0/AiEngineeringManagerCopilot.Domain.AssemblyInfoInputs.cache
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Domain/obj/Debug/net10.0/AiEngineeringManagerCopilot.Domain.AssemblyInfo.cs
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Domain/obj/Debug/net10.0/AiEngineeringManagerCopilot.Domain.csproj.CoreCompileInputs.cache
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Domain/obj/Debug/net10.0/AiEngineeringManagerCopilot.Domain.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Domain/obj/Debug/net10.0/refint/AiEngineeringManagerCopilot.Domain.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Domain/obj/Debug/net10.0/AiEngineeringManagerCopilot.Domain.pdb
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Domain/obj/Debug/net10.0/ref/AiEngineeringManagerCopilot.Domain.dll
