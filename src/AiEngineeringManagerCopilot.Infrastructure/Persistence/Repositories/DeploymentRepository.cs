@@ -59,4 +59,17 @@ public sealed class DeploymentRepository(
         return dbContext.SaveChangesAsync(
             cancellationToken);
     }
+
+    public Task<Deployment?> GetByExternalIdAsync(
+        Guid repositoryId,
+        long externalId,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.Deployments
+            .SingleOrDefaultAsync(
+                x =>
+                    x.RepositoryId == repositoryId &&
+                    x.ExternalId == externalId,
+                cancellationToken);
+    }
 }

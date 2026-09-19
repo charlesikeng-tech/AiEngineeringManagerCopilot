@@ -21,6 +21,16 @@ public sealed class RepositoryRepository(
                 cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Repository>> GetByTeamIdAsync(
+        Guid teamId,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.Repositories
+            .Where(x => x.TeamId == teamId)
+            .OrderBy(x => x.Name)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(
         Repository repository,
         CancellationToken cancellationToken)

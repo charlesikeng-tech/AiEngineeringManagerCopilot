@@ -80,4 +80,33 @@ public sealed class PullRequestRepository(
             .OrderBy(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
     }
+
+    public Task<PullRequest?> GetByExternalIdAsync(
+        Guid repositoryId,
+        long externalId,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.PullRequests
+            .SingleOrDefaultAsync(
+                x =>
+                    x.RepositoryId == repositoryId &&
+                    x.ExternalId == externalId,
+                cancellationToken);
+    }
+
+    public async Task AddAsync(
+        PullRequest pullRequest,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.PullRequests.AddAsync(
+            pullRequest,
+            cancellationToken);
+    }
+
+    public async Task SaveChangesAsync(
+        CancellationToken cancellationToken)
+    {
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
+    }
 }

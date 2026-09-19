@@ -111,6 +111,9 @@ builder.Services.AddScoped< IAIAnalysisService, AIAnalysisService>();
 builder.Services
     .AddOptions<LlmOptions>()
     .Bind(builder.Configuration.GetSection("Llm"));
+builder.Services.AddSingleton<
+    ILlmAnalysisParser,
+    LlmAnalysisJsonParser>();
 
 builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(
     client =>

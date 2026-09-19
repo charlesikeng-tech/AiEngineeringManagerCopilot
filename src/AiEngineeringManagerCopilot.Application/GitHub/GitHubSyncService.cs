@@ -1,5 +1,6 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Domain.Entities;
+using AiEngineeringManagerCopilot.Domain.Enums;
 
 namespace AiEngineeringManagerCopilot.Application.GitHub;
 
@@ -8,6 +9,9 @@ public sealed class GitHubSyncService(
     ITeamRepository teamRepository,
     IGitHubConnectionRepository gitHubConnectionRepository,
     IRepositoryRepository repositoryRepository,
+    IPullRequestRepository pullRequestRepository,
+    IPullRequestReviewRepository pullRequestReviewRepository,
+    IDeploymentRepository deploymentRepository,
     ISecretProtector secretProtector,
     IGitHubClient gitHubClient)
     : IGitHubSyncService
@@ -93,6 +97,190 @@ public sealed class GitHubSyncService(
 
         await repositoryRepository.SaveChangesAsync(
             cancellationToken);
+        
+        var teamRepositories =
+            await repositoryRepository.GetByTeamIdAsync(
+                teamId,
+                cancellationToken);
+
+foreach (var repository in teamRepositories)
+{
+    var pullRequests =
+        await gitHubClient.GetPullRequestsAsync(
+            accessToken,
+            connection.Organization,
+            repository.Name,
+            cancellationToken);
+
+    foreach (var githubPullRequest in pullRequests)
+    {
+        var pullRequest =
+            await pullRequestRepository.GetByExternalIdAsync(
+                repository.Id,
+                githubPullRequest.Id,
+                cancellationToken);
+
+        if (pullRequest is null)
+        {
+            pullRequest = new PullRequest
+            {
+                Id = Guid.NewGuid(),
+                RepositoryId = repository.Id,
+                ExternalId = githubPullRequest.Id,
+                AuthorExternalId =
+                    githubPullRequest.AuthorExternalId,
+                Title = githubPullRequest.Title,
+                State = MapPullRequestState(
+                    githubPullRequest),
+                CreatedAt = githubPullRequest.CreatedAt,
+                MergedAt = githubPullRequest.MergedAt,
+                ClosedAt = githubPullRequest.ClosedAt,
+                IsBlocked = false
+            };
+
+            await pullRequestRepository.AddAsync(
+                pullRequest,
+                cancellationToken);
+        }
+        else
+        {
+            pullRequest.AuthorExternalId =
+                githubPullRequest.AuthorExternalId;
+
+            pullRequest.Title =
+                githubPullRequest.Title;
+
+            pullRequest.State =
+                MapPullRequestState(githubPullRequest);
+
+            pullRequest.MergedAt =
+                githubPullRequest.MergedAt;
+
+            pullRequest.ClosedAt =
+                githubPullRequest.ClosedAt;
+        }
+
+        var reviews =
+            await gitHubClient.GetPullRequestReviewsAsync(
+                accessToken,
+                connection.Organization,
+                repository.Name,
+                githubPullRequest.Number,
+                cancellationToken);
+
+        foreach (var githubReview in reviews)
+        {
+            var review =
+                await pullRequestReviewRepository
+                    .GetByExternalIdAsync(
+                        pullRequest.Id,
+                        githubReview.Id,
+                        cancellationToken);
+
+            if (review is null)
+            {
+                review = new PullRequestReview
+                {
+                    Id = Guid.NewGuid(),
+                    ExternalId = githubReview.Id,
+                    PullRequestId = pullRequest.Id,
+                    ReviewerExternalId =
+                        githubReview.ReviewerExternalId,
+                    SubmittedAt =
+                        githubReview.SubmittedAt,
+                    State = MapPullRequestReviewState(
+                        githubReview.State)
+                };
+
+                await pullRequestReviewRepository.AddAsync(
+                    review,
+                    cancellationToken);
+
+                continue;
+            }
+
+            review.ReviewerExternalId =
+                githubReview.ReviewerExternalId;
+
+            review.SubmittedAt =
+                githubReview.SubmittedAt;
+
+            review.State =
+                MapPullRequestReviewState(
+                    githubReview.State);
+        }
+        
+        var githubDeployments =
+            await gitHubClient.GetDeploymentsAsync(
+                accessToken,
+                connection.Organization,
+                repository.Name,
+                cancellationToken);
+
+        foreach (var githubDeployment in githubDeployments)
+        {
+            var statuses =
+                await gitHubClient.GetDeploymentStatusesAsync(
+                    accessToken,
+                    connection.Organization,
+                    repository.Name,
+                    githubDeployment.Id,
+                    cancellationToken);
+
+            var latestStatus = statuses
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstOrDefault();
+
+            if (latestStatus is null)
+            {
+                continue;
+            }
+
+            var deployment =
+                await deploymentRepository.GetByExternalIdAsync(
+                    repository.Id,
+                    githubDeployment.Id,
+                    cancellationToken);
+
+            if (deployment is null)
+            {
+                deployment = new Deployment
+                {
+                    Id = Guid.NewGuid(),
+                    RepositoryId = repository.Id,
+                    ExternalId = githubDeployment.Id,
+                    Environment = githubDeployment.Environment,
+                    Status = latestStatus.State,
+                    DeployedAt = githubDeployment.CreatedAt
+                };
+
+                await deploymentRepository.AddAsync(
+                    deployment,
+                    cancellationToken);
+
+                continue;
+            }
+
+            deployment.Environment =
+                githubDeployment.Environment;
+
+            deployment.Status =
+                latestStatus.State;
+
+            deployment.DeployedAt =
+                githubDeployment.CreatedAt;
+        }
+    }
+}
+
+        await pullRequestRepository.SaveChangesAsync(
+            cancellationToken);
+        
+        await pullRequestReviewRepository.SaveChangesAsync(
+            cancellationToken);
+        
+        await deploymentRepository.SaveChangesAsync(
+            cancellationToken);
 
         await gitHubConnectionRepository.SaveChangesAsync(
             cancellationToken);
@@ -101,5 +289,49 @@ public sealed class GitHubSyncService(
             repositories.Count,
             created,
             updated);
+    }
+    
+    private static PullRequestState MapPullRequestState(
+        GitHubPullRequest pullRequest)
+    {
+        if (pullRequest.MergedAt.HasValue)
+        {
+            return PullRequestState.Merged;
+        }
+
+        if (string.Equals(
+                pullRequest.State,
+                "closed",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return PullRequestState.Closed;
+        }
+
+        return PullRequestState.Open;
+    }
+    
+    private static PullRequestReviewState MapPullRequestReviewState(
+        string state)
+    {
+        return state.ToUpperInvariant() switch
+        {
+            "APPROVED" =>
+                PullRequestReviewState.Approved,
+
+            "CHANGES_REQUESTED" =>
+                PullRequestReviewState.ChangesRequested,
+
+            "COMMENTED" =>
+                PullRequestReviewState.Commented,
+
+            "DISMISSED" =>
+                PullRequestReviewState.Dismissed,
+
+            "PENDING" =>
+                PullRequestReviewState.Pending,
+
+            _ =>
+                PullRequestReviewState.Pending
+        };
     }
 }

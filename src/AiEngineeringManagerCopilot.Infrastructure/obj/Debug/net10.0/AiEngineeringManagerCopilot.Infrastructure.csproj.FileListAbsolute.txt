@@ -17,3 +17,4 @@
 /Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Infrastructure/obj/Debug/net10.0/AiEngineeringManagerCopilot.Infrastructure.pdb
 /Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Infrastructure/obj/Debug/net10.0/AiEngineeringManagerCopilot.Infrastructure.genruntimeconfig.cache
 /Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Infrastructure/obj/Debug/net10.0/ref/AiEngineeringManagerCopilot.Infrastructure.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Infrastructure/obj/Debug/net10.0/AiEngineeringManagerCopilot.Infrastructure.sourcelink.json

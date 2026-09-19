@@ -24,4 +24,33 @@ public sealed class PullRequestReviewRepository(
             .OrderBy(x => x.SubmittedAt)
             .ToListAsync(cancellationToken);
     }
+
+    public Task<PullRequestReview?> GetByExternalIdAsync(
+        Guid pullRequestId,
+        long externalId,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.PullRequestReviews
+            .SingleOrDefaultAsync(
+                x =>
+                    x.PullRequestId == pullRequestId &&
+                    x.ExternalId == externalId,
+                cancellationToken);
+    }
+
+    public async Task AddAsync(
+        PullRequestReview review,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.PullRequestReviews.AddAsync(
+            review,
+            cancellationToken);
+    }
+
+    public async Task SaveChangesAsync(
+        CancellationToken cancellationToken)
+    {
+        await dbContext.SaveChangesAsync(
+            cancellationToken);
+    }
 }

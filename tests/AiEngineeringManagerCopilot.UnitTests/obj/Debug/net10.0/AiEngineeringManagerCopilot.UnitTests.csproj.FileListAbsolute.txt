@@ -129,3 +129,4 @@
 /Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.UnitTests/bin/Debug/net10.0/OpenAI.dll
 /Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.UnitTests/bin/Debug/net10.0/System.ClientModel.dll
 /Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.UnitTests/bin/Debug/net10.0/System.Memory.Data.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.UnitTests/obj/Debug/net10.0/AiEngineeringManagerCopilot.UnitTests.sourcelink.json

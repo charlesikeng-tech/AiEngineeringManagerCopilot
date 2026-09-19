@@ -31,7 +31,12 @@ public sealed class PullRequestReviewConfiguration
             .HasMaxLength(50)
             .IsRequired();
 
-        builder.HasIndex(x => x.PullRequestId);
+        builder.HasIndex(x => new
+            {
+                x.PullRequestId,
+                x.ExternalId
+            })
+            .IsUnique();
 
         builder.HasIndex(x => x.SubmittedAt);
 

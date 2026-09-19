@@ -13,3 +13,4 @@
 /Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/refint/AiEngineeringManagerCopilot.Application.dll
 /Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/AiEngineeringManagerCopilot.Application.pdb
 /Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/ref/AiEngineeringManagerCopilot.Application.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/src/AiEngineeringManagerCopilot.Application/obj/Debug/net10.0/AiEngineeringManagerCopilot.Application.sourcelink.json

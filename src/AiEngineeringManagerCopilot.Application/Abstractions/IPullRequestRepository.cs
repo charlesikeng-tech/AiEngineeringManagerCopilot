@@ -15,4 +15,16 @@ public interface IPullRequestRepository
         DateOnly periodStart,
         DateOnly periodEnd,
         CancellationToken cancellationToken);
+
+    Task<PullRequest?> GetByExternalIdAsync(
+        Guid repositoryId,
+        long externalId,
+        CancellationToken cancellationToken);
+
+    Task AddAsync(
+        PullRequest pullRequest,
+        CancellationToken cancellationToken);
+
+    Task SaveChangesAsync(
+        CancellationToken cancellationToken);
 }

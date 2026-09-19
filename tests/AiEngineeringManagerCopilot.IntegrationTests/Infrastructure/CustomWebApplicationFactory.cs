@@ -1,3 +1,4 @@
+using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;

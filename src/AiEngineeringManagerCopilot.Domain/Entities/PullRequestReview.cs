@@ -5,6 +5,7 @@ namespace AiEngineeringManagerCopilot.Domain.Entities;
 public sealed class PullRequestReview
 {
     public Guid Id { get; set; }
+    public long ExternalId { get; set; }
 
     public Guid PullRequestId { get; set; }
 

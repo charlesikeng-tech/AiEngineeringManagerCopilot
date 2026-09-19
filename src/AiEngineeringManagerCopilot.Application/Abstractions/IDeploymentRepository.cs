@@ -16,4 +16,9 @@ public interface IDeploymentRepository
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken);
+    
+    Task<Deployment?> GetByExternalIdAsync(
+        Guid repositoryId,
+        long externalId,
+        CancellationToken cancellationToken);
 }

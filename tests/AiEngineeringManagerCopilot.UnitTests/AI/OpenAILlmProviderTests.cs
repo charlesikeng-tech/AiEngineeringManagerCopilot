@@ -18,7 +18,9 @@ public sealed class OpenAILlmProviderTests
                 Model = "test-model"
             });
 
-        var provider = new OpenAILlmProvider(options);
+        var provider = new OpenAILlmProvider(
+            options,
+            new LlmAnalysisJsonParser());
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
             () => provider.AnalyzeAsync(

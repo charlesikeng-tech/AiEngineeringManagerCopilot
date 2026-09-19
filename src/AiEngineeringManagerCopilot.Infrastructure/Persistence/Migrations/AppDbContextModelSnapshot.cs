@@ -436,6 +436,9 @@ namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<long>("ExternalId")
+                        .HasColumnType("bigint");
+
                     b.Property<Guid>("PullRequestId")
                         .HasColumnType("uuid");
 
@@ -454,9 +457,10 @@ namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PullRequestId");
-
                     b.HasIndex("SubmittedAt");
+
+                    b.HasIndex("PullRequestId", "ExternalId")
+                        .IsUnique();
 
                     b.ToTable("pull_request_reviews", (string)null);
                 });

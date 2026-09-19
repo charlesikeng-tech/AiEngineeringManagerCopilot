@@ -9,6 +9,10 @@ public interface IRepositoryRepository
         long externalId,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<Repository>> GetByTeamIdAsync(
+        Guid teamId,
+        CancellationToken cancellationToken);
+
     Task AddAsync(
         Repository repository,
         CancellationToken cancellationToken);
