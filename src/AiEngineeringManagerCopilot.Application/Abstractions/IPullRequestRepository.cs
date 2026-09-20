@@ -20,6 +20,7 @@ public interface IPullRequestRepository
         Guid repositoryId,
         long externalId,
         CancellationToken cancellationToken);
+    
 
     Task AddAsync(
         PullRequest pullRequest,

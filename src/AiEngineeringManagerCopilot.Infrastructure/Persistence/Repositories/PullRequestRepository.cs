@@ -1,5 +1,6 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Domain.Entities;
+using AiEngineeringManagerCopilot.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Repositories;
@@ -38,10 +39,10 @@ public sealed class PullRequestRepository(
             .Where(x =>
                 x.TeamId == teamId &&
                 x.PullRequest.MergedAt.HasValue &&
-                x.PullRequest.CreatedAt >= start &&
-                x.PullRequest.CreatedAt < end)
+                x.PullRequest.MergedAt.Value >= start &&
+                x.PullRequest.MergedAt.Value < end)
             .Select(x => x.PullRequest)
-            .OrderBy(x => x.CreatedAt)
+            .OrderBy(x => x.MergedAt)
             .ToListAsync(cancellationToken);
     }
     
@@ -93,6 +94,7 @@ public sealed class PullRequestRepository(
                     x.ExternalId == externalId,
                 cancellationToken);
     }
+    
 
     public async Task AddAsync(
         PullRequest pullRequest,

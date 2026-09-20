@@ -92,7 +92,9 @@ public sealed class MetricsEndpointsTests
     private async Task SeedPullRequestAsync(
         Guid teamId,
         TimeSpan mergeDuration,
-        bool merged = true)
+        bool merged = true,
+        DateTimeOffset? createdAt = null,
+        DateTimeOffset? mergedAt = null)
     {
         using var scope = _factory.Services.CreateScope();
 
@@ -114,7 +116,8 @@ public sealed class MetricsEndpointsTests
 
         dbContext.Repositories.Add(repository);
 
-        var createdAt =
+        var pullRequestCreatedAt =
+            createdAt ??
             new DateTimeOffset(
                 2026,
                 1,
@@ -134,12 +137,12 @@ public sealed class MetricsEndpointsTests
             State = merged
                 ? PullRequestState.Merged
                 : PullRequestState.Open,
-            CreatedAt = createdAt,
+            CreatedAt = pullRequestCreatedAt,
             MergedAt = merged
-                ? createdAt.Add(mergeDuration)
+                ? mergedAt ?? pullRequestCreatedAt.Add(mergeDuration)
                 : null,
             ClosedAt = merged
-                ? createdAt.Add(mergeDuration)
+                ? mergedAt ?? pullRequestCreatedAt.Add(mergeDuration)
                 : null
         };
 
@@ -1041,5 +1044,50 @@ public sealed class MetricsEndpointsTests
         result!.TeamId.Should().Be(teamId);
         result.OverallScore.Should().Be(100);
         result.HealthLevel.Should().Be("Excellent");
+    }
+    
+    [Fact]
+    public async Task CalculateMergedPullRequests_ShouldUseMergedAtToDeterminePeriod()
+    {
+        var team = await CreateTeamAsync();
+
+        // Created in August, merged in September -> included
+        await SeedPullRequestAsync(
+            team.Id,
+            TimeSpan.Zero,
+            merged: true,
+            createdAt: new DateTimeOffset(
+                2026, 8, 28, 10, 0, 0, TimeSpan.Zero),
+            mergedAt: new DateTimeOffset(
+                2026, 9, 3, 10, 0, 0, TimeSpan.Zero));
+
+        // Created in September, merged in October -> excluded
+        await SeedPullRequestAsync(
+            team.Id,
+            TimeSpan.Zero,
+            merged: true,
+            createdAt: new DateTimeOffset(
+                2026, 9, 3, 10, 0, 0, TimeSpan.Zero),
+            mergedAt: new DateTimeOffset(
+                2026, 10, 1, 10, 0, 0, TimeSpan.Zero));
+
+        var response = await _client.PostAsync(
+            $"/teams/{team.Id}/metrics/merged-prs" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            null);
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var result =
+            await response.Content
+                .ReadFromJsonAsync<EngineeringMetricResponse>();
+
+        result.Should().NotBeNull();
+
+        result!.MetricType.Should()
+            .Be(MetricType.MergedPRs);
+
+        result.Value.Should().Be(1);
     }
 }
