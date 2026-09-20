@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.2.3...v1.2.4) (2026-09-20)
+
+
+### Bug Fixes
+
+* calculate Jira lead time by completion date ([be306d1](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/be306d1a600993fc0ea26024cf93dbc70101b2d8))
+
 ## [1.2.3](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.2.2...v1.2.3) (2026-09-20)
 
 
