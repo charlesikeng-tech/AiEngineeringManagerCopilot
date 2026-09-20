@@ -708,16 +708,16 @@ License to be defined.
 
 ### Engineering Metrics
 
-| Metric               | Source |
-| -------------------- | ------ |
-| Cycle Time           | GitHub |
-| PR Review Time       | GitHub |
+| Metric | Source |
+|---|---|
+| Cycle Time | GitHub |
+| PR Review Time | GitHub |
 | Deployment Frequency | GitHub |
-| Change Failure Rate  | GitHub |
-| Lead Time            | Jira   |
-| Open PRs             | GitHub |
-| Merged PRs           | GitHub |
-| Blocked Items        | Jira   |
+| Change Failure Rate | GitHub |
+| Lead Time | Jira |
+| Open PRs | GitHub |
+| Merged PRs | GitHub |
+| Blocked Items | Jira |
 
 ### Automated tests
 
