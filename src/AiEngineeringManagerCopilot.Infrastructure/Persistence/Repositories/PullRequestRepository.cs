@@ -94,7 +94,41 @@ public sealed class PullRequestRepository(
                     x.ExternalId == externalId,
                 cancellationToken);
     }
-    
+
+    public async Task<IReadOnlyList<PullRequest>>
+        GetOpenByTeamAtDateAsync(
+            Guid teamId,
+            DateOnly date,
+            CancellationToken cancellationToken)
+    {
+        var end = new DateTimeOffset(
+            date
+                .AddDays(1)
+                .ToDateTime(TimeOnly.MinValue),
+            TimeSpan.Zero);
+
+        return await dbContext.PullRequests
+            .Join(
+                dbContext.Repositories,
+                pullRequest => pullRequest.RepositoryId,
+                repository => repository.Id,
+                (pullRequest, repository) => new
+                {
+                    PullRequest = pullRequest,
+                    repository.TeamId
+                })
+            .Where(x =>
+                x.TeamId == teamId &&
+                x.PullRequest.CreatedAt < end &&
+                (
+                    !x.PullRequest.ClosedAt.HasValue ||
+                    x.PullRequest.ClosedAt.Value >= end
+                ))
+            .Select(x => x.PullRequest)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
 
     public async Task AddAsync(
         PullRequest pullRequest,

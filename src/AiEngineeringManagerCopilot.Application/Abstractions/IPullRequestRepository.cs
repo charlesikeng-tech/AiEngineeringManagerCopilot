@@ -21,6 +21,12 @@ public interface IPullRequestRepository
         long externalId,
         CancellationToken cancellationToken);
     
+    Task<IReadOnlyList<PullRequest>>
+        GetOpenByTeamAtDateAsync(
+            Guid teamId,
+            DateOnly date,
+            CancellationToken cancellationToken);
+    
 
     Task AddAsync(
         PullRequest pullRequest,

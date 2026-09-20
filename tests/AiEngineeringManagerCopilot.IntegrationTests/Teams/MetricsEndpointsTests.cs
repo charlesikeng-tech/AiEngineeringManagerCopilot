@@ -856,6 +856,52 @@ public sealed class MetricsEndpointsTests
     }
     
     [Fact]
+    public async Task CalculateOpenPullRequests_ShouldUsePeriodEndAsSnapshot()
+    {
+        var team = await CreateTeamAsync();
+
+        // Created before September, still open -> included
+        await SeedPullRequestAsync(
+            team.Id,
+            TimeSpan.Zero,
+            merged: false,
+            createdAt: new DateTimeOffset(
+                2026, 8, 20, 10, 0, 0, TimeSpan.Zero));
+
+        // Created during September, still open -> included
+        await SeedPullRequestAsync(
+            team.Id,
+            TimeSpan.Zero,
+            merged: false,
+            createdAt: new DateTimeOffset(
+                2026, 9, 10, 10, 0, 0, TimeSpan.Zero));
+
+        // Created after September -> excluded
+        await SeedPullRequestAsync(
+            team.Id,
+            TimeSpan.Zero,
+            merged: false,
+            createdAt: new DateTimeOffset(
+                2026, 10, 5, 10, 0, 0, TimeSpan.Zero));
+
+        var response = await _client.PostAsync(
+            $"/teams/{team.Id}/metrics/open-prs" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            null);
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var result =
+            await response.Content
+                .ReadFromJsonAsync<EngineeringMetricResponse>();
+
+        result.Should().NotBeNull();
+        result!.MetricType.Should().Be(MetricType.OpenPRs);
+        result.Value.Should().Be(2);
+    }
+    
+    [Fact]
     public async Task CalculateMergedPullRequests_ShouldReturnMetric()
     {
         var team = await CreateTeamAsync();

@@ -68,20 +68,23 @@ public sealed class OpenPullRequestsCalculatorTests
     }
 
     [Fact]
-    public void Calculate_ShouldIgnorePullRequestsOutsidePeriod()
+    public void Calculate_ShouldCountPullRequestsOpenAtPeriodEnd()
     {
         var pullRequests = new[]
         {
+            // Created before the period but still open at period end
             CreatePullRequest(
                 PullRequestState.Open,
                 new DateTimeOffset(
                     2025, 12, 31, 10, 0, 0, TimeSpan.Zero)),
 
+            // Created during the period and still open
             CreatePullRequest(
                 PullRequestState.Open,
                 new DateTimeOffset(
                     2026, 1, 10, 10, 0, 0, TimeSpan.Zero)),
 
+            // Created after the period
             CreatePullRequest(
                 PullRequestState.Open,
                 new DateTimeOffset(
@@ -93,7 +96,7 @@ public sealed class OpenPullRequestsCalculatorTests
             new DateOnly(2026, 1, 1),
             new DateOnly(2026, 1, 31));
 
-        result.PullRequestsCount.Should().Be(1);
+        result.PullRequestsCount.Should().Be(2);
     }
 
     [Fact]
@@ -147,9 +150,12 @@ public sealed class OpenPullRequestsCalculatorTests
             MergedAt = state == PullRequestState.Merged
                 ? createdAt.AddHours(10)
                 : null,
-            ClosedAt = state == PullRequestState.Closed
-                ? createdAt.AddHours(10)
-                : null
+
+            ClosedAt =
+                state == PullRequestState.Merged ||
+                state == PullRequestState.Closed
+                    ? createdAt.AddHours(10)
+                    : null
         };
     }
 }

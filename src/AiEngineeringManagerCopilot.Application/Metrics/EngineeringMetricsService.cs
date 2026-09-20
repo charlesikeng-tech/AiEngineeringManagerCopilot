@@ -344,9 +344,8 @@ public sealed class EngineeringMetricsService(
             return null;
 
         var pullRequests =
-            await pullRequestRepository.GetByTeamAndPeriodAsync(
+            await pullRequestRepository.GetOpenByTeamAtDateAsync(
                 teamId,
-                periodStart,
                 periodEnd,
                 cancellationToken);
 

@@ -1,5 +1,4 @@
 using AiEngineeringManagerCopilot.Domain.Entities;
-using AiEngineeringManagerCopilot.Domain.Enums;
 
 namespace AiEngineeringManagerCopilot.Application.Metrics;
 
@@ -17,12 +16,18 @@ public sealed class OpenPullRequestsCalculator
                 "periodStart must be before or equal to periodEnd.");
         }
 
+        var end = new DateTimeOffset(
+            periodEnd
+                .AddDays(1)
+                .ToDateTime(TimeOnly.MinValue),
+            TimeSpan.Zero);
+
         var count = pullRequests.Count(x =>
-            x.State == PullRequestState.Open &&
-            DateOnly.FromDateTime(
-                x.CreatedAt.UtcDateTime) >= periodStart &&
-            DateOnly.FromDateTime(
-                x.CreatedAt.UtcDateTime) <= periodEnd);
+            x.CreatedAt < end &&
+            (
+                !x.ClosedAt.HasValue ||
+                x.ClosedAt.Value >= end
+            ));
 
         return new OpenPullRequestsResult(count);
     }
