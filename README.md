@@ -1156,7 +1156,40 @@ It:
 The generated section is delimited by:
 
 ```html
+
 <!-- AUTO-GENERATED:START -->
+
+## 🚀 Current implementation status
+
+### Integrations
+
+- ✅ GitHub
+- ✅ Jira
+- ✅ OpenAI
+- 🧪 Fake LLM provider
+
+### Engineering Metrics
+
+| Metric | Source |
+|---|---|
+| Cycle Time | GitHub |
+| PR Review Time | GitHub |
+| Deployment Frequency | GitHub |
+| Change Failure Rate | GitHub |
+| Lead Time | Jira |
+| Open PRs | GitHub |
+| Merged PRs | GitHub |
+| Blocked Items | Jira |
+
+### Automated tests
+
+```text
+282 tests
+282 passed
+0 failed
+0 skipped
+```
+
 <!-- AUTO-GENERATED:END -->
 ```
 
