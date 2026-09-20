@@ -14,9 +14,20 @@ END="<!-- AUTO-GENERATED:END -->"
 echo "🧪 Running tests..."
 echo ""
 
+set +e
+
 TEST_OUTPUT=$(dotnet test --nologo 2>&1)
+TEST_EXIT_CODE=$?
+
+set -e
 
 echo "$TEST_OUTPUT"
+echo ""
+
+if [[ $TEST_EXIT_CODE -ne 0 ]]; then
+    echo "❌ Tests failed with exit code $TEST_EXIT_CODE"
+    exit $TEST_EXIT_CODE
+fi
 echo ""
 
 # ------------------------------------------------------------
