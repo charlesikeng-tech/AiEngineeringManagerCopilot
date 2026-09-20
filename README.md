@@ -711,3 +711,38 @@ The current baseline is:
 ## 📄 License
 
 License to be defined.
+
+<!-- AUTO-GENERATED:START -->
+
+## 🚀 Current capabilities
+
+### Integrations
+
+- GitHub
+- Jira
+
+### Engineering Metrics
+
+- Cycle Time
+- PR Review Time
+- Deployment Frequency
+- Change Failure Rate
+- Lead Time
+- Open Pull Requests
+- Merged Pull Requests
+- Blocked Items
+
+### Data sources
+
+| Metric | Source |
+|---|---|
+| Cycle Time | GitHub |
+| PR Review Time | GitHub |
+| Deployment Frequency | GitHub |
+| Change Failure Rate | GitHub |
+| Lead Time | Jira |
+| Open PRs | GitHub |
+| Merged PRs | GitHub |
+| Blocked Items | Jira |
+
+<!-- AUTO-GENERATED:END -->
