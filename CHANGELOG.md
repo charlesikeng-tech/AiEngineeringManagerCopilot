@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.5](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.2.4...v1.2.5) (2026-09-20)
+
+
+### Bug Fixes
+
+* align pull request metrics with lifecycle dates ([8be0081](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/8be0081056c418ac3e4e471011f17a532580ea64))
+* calculate PR metrics by merge date ([44d1ceb](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/44d1ceb7104d45b4d77788e4aefe8a26678079a1))
+
 ## [1.2.4](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.2.3...v1.2.4) (2026-09-20)
 
 
