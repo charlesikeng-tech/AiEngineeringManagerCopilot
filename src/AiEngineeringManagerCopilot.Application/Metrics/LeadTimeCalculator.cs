@@ -20,9 +20,9 @@ public sealed class LeadTimeCalculator
             .Where(x =>
                 x.DoneAt.HasValue &&
                 DateOnly.FromDateTime(
-                    x.CreatedAt.UtcDateTime) >= periodStart &&
+                    x.DoneAt.Value.UtcDateTime) >= periodStart &&
                 DateOnly.FromDateTime(
-                    x.CreatedAt.UtcDateTime) <= periodEnd &&
+                    x.DoneAt.Value.UtcDateTime) <= periodEnd &&
                 x.DoneAt.Value >= x.CreatedAt)
             .Select(x =>
                 (decimal)(

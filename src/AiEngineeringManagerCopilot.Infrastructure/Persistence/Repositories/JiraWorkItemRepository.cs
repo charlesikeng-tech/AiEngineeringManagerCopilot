@@ -61,4 +61,21 @@ public sealed class JiraWorkItemRepository(
             .OrderBy(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<JiraWorkItem>>
+        GetCompletedByTeamAndPeriodAsync(
+            Guid teamId,
+            DateTimeOffset from,
+            DateTimeOffset to,
+            CancellationToken cancellationToken)
+    {
+        return await dbContext.JiraWorkItems
+            .Where(x =>
+                x.TeamId == teamId &&
+                x.DoneAt.HasValue &&
+                x.DoneAt.Value >= from &&
+                x.DoneAt.Value <= to)
+            .OrderBy(x => x.DoneAt)
+            .ToListAsync(cancellationToken);
+    }
 }

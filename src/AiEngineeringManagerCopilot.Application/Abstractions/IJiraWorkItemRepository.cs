@@ -25,4 +25,10 @@ public interface IJiraWorkItemRepository
         DateTimeOffset from,
         DateTimeOffset to,
         CancellationToken cancellationToken);
+    
+    Task<IReadOnlyList<JiraWorkItem>> GetCompletedByTeamAndPeriodAsync(
+        Guid teamId,
+        DateTimeOffset from,
+        DateTimeOffset to,
+        CancellationToken cancellationToken);
 }

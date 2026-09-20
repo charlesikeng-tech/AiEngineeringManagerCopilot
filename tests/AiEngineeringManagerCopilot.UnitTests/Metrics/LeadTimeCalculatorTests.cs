@@ -142,6 +142,32 @@ public sealed class LeadTimeCalculatorTests
             .WithMessage(
                 "periodStart must be before or equal to periodEnd.");
     }
+    
+    [Fact]
+    public void Calculate_ShouldUseDoneAtToDeterminePeriod()
+    {
+        var workItems = new[]
+        {
+            // Created before September, completed in September → included
+            CreateWorkItem(
+                createdAt: DateTimeOffset.Parse("2026-08-25T08:00:00Z"),
+                doneAt: DateTimeOffset.Parse("2026-09-02T08:00:00Z")),
+
+            // Created in September, completed in October → excluded
+            CreateWorkItem(
+                createdAt: DateTimeOffset.Parse("2026-09-02T08:00:00Z"),
+                doneAt: DateTimeOffset.Parse("2026-10-01T08:00:00Z"))
+        };
+
+        var result = _calculator.Calculate(
+            workItems,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        result.ItemsCount.Should().Be(1);
+
+        result.AverageHours.Should().Be(192);
+    }
 
     private static JiraWorkItem CreateWorkItem(
         DateTimeOffset createdAt,

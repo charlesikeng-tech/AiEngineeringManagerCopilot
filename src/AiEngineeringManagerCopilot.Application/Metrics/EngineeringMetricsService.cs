@@ -289,7 +289,7 @@ public sealed class EngineeringMetricsService(
             TimeSpan.Zero);
 
         var workItems =
-            await jiraWorkItemRepository.GetByTeamAndPeriodAsync(
+            await jiraWorkItemRepository.GetCompletedByTeamAndPeriodAsync(
                 teamId,
                 from,
                 to,
