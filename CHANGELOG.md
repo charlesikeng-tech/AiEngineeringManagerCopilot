@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.2.2...v1.2.3) (2026-09-20)
+
+
+### Bug Fixes
+
+* serialize integration test database initialization ([3177eee](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/3177eee08702059078b696965debbd070922224d))
+
 ## [1.2.2](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.2.1...v1.2.2) (2026-09-20)
 
 
