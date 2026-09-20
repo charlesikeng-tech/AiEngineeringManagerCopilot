@@ -4,12 +4,12 @@ AI Engineering Manager Copilot is an engineering intelligence platform designed 
 
 The goal is not to replace engineering leadership, but to provide an evidence-based assistant for:
 
-* understanding engineering health
-* detecting delivery and quality risks
-* identifying bottlenecks
-* generating actionable recommendations
-* supporting Engineering Manager decision-making
-* reducing the time spent collecting and interpreting engineering data
+- understanding engineering health
+- detecting delivery and quality risks
+- identifying bottlenecks
+- generating actionable recommendations
+- supporting Engineering Manager decision-making
+- reducing the time spent collecting and interpreting engineering data
 
 ---
 
@@ -51,13 +51,13 @@ The application can generate an engineering health report for a team over a defi
 
 A report currently includes:
 
-* overall engineering health score
-* health level
-* executive summary
-* engineering metrics
-* detected insights
-* identified risks
-* recommended engineering actions
+- overall engineering health score
+- health level
+- executive summary
+- engineering metrics
+- detected insights
+- identified risks
+- recommended engineering actions
 
 Example:
 
@@ -93,19 +93,19 @@ The application supports an LLM-based analysis layer.
 
 The AI receives a structured engineering context containing:
 
-* reporting period
-* overall score
-* executive summary
-* engineering metrics
-* existing insights
-* detected risks
+- reporting period
+- overall score
+- executive summary
+- engineering metrics
+- existing insights
+- detected risks
 
 The LLM then produces:
 
-* executive analysis
-* additional insights
-* recommended actions
-* action priorities
+- executive analysis
+- additional insights
+- recommended actions
+- action priorities
 
 The application exposes the provider behind an abstraction:
 
@@ -130,10 +130,10 @@ A `FakeLlmProvider` is available for deterministic local execution.
 
 This allows the application to be developed and tested without:
 
-* an OpenAI API key
-* network access
-* API costs
-* non-deterministic LLM responses
+- an OpenAI API key
+- network access
+- API costs
+- non-deterministic LLM responses
 
 The real provider can therefore be introduced independently from the core application logic.
 
@@ -145,10 +145,10 @@ An `OpenAiLlmProvider` is available as the real LLM implementation.
 
 The provider currently validates:
 
-* API key configuration
-* model configuration
-* empty LLM responses
-* invalid JSON responses
+- API key configuration
+- model configuration
+- empty LLM responses
+- invalid JSON responses
 
 The application does not require an OpenAI API key when using the fake provider.
 
@@ -162,14 +162,14 @@ Use local configuration or .NET User Secrets for development.
 
 The current domain contains metrics such as:
 
-* Cycle Time
-* PR Review Time
-* Deployment Frequency
-* Change Failure Rate
-* Lead Time
-* Open PRs
-* Merged PRs
-* Blocked Items
+- Cycle Time
+- PR Review Time
+- Deployment Frequency
+- Change Failure Rate
+- Lead Time
+- Open PRs
+- Merged PRs
+- Blocked Items
 
 These metrics are used to identify engineering insights and risks.
 
@@ -194,10 +194,10 @@ High number of blocked items
 
 Risks have:
 
-* category
-* title
-* description
-* severity
+- category
+- title
+- description
+- severity
 
 Supported severity levels include:
 
@@ -216,11 +216,11 @@ Reports can generate concrete engineering actions from detected insights.
 
 Actions contain:
 
-* title
-* description
-* priority
-* status
-* report association
+- title
+- description
+- priority
+- status
+- report association
 
 The application currently limits generated report actions to a maximum of three.
 
@@ -302,11 +302,11 @@ rather than directly depending on OpenAI.
 
 This provides:
 
-* provider independence
-* deterministic testing
-* easier provider replacement
-* lower coupling
-* simpler local development
+- provider independence
+- deterministic testing
+- easier provider replacement
+- lower coupling
+- simpler local development
 
 ---
 
@@ -379,42 +379,33 @@ Generate an AI analysis for an engineering report.
 
 ### Backend
 
-* .NET 10
-* C#
-* ASP.NET Core Minimal APIs
-* Entity Framework Core
+- .NET 10
+- C#
+- ASP.NET Core Minimal APIs
+- Entity Framework Core
 
 ### Testing
 
-* xUnit
-* FluentAssertions
-* Integration testing with `WebApplicationFactory`
+- xUnit
+- FluentAssertions
+- Integration testing with `WebApplicationFactory`
 
 ### AI
 
-* OpenAI Responses API
-* Pluggable `ILlmProvider`
-* Fake LLM provider for local development and tests
+- OpenAI Responses API
+- Pluggable `ILlmProvider`
+- Fake LLM provider for local development and tests
 
 ### Development
 
-* Rider / Visual Studio Code
-* Git
-* macOS
-* .NET CLI
+- Rider / Visual Studio Code
+- Git
+- macOS
+- .NET CLI
 
 ---
 
 ## 🧪 Testing
-
-The project currently contains:
-
-```text
-244 tests
-244 passed
-0 failed
-0 skipped
-```
 
 Run the complete test suite:
 
@@ -432,19 +423,19 @@ dotnet test \
 
 The test suite covers:
 
-* team creation
-* report generation
-* report persistence
-* report retrieval
-* team isolation
-* insight generation
-* risk generation
-* action generation
-* action prioritization
-* AI analysis
-* duplicate AI analysis prevention
-* LLM provider behavior
-* missing API key handling
+- team creation
+- report generation
+- report persistence
+- report retrieval
+- team isolation
+- insight generation
+- risk generation
+- action generation
+- action prioritization
+- AI analysis
+- duplicate AI analysis prevention
+- LLM provider behavior
+- missing API key handling
 
 ---
 
@@ -454,8 +445,8 @@ The test suite covers:
 
 Install:
 
-* .NET 10 SDK
-* Git
+- .NET 10 SDK
+- Git
 
 Verify the SDK:
 
@@ -573,53 +564,53 @@ AiEngineeringManagerCopilot/
 
 ### Phase 1 — Engineering intelligence foundation
 
-* [x] Team management
-* [x] Engineering metrics
-* [x] Engineering health score
-* [x] Engineering insights
-* [x] Risk detection
-* [x] Recommended actions
-* [x] Engineering reports
-* [x] Report persistence
-* [x] API endpoints
-* [x] Integration tests
+- [x] Team management
+- [x] Engineering metrics
+- [x] Engineering health score
+- [x] Engineering insights
+- [x] Risk detection
+- [x] Recommended actions
+- [x] Engineering reports
+- [x] Report persistence
+- [x] API endpoints
+- [x] Integration tests
 
 ### Phase 2 — AI Engineering Manager
 
-* [x] `ILlmProvider`
-* [x] Fake LLM provider
-* [x] OpenAI provider
-* [x] AI report analysis
-* [x] AI insights
-* [x] AI actions
-* [x] Duplicate analysis prevention
-* [ ] Structured LLM output validation
-* [ ] Better prompt engineering
-* [ ] AI confidence / evidence
-* [ ] Analysis history
+- [x] `ILlmProvider`
+- [x] Fake LLM provider
+- [x] OpenAI provider
+- [x] AI report analysis
+- [x] AI insights
+- [x] AI actions
+- [x] Duplicate analysis prevention
+- [ ] Structured LLM output validation
+- [ ] Better prompt engineering
+- [ ] AI confidence / evidence
+- [ ] Analysis history
 
 ### Phase 3 — Engineering Management cockpit
 
-* [ ] Web dashboard
-* [ ] Team health overview
-* [ ] Metric trends
-* [ ] Risk dashboard
-* [ ] Action tracking
-* [ ] Historical comparisons
-* [ ] Team-level filtering
-* [ ] Engineering health evolution
+- [ ] Web dashboard
+- [ ] Team health overview
+- [ ] Metric trends
+- [ ] Risk dashboard
+- [ ] Action tracking
+- [ ] Historical comparisons
+- [ ] Team-level filtering
+- [ ] Engineering health evolution
 
 ### Phase 4 — Engineering data integrations
 
 Potential integrations:
 
-* [ ] GitHub
-* [ ] GitLab
-* [ ] Jira
-* [ ] Linear
-* [ ] Azure DevOps
-* [ ] Datadog
-* [ ] CI/CD platforms
+- [ ] GitHub
+- [ ] GitLab
+- [ ] Jira
+- [ ] Linear
+- [ ] Azure DevOps
+- [ ] Datadog
+- [ ] CI/CD platforms
 
 The objective is to automatically collect engineering signals rather than relying exclusively on manually entered metrics.
 
@@ -627,15 +618,15 @@ The objective is to automatically collect engineering signals rather than relyin
 
 Long-term capabilities:
 
-* contextual team analysis
-* recurring engineering reviews
-* automatic detection of delivery anomalies
-* engineering risk forecasting
-* action follow-up
-* post-mortem assistance
-* engineering decision support
-* team health trends
-* personalized recommendations for Engineering Managers
+- contextual team analysis
+- recurring engineering reviews
+- automatic detection of delivery anomalies
+- engineering risk forecasting
+- action follow-up
+- post-mortem assistance
+- engineering decision support
+- team health trends
+- personalized recommendations for Engineering Managers
 
 ---
 
@@ -673,13 +664,13 @@ This project is currently an MVP.
 
 Known limitations include:
 
-* LLM output still requires stronger schema validation
-* engineering thresholds are currently rule-based
-* metrics are not yet automatically imported from external systems
-* there is no production dashboard yet
-* authentication and authorization are not yet implemented
-* AI analysis is currently report-based rather than continuously evaluated
-* historical trend analysis is limited
+- LLM output still requires stronger schema validation
+- engineering thresholds are currently rule-based
+- metrics are not yet automatically imported from external systems
+- there is no production dashboard yet
+- authentication and authorization are not yet implemented
+- AI analysis is currently report-based rather than continuously evaluated
+- historical trend analysis is limited
 
 These limitations are intentional and will be addressed incrementally.
 
@@ -696,14 +687,6 @@ Architecture→ Clear boundaries
 AI          → Provider independent
 Secrets     → Never committed
 Delivery    → Small incremental changes
-```
-
-The current baseline is:
-
-```text
-244 tests
-244 passed
-0 failed
 ```
 
 ---
@@ -725,16 +708,16 @@ License to be defined.
 
 ### Engineering Metrics
 
-| Metric | Source |
-|---|---|
-| Cycle Time | GitHub |
-| PR Review Time | GitHub |
+| Metric               | Source |
+| -------------------- | ------ |
+| Cycle Time           | GitHub |
+| PR Review Time       | GitHub |
 | Deployment Frequency | GitHub |
-| Change Failure Rate | GitHub |
-| Lead Time | Jira |
-| Open PRs | GitHub |
-| Merged PRs | GitHub |
-| Blocked Items | Jira |
+| Change Failure Rate  | GitHub |
+| Lead Time            | Jira   |
+| Open PRs             | GitHub |
+| Merged PRs           | GitHub |
+| Blocked Items        | Jira   |
 
 ### Automated tests
 
