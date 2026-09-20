@@ -1,4 +1,3 @@
-using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.Jira;
 using AiEngineeringManagerCopilot.Domain.Entities;
@@ -15,6 +14,8 @@ namespace AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 public sealed class CustomWebApplicationFactory
     : WebApplicationFactory<Program>
 {
+    private static readonly object DatabaseInitializationLock = new();
+
     protected override void ConfigureWebHost(
         IWebHostBuilder builder)
     {
@@ -26,20 +27,23 @@ public sealed class CustomWebApplicationFactory
 
         builder.ConfigureServices(services =>
         {
-            using var serviceProvider =
-                services.BuildServiceProvider();
+            lock (DatabaseInitializationLock)
+            {
+                using var serviceProvider =
+                    services.BuildServiceProvider();
 
-            using var scope =
-                serviceProvider.CreateScope();
+                using var scope =
+                    serviceProvider.CreateScope();
 
-            var dbContext =
-                scope.ServiceProvider
-                    .GetRequiredService<AppDbContext>();
+                var dbContext =
+                    scope.ServiceProvider
+                        .GetRequiredService<AppDbContext>();
 
-            dbContext.Database.Migrate();
+                dbContext.Database.Migrate();
 
-            SeedTestUser(dbContext);
-            
+                SeedTestUser(dbContext);
+            }
+
             services.RemoveAll<IGitHubClient>();
 
             services.AddSingleton<FakeGitHubClient>();
@@ -47,7 +51,7 @@ public sealed class CustomWebApplicationFactory
             services.AddSingleton<IGitHubClient>(
                 provider =>
                     provider.GetRequiredService<FakeGitHubClient>());
-            
+
             services.RemoveAll<IJiraClient>();
 
             services.AddSingleton<FakeJiraClient>();
