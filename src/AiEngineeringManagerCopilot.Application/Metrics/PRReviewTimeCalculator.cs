@@ -11,13 +11,19 @@ public sealed class PRReviewTimeCalculator
         DateOnly periodStart,
         DateOnly periodEnd)
     {
+        if (periodStart > periodEnd)
+        {
+            throw new ArgumentException(
+                "periodStart must be before or equal to periodEnd.");
+        }
+        
         var durations = pullRequests
             .Where(x =>
                 x.MergedAt.HasValue &&
                 DateOnly.FromDateTime(
-                    x.CreatedAt.UtcDateTime) >= periodStart &&
+                    x.MergedAt.Value.UtcDateTime) >= periodStart &&
                 DateOnly.FromDateTime(
-                    x.CreatedAt.UtcDateTime) <= periodEnd)
+                    x.MergedAt.Value.UtcDateTime) <= periodEnd)
             .Select(pullRequest =>
             {
                 var firstReview = reviews

@@ -146,6 +146,50 @@ public sealed class PRReviewTimeCalculatorTests
         result.AverageHours.Should().Be(0);
         result.PullRequestsCount.Should().Be(0);
     }
+    
+    [Fact]
+    public void Calculate_ShouldUseMergedAtToDeterminePeriod()
+    {
+        var pullRequest = new PullRequest
+        {
+            Id = Guid.NewGuid(),
+            RepositoryId = Guid.NewGuid(),
+            ExternalId = 1,
+            AuthorExternalId = "test-user",
+            Title = "Test PR",
+            State = PullRequestState.Merged,
+            CreatedAt = DateTimeOffset.Parse(
+                "2026-08-30T10:00:00Z"),
+            MergedAt = DateTimeOffset.Parse(
+                "2026-09-05T10:00:00Z"),
+            ClosedAt = DateTimeOffset.Parse(
+                "2026-09-05T10:00:00Z")
+        };
+
+        var reviews = new[]
+        {
+            new PullRequestReview
+            {
+                Id = Guid.NewGuid(),
+                ExternalId = 1,
+                PullRequestId = pullRequest.Id,
+                ReviewerExternalId = "reviewer",
+                SubmittedAt = DateTimeOffset.Parse(
+                    "2026-09-02T10:00:00Z"),
+                State = PullRequestReviewState.Approved
+            }
+        };
+        
+        var calculator = new PRReviewTimeCalculator();
+
+        var result = calculator.Calculate(
+            new[] { pullRequest },
+            reviews,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        result.AverageHours.Should().Be(72);
+    }
 
     private static PullRequest CreatePullRequest(
         DateTimeOffset createdAt)
