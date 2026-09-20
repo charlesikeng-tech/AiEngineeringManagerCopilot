@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.2.0...v1.2.1) (2026-09-20)
+
+
+### Bug Fixes
+
+* display test failures in README workflow ([d14a2c2](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/d14a2c24c76b46abc6889bfcf80b6b643d0b14fd))
+
 ## [1.2.0](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.1.0...v1.2.0) (2026-09-20)
 
 
