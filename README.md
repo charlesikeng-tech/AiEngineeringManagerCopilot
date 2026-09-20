@@ -714,25 +714,16 @@ License to be defined.
 
 <!-- AUTO-GENERATED:START -->
 
-## 🚀 Current capabilities
+## 🚀 Current implementation status
 
 ### Integrations
 
-- GitHub
-- Jira
+- ✅ GitHub
+- ✅ Jira
+- ✅ OpenAI
+- 🧪 Fake LLM provider
 
 ### Engineering Metrics
-
-- Cycle Time
-- PR Review Time
-- Deployment Frequency
-- Change Failure Rate
-- Lead Time
-- Open Pull Requests
-- Merged Pull Requests
-- Blocked Items
-
-### Data sources
 
 | Metric | Source |
 |---|---|
@@ -744,5 +735,14 @@ License to be defined.
 | Open PRs | GitHub |
 | Merged PRs | GitHub |
 | Blocked Items | Jira |
+
+### Automated tests
+
+```text
+282 tests
+282 passed
+0 failed
+0 skipped
+```
 
 <!-- AUTO-GENERATED:END -->
