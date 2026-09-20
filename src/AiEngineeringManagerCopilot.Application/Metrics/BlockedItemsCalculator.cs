@@ -6,7 +6,7 @@ public sealed class BlockedItemsCalculator
     : IBlockedItemsCalculator
 {
     public BlockedItemsResult Calculate(
-        IReadOnlyCollection<PullRequest> pullRequests,
+        IReadOnlyCollection<JiraWorkItem> workItems,
         DateOnly periodStart,
         DateOnly periodEnd)
     {
@@ -16,7 +16,7 @@ public sealed class BlockedItemsCalculator
                 "periodStart must be before or equal to periodEnd.");
         }
 
-        var count = pullRequests.Count(x =>
+        var count = workItems.Count(x =>
             x.IsBlocked &&
             DateOnly.FromDateTime(
                 x.CreatedAt.UtcDateTime) >= periodStart &&

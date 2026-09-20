@@ -1106,103 +1106,6 @@ public sealed class GitHubSyncEndpointsTests
     
     [Fact]
     public async Task GitHubSync_ShouldFeedCycleTimeMetric()
-{
-    // Arrange
-    var team = await CreateTeamAsync();
-
-    await CreateGitHubConnectionAsync(team.Id);
-
-    var fakeGitHubClient = GetFakeGitHubClient();
-    
-    fakeGitHubClient.Reset();
-
-    fakeGitHubClient.Repositories =
-    [
-        new GitHubRepository(
-            1001,
-            "backend",
-            "my-company/backend",
-            "https://github.com/my-company/backend",
-            "main")
-    ];
-
-    fakeGitHubClient.PullRequestsByRepository["backend"] =
-    [
-        new GitHubPullRequest(
-            5001,
-            42,
-            "First feature",
-            "10001",
-            "closed",
-            new DateTimeOffset(
-                2026, 9, 10, 10, 0, 0,
-                TimeSpan.Zero),
-            new DateTimeOffset(
-                2026, 9, 11, 10, 0, 0,
-                TimeSpan.Zero),
-            new DateTimeOffset(
-                2026, 9, 11, 10, 0, 0,
-                TimeSpan.Zero)),
-
-        new GitHubPullRequest(
-            5002,
-            43,
-            "Second feature",
-            "10002",
-            "closed",
-            new DateTimeOffset(
-                2026, 9, 15, 10, 0, 0,
-                TimeSpan.Zero),
-            new DateTimeOffset(
-                2026, 9, 17, 10, 0, 0,
-                TimeSpan.Zero),
-            new DateTimeOffset(
-                2026, 9, 17, 10, 0, 0,
-                TimeSpan.Zero))
-    ];
-
-    // Act - synchronize GitHub
-    var syncResponse = await _client.PostAsync(
-        $"/teams/{team.Id}/github/sync",
-        null);
-
-    syncResponse.StatusCode.Should()
-        .Be(HttpStatusCode.OK);
-
-    // Act - calculate Cycle Time
-    var metricResponse = await _client.PostAsync(
-        $"/teams/{team.Id}/metrics/cycle-time" +
-        "?periodStart=2026-09-01" +
-        "&periodEnd=2026-09-30",
-        null);
-
-    // Assert
-    metricResponse.StatusCode.Should()
-        .Be(HttpStatusCode.OK);
-
-    var metric = await metricResponse.Content
-        .ReadFromJsonAsync<EngineeringMetricResponse>();
-
-    metric.Should().NotBeNull();
-
-    metric!.TeamId.Should()
-        .Be(team.Id);
-
-    metric.MetricType.Should()
-        .Be(MetricType.CycleTime);
-
-    metric.Value.Should()
-        .Be(36m);
-
-    metric.PeriodStart.Should()
-        .Be(new DateOnly(2026, 9, 1));
-
-    metric.PeriodEnd.Should()
-        .Be(new DateOnly(2026, 9, 30));
-}
-    
-    [Fact]
-    public async Task GitHubSync_ShouldFeedLeadTimeMetric()
     {
         // Arrange
         var team = await CreateTeamAsync();
@@ -1210,7 +1113,7 @@ public sealed class GitHubSyncEndpointsTests
         await CreateGitHubConnectionAsync(team.Id);
 
         var fakeGitHubClient = GetFakeGitHubClient();
-
+        
         fakeGitHubClient.Reset();
 
         fakeGitHubClient.Repositories =
@@ -1266,9 +1169,9 @@ public sealed class GitHubSyncEndpointsTests
         syncResponse.StatusCode.Should()
             .Be(HttpStatusCode.OK);
 
-        // Act - calculate Lead Time
+        // Act - calculate Cycle Time
         var metricResponse = await _client.PostAsync(
-            $"/teams/{team.Id}/metrics/lead-time" +
+            $"/teams/{team.Id}/metrics/cycle-time" +
             "?periodStart=2026-09-01" +
             "&periodEnd=2026-09-30",
             null);
@@ -1286,7 +1189,7 @@ public sealed class GitHubSyncEndpointsTests
             .Be(team.Id);
 
         metric.MetricType.Should()
-            .Be(MetricType.LeadTime);
+            .Be(MetricType.CycleTime);
 
         metric.Value.Should()
             .Be(36m);
@@ -1297,6 +1200,7 @@ public sealed class GitHubSyncEndpointsTests
         metric.PeriodEnd.Should()
             .Be(new DateOnly(2026, 9, 30));
     }
+    
     
     [Fact]
     public async Task GitHubSync_ShouldFeedOpenPullRequestsMetric()

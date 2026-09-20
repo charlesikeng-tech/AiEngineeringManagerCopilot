@@ -13,6 +13,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
 
     public DbSet<GitHubConnection> GitHubConnections => Set<GitHubConnection>();
+    
+    public DbSet<JiraConnection> JiraConnections => Set<JiraConnection>();
+    
+    public DbSet<JiraWorkItem> JiraWorkItems => Set<JiraWorkItem>();
 
     public DbSet<Repository> Repositories => Set<Repository>();
 

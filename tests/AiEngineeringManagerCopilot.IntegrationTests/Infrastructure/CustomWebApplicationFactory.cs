@@ -1,5 +1,6 @@
 using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Application.Abstractions;
+using AiEngineeringManagerCopilot.Application.Jira;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.IntegrationTests.Fakes;
@@ -46,6 +47,14 @@ public sealed class CustomWebApplicationFactory
             services.AddSingleton<IGitHubClient>(
                 provider =>
                     provider.GetRequiredService<FakeGitHubClient>());
+            
+            services.RemoveAll<IJiraClient>();
+
+            services.AddSingleton<FakeJiraClient>();
+
+            services.AddSingleton<IJiraClient>(
+                provider =>
+                    provider.GetRequiredService<FakeJiraClient>());
         });
     }
 

@@ -11,21 +11,21 @@ public sealed class BlockedItemsCalculatorTests
     [Fact]
     public void Calculate_ShouldCountBlockedItems()
     {
-        var pullRequests = new List<PullRequest>
+        var workItems = new List<JiraWorkItem>
         {
-            CreatePullRequest(
+            CreateWorkItem(
                 isBlocked: true,
                 new DateTimeOffset(
                     2026, 1, 10, 10, 0, 0, TimeSpan.Zero)),
 
-            CreatePullRequest(
+            CreateWorkItem(
                 isBlocked: true,
                 new DateTimeOffset(
                     2026, 1, 11, 10, 0, 0, TimeSpan.Zero))
         };
 
         var result = _calculator.Calculate(
-            pullRequests,
+            workItems,
             new DateOnly(2026, 1, 1),
             new DateOnly(2026, 1, 31));
 
@@ -35,21 +35,21 @@ public sealed class BlockedItemsCalculatorTests
     [Fact]
     public void Calculate_ShouldIgnoreNonBlockedItems()
     {
-        var pullRequests = new List<PullRequest>
+        var workItems = new List<JiraWorkItem>
         {
-            CreatePullRequest(
+            CreateWorkItem(
                 isBlocked: true,
                 new DateTimeOffset(
                     2026, 1, 10, 10, 0, 0, TimeSpan.Zero)),
 
-            CreatePullRequest(
+            CreateWorkItem(
                 isBlocked: false,
                 new DateTimeOffset(
                     2026, 1, 11, 10, 0, 0, TimeSpan.Zero))
         };
 
         var result = _calculator.Calculate(
-            pullRequests,
+            workItems,
             new DateOnly(2026, 1, 1),
             new DateOnly(2026, 1, 31));
 
@@ -59,26 +59,26 @@ public sealed class BlockedItemsCalculatorTests
     [Fact]
     public void Calculate_ShouldIgnoreItemsOutsidePeriod()
     {
-        var pullRequests = new List<PullRequest>
+        var workItems = new List<JiraWorkItem>
         {
-            CreatePullRequest(
+            CreateWorkItem(
                 isBlocked: true,
                 new DateTimeOffset(
                     2025, 12, 31, 10, 0, 0, TimeSpan.Zero)),
 
-            CreatePullRequest(
+            CreateWorkItem(
                 isBlocked: true,
                 new DateTimeOffset(
                     2026, 1, 10, 10, 0, 0, TimeSpan.Zero)),
 
-            CreatePullRequest(
+            CreateWorkItem(
                 isBlocked: true,
                 new DateTimeOffset(
                     2026, 2, 1, 10, 0, 0, TimeSpan.Zero))
         };
 
         var result = _calculator.Calculate(
-            pullRequests,
+            workItems,
             new DateOnly(2026, 1, 1),
             new DateOnly(2026, 1, 31));
 
@@ -88,16 +88,16 @@ public sealed class BlockedItemsCalculatorTests
     [Fact]
     public void Calculate_ShouldReturnZero_WhenNoBlockedItemsExist()
     {
-        var pullRequests = new List<PullRequest>
+        var workItems = new List<JiraWorkItem>
         {
-            CreatePullRequest(
+            CreateWorkItem(
                 isBlocked: false,
                 new DateTimeOffset(
                     2026, 1, 10, 10, 0, 0, TimeSpan.Zero))
         };
 
         var result = _calculator.Calculate(
-            pullRequests,
+            workItems,
             new DateOnly(2026, 1, 1),
             new DateOnly(2026, 1, 31));
 
@@ -107,10 +107,10 @@ public sealed class BlockedItemsCalculatorTests
     [Fact]
     public void Calculate_ShouldThrow_WhenPeriodIsInvalid()
     {
-        var pullRequests = new List<PullRequest>();
+        var workItems = new List<JiraWorkItem>();
 
         var action = () => _calculator.Calculate(
-            pullRequests,
+            workItems,
             new DateOnly(2026, 2, 1),
             new DateOnly(2026, 1, 1));
 
@@ -120,19 +120,21 @@ public sealed class BlockedItemsCalculatorTests
                 "periodStart must be before or equal to periodEnd.");
     }
 
-    private static PullRequest CreatePullRequest(
+    private static JiraWorkItem CreateWorkItem(
         bool isBlocked,
         DateTimeOffset createdAt)
     {
-        return new PullRequest
+        return new JiraWorkItem
         {
             Id = Guid.NewGuid(),
-            RepositoryId = Guid.NewGuid(),
-            ExternalId = Random.Shared.NextInt64(1, long.MaxValue),
-            AuthorExternalId = "test-user",
-            Title = "Test PR",
-            State = Domain.Enums.PullRequestState.Open,
+            TeamId = Guid.NewGuid(),
+            ExternalId = Guid.NewGuid().ToString(),
+            Key = $"REC-{Random.Shared.Next(1, 10000)}",
+            Summary = "Test Jira work item",
+            Status = isBlocked ? "Blocked" : "In Progress",
+            AssigneeExternalId = "test-user",
             CreatedAt = createdAt,
+            DoneAt = null,
             IsBlocked = isBlocked
         };
     }

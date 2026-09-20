@@ -92,8 +92,7 @@ public sealed class MetricsEndpointsTests
     private async Task SeedPullRequestAsync(
         Guid teamId,
         TimeSpan mergeDuration,
-        bool merged = true,
-        bool isBlocked = false)
+        bool merged = true)
     {
         using var scope = _factory.Services.CreateScope();
 
@@ -141,11 +140,45 @@ public sealed class MetricsEndpointsTests
                 : null,
             ClosedAt = merged
                 ? createdAt.Add(mergeDuration)
-                : null,
-            IsBlocked = isBlocked
+                : null
         };
 
         dbContext.PullRequests.Add(pullRequest);
+
+        await dbContext.SaveChangesAsync();
+    }
+    
+    private async Task SeedJiraWorkItemAsync(
+        Guid teamId,
+        bool isBlocked,
+        DateTimeOffset? createdAt = null,
+        DateTimeOffset? doneAt = null)
+    {
+        using var scope = _factory.Services.CreateScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<AppDbContext>();
+
+        var workItem = new JiraWorkItem
+        {
+            Id = Guid.NewGuid(),
+            TeamId = teamId,
+            ExternalId = Guid.NewGuid().ToString(),
+            Key = $"REC-{Random.Shared.Next(1, 100000)}",
+            Summary = "Test Jira work item",
+            Status = doneAt.HasValue
+                ? "Done"
+                : "In Progress",
+            AssigneeExternalId = "test-user",
+            CreatedAt = createdAt ??
+                        new DateTimeOffset(
+                            2026, 1, 10, 10, 0, 0, TimeSpan.Zero),
+            DoneAt = doneAt,
+            IsBlocked = isBlocked
+        };
+
+        dbContext.JiraWorkItems.Add(workItem);
 
         await dbContext.SaveChangesAsync();
     }
@@ -675,9 +708,13 @@ public sealed class MetricsEndpointsTests
     {
         var team = await CreateTeamAsync();
 
-        await SeedPullRequestAsync(
+        await SeedJiraWorkItemAsync(
             team.Id,
-            TimeSpan.FromHours(10));
+            isBlocked: false,
+            createdAt: new DateTimeOffset(
+                2026, 1, 10, 8, 0, 0, TimeSpan.Zero),
+            doneAt: new DateTimeOffset(
+                2026, 1, 10, 18, 0, 0, TimeSpan.Zero));
 
         var response = await _client.PostAsync(
             $"/teams/{team.Id}/metrics/lead-time" +
@@ -687,7 +724,8 @@ public sealed class MetricsEndpointsTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var metric =
-            await response.Content.ReadFromJsonAsync<EngineeringMetricResponse>();
+            await response.Content
+                .ReadFromJsonAsync<EngineeringMetricResponse>();
 
         metric.Should().NotBeNull();
         metric!.MetricType.Should().Be(MetricType.LeadTime);
@@ -695,18 +733,26 @@ public sealed class MetricsEndpointsTests
     }
     
     [Fact]
-    public async Task CalculateLeadTime_ShouldIgnoreUnmergedPullRequests()
+    public async Task CalculateLeadTime_ShouldIgnoreIncompleteWorkItems()
     {
         var team = await CreateTeamAsync();
 
-        await SeedPullRequestAsync(
+        // Completed Jira item -> 10h Lead Time
+        await SeedJiraWorkItemAsync(
             team.Id,
-            TimeSpan.FromHours(10));
+            isBlocked: false,
+            createdAt: new DateTimeOffset(
+                2026, 1, 10, 8, 0, 0, TimeSpan.Zero),
+            doneAt: new DateTimeOffset(
+                2026, 1, 10, 18, 0, 0, TimeSpan.Zero));
 
-        await SeedPullRequestAsync(
+        // Incomplete Jira item -> ignored
+        await SeedJiraWorkItemAsync(
             team.Id,
-            TimeSpan.FromHours(10),
-            merged: false);
+            isBlocked: false,
+            createdAt: new DateTimeOffset(
+                2026, 1, 11, 8, 0, 0, TimeSpan.Zero),
+            doneAt: null);
 
         var response = await _client.PostAsync(
             $"/teams/{team.Id}/metrics/lead-time" +
@@ -716,10 +762,12 @@ public sealed class MetricsEndpointsTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var metric =
-            await response.Content.ReadFromJsonAsync<EngineeringMetricResponse>();
+            await response.Content
+                .ReadFromJsonAsync<EngineeringMetricResponse>();
 
         metric.Should().NotBeNull();
-        metric!.Value.Should().Be(10);
+        metric!.MetricType.Should().Be(MetricType.LeadTime);
+        metric.Value.Should().Be(10);
     }
     
     [Fact]
@@ -875,10 +923,8 @@ public sealed class MetricsEndpointsTests
         var team = await CreateTeamAsync();
         var teamId = team.Id;
 
-        await SeedPullRequestAsync(
+        await SeedJiraWorkItemAsync(
             teamId,
-            TimeSpan.Zero,
-            merged: false,
             isBlocked: true);
 
         var response = await _client.PostAsync(
@@ -902,10 +948,8 @@ public sealed class MetricsEndpointsTests
         var team = await CreateTeamAsync();
         var teamId = team.Id;
 
-        await SeedPullRequestAsync(
+        await SeedJiraWorkItemAsync(
             teamId,
-            TimeSpan.Zero,
-            merged: false,
             isBlocked: false);
 
         var response = await _client.PostAsync(

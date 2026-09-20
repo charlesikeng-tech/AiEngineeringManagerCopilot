@@ -6,6 +6,7 @@ using AiEngineeringManagerCopilot.Application.AI;
 using AiEngineeringManagerCopilot.Application.GitHub;
 using AiEngineeringManagerCopilot.Application.GitHub.Validation;
 using AiEngineeringManagerCopilot.Application.Health;
+using AiEngineeringManagerCopilot.Application.Jira;
 using AiEngineeringManagerCopilot.Application.Metrics;
 using AiEngineeringManagerCopilot.Application.Reports;
 using AiEngineeringManagerCopilot.Application.Risks;
@@ -16,6 +17,7 @@ using AiEngineeringManagerCopilot.Application.Teams.Validation;
 using AiEngineeringManagerCopilot.Infrastructure.AI;
 using AiEngineeringManagerCopilot.Infrastructure.Authentication;
 using AiEngineeringManagerCopilot.Infrastructure.GitHub;
+using AiEngineeringManagerCopilot.Infrastructure.Jira;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence.Repositories;
 using AiEngineeringManagerCopilot.Infrastructure.Security;
 using FluentValidation;
@@ -54,6 +56,8 @@ builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 builder.Services.AddScoped<ITeamMemberRepository, TeamMemberRepository>();
 builder.Services.AddScoped<IGitHubConnectionRepository, GitHubConnectionRepository>();
 builder.Services.AddScoped<IRepositoryRepository, RepositoryRepository>();
+builder.Services.AddScoped<IJiraConnectionRepository, JiraConnectionRepository>();
+builder.Services.AddScoped<IJiraWorkItemRepository, JiraWorkItemRepository>();
 builder.Services.AddScoped<IEngineeringMetricRepository, EngineeringMetricRepository>();
 builder.Services.AddScoped<IPullRequestRepository, PullRequestRepository>();
 builder.Services.AddScoped<IPullRequestReviewRepository, PullRequestReviewRepository>();
@@ -75,6 +79,8 @@ builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<ITeamMemberService, TeamMemberService>();
 builder.Services.AddScoped<IGitHubConnectionService, GitHubConnectionService>();
 builder.Services.AddScoped<IGitHubSyncService, GitHubSyncService>();
+builder.Services.AddScoped<IJiraConnectionService, JiraConnectionService>();
+builder.Services.AddScoped<IJiraSyncService, JiraSyncService>();
 builder.Services.AddScoped<IEngineeringMetricsService, EngineeringMetricsService>();
 builder.Services.AddScoped<IEngineeringHealthScoreService, EngineeringHealthScoreService>();
 builder.Services.AddScoped<IEngineeringReportService, EngineeringReportService>();
@@ -126,7 +132,7 @@ builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(
     });
 
 
-
+builder.Services.AddHttpClient<IJiraClient, JiraClient>();
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -144,6 +150,7 @@ if (app.Environment.IsDevelopment())
 app.MapTeamEndpoints();
 app.MapTeamMemberEndpoints();
 app.MapGitHubEndpoints();
+app.MapJiraConnectionEndpoints();
 app.MapMetricsEndpoints();
 app.MapHealthEndpoints();
 app.MapEngineeringReportEndpoints();

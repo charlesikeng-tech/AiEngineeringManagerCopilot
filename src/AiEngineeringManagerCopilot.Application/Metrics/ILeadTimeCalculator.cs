@@ -5,7 +5,7 @@ namespace AiEngineeringManagerCopilot.Application.Metrics;
 public interface ILeadTimeCalculator
 {
     LeadTimeResult Calculate(
-        IReadOnlyCollection<PullRequest> pullRequests,
+        IReadOnlyCollection<JiraWorkItem> workItems,
         DateOnly periodStart,
         DateOnly periodEnd);
 }

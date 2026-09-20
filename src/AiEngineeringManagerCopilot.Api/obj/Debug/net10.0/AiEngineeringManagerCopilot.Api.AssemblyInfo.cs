@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AiEngineeringManagerCopilot.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+19b5e4913e9a74c8d4903063b151890e8bf41787")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+26223fdedb92bc09608be140cf766cbeecdefd46")]
 [assembly: System.Reflection.AssemblyProductAttribute("AiEngineeringManagerCopilot.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AiEngineeringManagerCopilot.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -8,6 +8,7 @@ public sealed class EngineeringMetricsService(
     ICurrentUser currentUser,
     ITeamRepository teamRepository,
     IPullRequestRepository pullRequestRepository,
+    IJiraWorkItemRepository jiraWorkItemRepository,
     IPullRequestReviewRepository pullRequestReviewRepository,
     IEngineeringMetricRepository metricRepository,
     ICycleTimeCalculator cycleTimeCalculator,
@@ -279,15 +280,23 @@ public sealed class EngineeringMetricsService(
         if (team is null)
             return null;
 
-        var pullRequests =
-            await pullRequestRepository.GetByTeamAndPeriodAsync(
+        var from = new DateTimeOffset(
+            periodStart.ToDateTime(TimeOnly.MinValue),
+            TimeSpan.Zero);
+
+        var to = new DateTimeOffset(
+            periodEnd.ToDateTime(TimeOnly.MaxValue),
+            TimeSpan.Zero);
+
+        var workItems =
+            await jiraWorkItemRepository.GetByTeamAndPeriodAsync(
                 teamId,
-                periodStart,
-                periodEnd,
+                from,
+                to,
                 cancellationToken);
 
         var result = leadTimeCalculator.Calculate(
-            pullRequests,
+            workItems,
             periodStart,
             periodEnd);
 
@@ -444,15 +453,23 @@ public sealed class EngineeringMetricsService(
         if (team is null)
             return null;
 
-        var pullRequests =
-            await pullRequestRepository.GetByTeamAndPeriodAsync(
+        var from = new DateTimeOffset(
+            periodStart.ToDateTime(TimeOnly.MinValue),
+            TimeSpan.Zero);
+
+        var to = new DateTimeOffset(
+            periodEnd.ToDateTime(TimeOnly.MaxValue),
+            TimeSpan.Zero);
+
+        var workItems =
+            await jiraWorkItemRepository.GetByTeamAndPeriodAsync(
                 teamId,
-                periodStart,
-                periodEnd,
+                from,
+                to,
                 cancellationToken);
 
         var result = blockedItemsCalculator.Calculate(
-            pullRequests,
+            workItems,
             periodStart,
             periodEnd);
 

@@ -6,7 +6,7 @@ public sealed class LeadTimeCalculator
     : ILeadTimeCalculator
 {
     public LeadTimeResult Calculate(
-        IReadOnlyCollection<PullRequest> pullRequests,
+        IReadOnlyCollection<JiraWorkItem> workItems,
         DateOnly periodStart,
         DateOnly periodEnd)
     {
@@ -16,17 +16,17 @@ public sealed class LeadTimeCalculator
                 "periodStart must be before or equal to periodEnd.");
         }
 
-        var durations = pullRequests
+        var durations = workItems
             .Where(x =>
-                x.MergedAt.HasValue &&
+                x.DoneAt.HasValue &&
                 DateOnly.FromDateTime(
                     x.CreatedAt.UtcDateTime) >= periodStart &&
                 DateOnly.FromDateTime(
                     x.CreatedAt.UtcDateTime) <= periodEnd &&
-                x.MergedAt.Value >= x.CreatedAt)
+                x.DoneAt.Value >= x.CreatedAt)
             .Select(x =>
                 (decimal)(
-                    x.MergedAt.Value - x.CreatedAt)
+                    x.DoneAt!.Value - x.CreatedAt)
                 .TotalHours)
             .ToList();
 
