@@ -85,22 +85,23 @@ public sealed class EngineeringHealthScoreService(
         var score = scoreCalculator.Calculate(
             cycleTimeHours: cycleTime,
             prReviewTimeHours: prReviewTime,
-            deploymentCount: (int)deploymentFrequency,
+            deploymentCount: (int?)deploymentFrequency,
             changeFailureRate: changeFailureRate,
             leadTimeHours: leadTime,
-            openPullRequests: (int)openPullRequests,
-            mergedPullRequests: (int)mergedPullRequests,
-            blockedItems: (int)blockedItems);
+            openPullRequests: (int?)openPullRequests,
+            mergedPullRequests: (int?)mergedPullRequests,
+            blockedItems: (int?)blockedItems);
 
         return new EngineeringHealthScoreResponse(
             teamId,
             periodStart,
             periodEnd,
             score.OverallScore,
-            score.HealthLevel);
+            score.HealthLevel,
+            score.DataCoverage);
     }
 
-    private async Task<decimal> GetMetricValueAsync(
+    private async Task<decimal?> GetMetricValueAsync(
         Guid teamId,
         MetricType metricType,
         DateOnly periodStart,
@@ -116,7 +117,7 @@ public sealed class EngineeringHealthScoreService(
 
         return metrics
             .OrderByDescending(x => x.CreatedAt)
-            .Select(x => x.Value)
+            .Select(x => (decimal?)x.Value)
             .FirstOrDefault();
     }
 }

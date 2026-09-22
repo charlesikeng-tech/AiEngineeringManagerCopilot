@@ -1,4 +1,5 @@
 using AiEngineeringManagerCopilot.Domain.Entities;
+using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 using FluentAssertions;
@@ -50,7 +51,7 @@ public sealed class EngineeringReportInsightRepositoryTests
             {
                 Id = Guid.NewGuid(),
                 ReportId = report.Id,
-                Category = "Delivery",
+                Category = RiskCategory.Delivery,
                 Title = "Cycle time is too high",
                 Description = "Cycle time is above the target.",
                 Impact = "Delivery is slower.",
@@ -60,7 +61,7 @@ public sealed class EngineeringReportInsightRepositoryTests
             {
                 Id = Guid.NewGuid(),
                 ReportId = report.Id,
-                Category = "Review",
+                Category = RiskCategory.Review,
                 Title = "Review time is high",
                 Description = "Review time is above the target.",
                 Impact = "Reviews create bottlenecks.",
@@ -110,7 +111,7 @@ public sealed class EngineeringReportInsightRepositoryTests
             {
                 Id = Guid.NewGuid(),
                 ReportId = report1.Id,
-                Category = "Delivery",
+                Category = RiskCategory.Delivery,
                 Title = "Report 1 insight",
                 Description = "Description",
                 Impact = "Impact",
@@ -120,7 +121,7 @@ public sealed class EngineeringReportInsightRepositoryTests
             {
                 Id = Guid.NewGuid(),
                 ReportId = report2.Id,
-                Category = "Quality",
+                Category = RiskCategory.Quality,
                 Title = "Report 2 insight",
                 Description = "Description",
                 Impact = "Impact",
@@ -159,7 +160,7 @@ public sealed class EngineeringReportInsightRepositoryTests
             {
                 Id = Guid.NewGuid(),
                 ReportId = report.Id,
-                Category = "Review",
+                Category = RiskCategory.Review,
                 Title = "B insight",
                 Description = "Description",
                 Impact = "Impact",
@@ -169,7 +170,7 @@ public sealed class EngineeringReportInsightRepositoryTests
             {
                 Id = Guid.NewGuid(),
                 ReportId = report.Id,
-                Category = "Delivery",
+                Category = RiskCategory.Delivery,
                 Title = "Z insight",
                 Description = "Description",
                 Impact = "Impact",
@@ -179,7 +180,7 @@ public sealed class EngineeringReportInsightRepositoryTests
             {
                 Id = Guid.NewGuid(),
                 ReportId = report.Id,
-                Category = "Delivery",
+                Category = RiskCategory.Delivery,
                 Title = "A insight",
                 Description = "Description",
                 Impact = "Impact",

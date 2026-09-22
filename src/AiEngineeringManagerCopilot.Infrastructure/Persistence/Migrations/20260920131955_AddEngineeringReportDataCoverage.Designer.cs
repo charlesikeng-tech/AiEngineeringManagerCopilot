@@ -3,6 +3,7 @@ using System;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260920131955_AddEngineeringReportDataCoverage")]
+    partial class AddEngineeringReportDataCoverage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -288,10 +291,6 @@ namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Migrations
                         .HasMaxLength(3000)
                         .HasColumnType("character varying(3000)");
 
-                    b.Property<string>("MetricType")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
                     b.Property<string>("Recommendation")
                         .IsRequired()
                         .HasMaxLength(5000)
@@ -329,10 +328,6 @@ namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(5000)
                         .HasColumnType("character varying(5000)");
-
-                    b.Property<string>("MetricType")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Recommendation")
                         .IsRequired()

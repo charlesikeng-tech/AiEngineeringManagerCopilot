@@ -101,6 +101,13 @@ builder.Services.AddScoped< IEngineeringMetricScoreCalculator, EngineeringMetric
 builder.Services.AddScoped<IEngineeringRiskDetector, EngineeringRiskDetector>();
 
 builder.Services.AddScoped<ISecretProtector, DataProtectionSecretProtector>();
+builder.Services.AddSingleton<PreviousPeriodCalculator>();
+builder.Services.AddSingleton<MetricTrendCalculator>();
+builder.Services.AddSingleton<MetricTrendBuilder>();
+
+builder.Services.AddSingleton<EngineeringTrendSignalDetector>();
+builder.Services.AddSingleton<EngineeringTrendInsightGenerator>();
+builder.Services.AddSingleton<EngineeringTrendInsightService>();
 
 var llmProvider = builder.Configuration["Llm:Provider"];
 

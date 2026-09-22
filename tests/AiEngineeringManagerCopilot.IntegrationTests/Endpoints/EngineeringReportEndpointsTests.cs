@@ -179,17 +179,25 @@ public sealed class EngineeringReportEndpointsTests
 
         await SeedAllMetricsAsync(teamId);
 
-        await _client.PostAsync(
+        var septemberResponse = await _client.PostAsync(
             $"/teams/{teamId}/reports" +
             "?periodStart=2026-09-01" +
             "&periodEnd=2026-09-30",
             null);
 
-        await _client.PostAsync(
+        septemberResponse.StatusCode
+            .Should()
+            .Be(HttpStatusCode.Created);
+
+        var augustResponse = await _client.PostAsync(
             $"/teams/{teamId}/reports" +
             "?periodStart=2026-08-01" +
             "&periodEnd=2026-08-31",
             null);
+
+        augustResponse.StatusCode
+            .Should()
+            .Be(HttpStatusCode.Created);
 
         var response = await _client.GetAsync(
             $"/teams/{teamId}/reports");
@@ -205,7 +213,10 @@ public sealed class EngineeringReportEndpointsTests
 
         reports.Should().NotBeNull();
         reports!.Count.Should().Be(2);
-        reports.Should().OnlyContain(x => x.TeamId == teamId);
+
+        reports.Should()
+            .OnlyContain(x => x.TeamId == teamId);
+
         reports.Should().AllSatisfy(report =>
         {
             report.Actions.Should().NotBeNull();
@@ -216,6 +227,43 @@ public sealed class EngineeringReportEndpointsTests
                 action.Status.Should().Be("Todo");
             });
         });
+    }
+    
+    [Fact]
+    public async Task GetReports_ShouldReturnNoData_WhenReportHasNoMetrics()
+    {
+        var teamId = await CreateTeamAsync();
+
+        var createResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-08-01" +
+            "&periodEnd=2026-08-31",
+            null);
+
+        createResponse.StatusCode
+            .Should()
+            .Be(HttpStatusCode.Created);
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/reports");
+
+        response.StatusCode
+            .Should()
+            .Be(HttpStatusCode.OK);
+
+        var reports =
+            await response.Content
+                .ReadFromJsonAsync<
+                    IReadOnlyList<EngineeringReportResponse>>();
+
+        reports.Should().NotBeNull();
+        reports.Should().ContainSingle();
+
+        var report = reports!.Single();
+
+        report.OverallScore.Should().Be(0);
+        report.DataCoverage.Should().Be(0m);
+        report.HealthLevel.Should().Be("No Data");
     }
 
     [Fact]
@@ -302,6 +350,246 @@ public sealed class EngineeringReportEndpointsTests
             .Should()
             .Be(HttpStatusCode.NotFound);
     }
+    
+    [Fact]
+    public async Task GenerateReport_ShouldReturnMetricTrendComparedToPreviousPeriod()
+    {
+        // Arrange
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            50m,
+            new DateOnly(2026, 8, 2),
+            new DateOnly(2026, 8, 31));
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            30m,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        // Act
+        var response = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01" +
+            "&periodEnd=2026-09-30",
+            null);
+
+        // Assert
+        response.StatusCode
+            .Should()
+            .Be(HttpStatusCode.Created);
+
+        var report = await response.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        report!.Trends.Should().ContainSingle();
+
+        var trend = report.Trends.Single();
+
+        trend.MetricType.Should().Be("CycleTime");
+        trend.CurrentValue.Should().Be(30m);
+        trend.PreviousValue.Should().Be(50m);
+        trend.ChangePercentage.Should().Be(-40m);
+        trend.Direction.Should().Be("Improving");
+    }
+    
+    [Fact]
+    public async Task GetReport_ShouldReturnMetricTrend()
+    {
+        // Arrange
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            50m,
+            new DateOnly(2026, 8, 2),
+            new DateOnly(2026, 8, 31));
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            30m,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        var createResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01" +
+            "&periodEnd=2026-09-30",
+            null);
+
+        createResponse.StatusCode
+            .Should()
+            .Be(HttpStatusCode.Created);
+
+        var createdReport = await createResponse.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        createdReport.Should().NotBeNull();
+
+        // Act
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/reports/{createdReport!.Id}");
+
+        // Assert
+        response.StatusCode
+            .Should()
+            .Be(HttpStatusCode.OK);
+
+        var report = await response.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+        report!.Trends.Should().ContainSingle();
+
+        var trend = report.Trends.Single();
+
+        trend.MetricType.Should().Be("CycleTime");
+        trend.CurrentValue.Should().Be(30m);
+        trend.PreviousValue.Should().Be(50m);
+        trend.ChangePercentage.Should().Be(-40m);
+        trend.Direction.Should().Be("Improving");
+    }
+    
+    [Fact]
+    public async Task GetReports_ShouldReturnMetricTrends()
+    {
+        // Arrange
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            50m,
+            new DateOnly(2026, 8, 2),
+            new DateOnly(2026, 8, 31));
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            30m,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        var createResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01" +
+            "&periodEnd=2026-09-30",
+            null);
+
+        createResponse.StatusCode
+            .Should()
+            .Be(HttpStatusCode.Created);
+
+        // Act
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/reports");
+
+        // Assert
+        response.StatusCode
+            .Should()
+            .Be(HttpStatusCode.OK);
+
+        var reports = await response.Content
+            .ReadFromJsonAsync<
+                IReadOnlyList<EngineeringReportResponse>>();
+
+        reports.Should().NotBeNull();
+        reports.Should().ContainSingle();
+
+        var report = reports!.Single();
+
+        report.Trends.Should().ContainSingle();
+
+        var trend = report.Trends.Single();
+
+        trend.MetricType.Should().Be("CycleTime");
+        trend.CurrentValue.Should().Be(30m);
+        trend.PreviousValue.Should().Be(50m);
+        trend.ChangePercentage.Should().Be(-40m);
+        trend.Direction.Should().Be("Improving");
+    }
+    
+    [Fact]
+    public async Task AnalyzeReport_ShouldIncludeMetricTrendsInPrompt()
+    {
+        // Arrange
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            50m,
+            new DateOnly(2026, 8, 2),
+            new DateOnly(2026, 8, 31));
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            30m,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        var generateResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01" +
+            "&periodEnd=2026-09-30",
+            null);
+
+        generateResponse.StatusCode
+            .Should()
+            .Be(HttpStatusCode.Created);
+
+        var report = await generateResponse.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        // Act
+        var response = await _client.PostAsync(
+            $"/teams/{teamId}/reports/{report!.Id}/analyze",
+            null);
+
+        // Assert
+        response.StatusCode
+            .Should()
+            .Be(HttpStatusCode.OK);
+
+        var llmProvider = _factory.Services
+            .GetRequiredService<ILlmProvider>();
+
+        var fakeLlmProvider =
+            llmProvider.Should()
+                .BeOfType<FakeLlmProvider>()
+                .Subject;
+
+        fakeLlmProvider.LastPrompt
+            .Should()
+            .Contain("Metric trends compared with previous period");
+
+        fakeLlmProvider.LastPrompt
+            .Should()
+            .Contain("CycleTime");
+
+        fakeLlmProvider.LastPrompt
+            .Should()
+            .Contain("50 → 30");
+
+        fakeLlmProvider.LastPrompt
+            .Should()
+            .Contain("-40%");
+
+        fakeLlmProvider.LastPrompt
+            .Should()
+            .Contain("Improving");
+    }
 
     private async Task<Guid> CreateTeamAsync()
     {
@@ -374,7 +662,9 @@ public sealed class EngineeringReportEndpointsTests
     private async Task SeedMetricAsync(
         Guid teamId,
         MetricType metricType,
-        decimal value)
+        decimal value,
+        DateOnly? periodStart = null,
+        DateOnly? periodEnd = null)
     {
         await using var scope =
             _factory.Services.CreateAsyncScope();
@@ -390,8 +680,10 @@ public sealed class EngineeringReportEndpointsTests
                 TeamId = teamId,
                 MetricType = metricType,
                 Value = value,
-                PeriodStart = new DateOnly(2026, 9, 1),
-                PeriodEnd = new DateOnly(2026, 9, 30),
+                PeriodStart = periodStart
+                              ?? new DateOnly(2026, 9, 1),
+                PeriodEnd = periodEnd
+                            ?? new DateOnly(2026, 9, 30),
                 CreatedAt = DateTimeOffset.UtcNow
             });
 
@@ -1063,5 +1355,94 @@ public sealed class EngineeringReportEndpointsTests
         secondAnalysis.Actions[0].Priority
             .Should()
             .Be(ActionPriority.High);
+    }
+    
+    [Fact]
+    public async Task GenerateReport_ShouldCreateEarlyWarningInsight_WhenMetricIsDegrading()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            10m,
+            new DateOnly(2026, 8, 2),
+            new DateOnly(2026, 8, 31));
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            20m,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        var response = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01" +
+            "&periodEnd=2026-09-30",
+            null);
+
+        response.StatusCode
+            .Should()
+            .Be(HttpStatusCode.Created);
+
+        var report = await response.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        report!.Insights
+            .Should()
+            .ContainSingle(x =>
+                x.Title.Contains("Early warning") &&
+                x.Title.Contains("CycleTime"));
+    }
+    
+    [Fact]
+    public async Task GenerateReport_ShouldNotCreateEarlyWarning_WhenClassicInsightAlreadyExists()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            10m,
+            new DateOnly(2026, 8, 2),
+            new DateOnly(2026, 8, 31));
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            30m,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        var response = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01" +
+            "&periodEnd=2026-09-30",
+            null);
+
+        response.StatusCode
+            .Should()
+            .Be(HttpStatusCode.Created);
+
+        var report = await response.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        report!.Insights
+            .Should()
+            .ContainSingle();
+
+        report.Insights[0].Title
+            .Should()
+            .Be("Cycle time is too high");
+
+        report.Insights
+            .Should()
+            .NotContain(x =>
+                x.Title.Contains("Early warning"));
     }
 }

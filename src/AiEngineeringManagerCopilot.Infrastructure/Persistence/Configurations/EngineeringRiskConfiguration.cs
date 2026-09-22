@@ -22,6 +22,11 @@ public sealed class EngineeringRiskConfiguration
         builder.Property(x => x.ReportId)
             .IsRequired();
 
+        builder.Property(x => x.MetricType)
+            .HasConversion<string>()
+            .HasMaxLength(100)
+            .IsRequired(false);
+        
         builder.Property(x => x.Severity)
             .HasConversion<string>()
             .HasMaxLength(50)

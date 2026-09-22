@@ -1,4 +1,6 @@
+using System.Globalization;
 using AiEngineeringManagerCopilot.Application.Abstractions;
+using AiEngineeringManagerCopilot.Application.Metrics;
 using AiEngineeringManagerCopilot.Application.Reports;
 using AiEngineeringManagerCopilot.Application.Risks;
 using AiEngineeringManagerCopilot.Domain.Entities;
@@ -14,7 +16,9 @@ public sealed class AIAnalysisService(
     IAIAnalysisRepository analysisRepository,
     IAIAnalysisInsightRepository analysisInsightRepository,
     IAIAnalysisActionRepository analysisActionRepository,
-    ILlmProvider llmProvider)
+    ILlmProvider llmProvider,
+    PreviousPeriodCalculator previousPeriodCalculator,
+    MetricTrendBuilder metricTrendBuilder)
     : IAIAnalysisService
 {
     public async Task<AIAnalysisResult> AnalyzeAsync(
@@ -72,6 +76,20 @@ public sealed class AIAnalysisService(
             report.PeriodStart,
             report.PeriodEnd,
             cancellationToken);
+        
+        var previousPeriod = previousPeriodCalculator.Calculate(
+            report.PeriodStart,
+            report.PeriodEnd);
+
+        var previousMetrics = await GetMetricsAsync(
+            teamId,
+            previousPeriod.Start,
+            previousPeriod.End,
+            cancellationToken);
+
+        var trends = metricTrendBuilder.Build(
+            metrics,
+            previousMetrics);
 
         var insights = await insightRepository.GetByReportIdAsync(
             reportId,
@@ -83,6 +101,7 @@ public sealed class AIAnalysisService(
 
         var analysisInsights = insights
             .Select(x => new EngineeringInsight(
+                x.MetricType,
                 x.Category,
                 x.Title,
                 x.Description,
@@ -97,7 +116,8 @@ public sealed class AIAnalysisService(
             report.ExecutiveSummary,
             metrics,
             analysisInsights,
-            risks);
+            risks,
+            trends);
 
         var prompt = BuildPrompt(context);
 
@@ -209,35 +229,63 @@ public sealed class AIAnalysisService(
             Environment.NewLine,
             context.Risks.Select(x =>
                 $"- {x.Severity} / {x.Category}: {x.Title} — {x.Description}"));
+        
+        var trends = string.Join(
+            Environment.NewLine,
+            context.Trends.Select(x =>
+            {
+                var previousValue = x.PreviousValue.ToString(
+                    "0.##",
+                    CultureInfo.InvariantCulture);
 
-        return $"""
+                var currentValue = x.CurrentValue.ToString(
+                    "0.##",
+                    CultureInfo.InvariantCulture);
+
+                var change = x.ChangePercentage.HasValue
+                    ? x.ChangePercentage.Value.ToString(
+                        "+0.##;-0.##;0",
+                        CultureInfo.InvariantCulture) + "%"
+                    : "N/A";
+
+                return
+                    $"- {x.MetricType}: " +
+                    $"{previousValue} → {currentValue} " +
+                    $"({change}) — {x.Direction}";
+            }));
+
+        return $$"""
             You are an Engineering Manager Copilot.
 
             Analyze the engineering health of the team.
 
             ## Period
 
-            {context.PeriodStart} to {context.PeriodEnd}
+            {{context.PeriodStart}} to {{context.PeriodEnd}}
 
             ## Overall score
 
-            {context.OverallScore}/100
+            {{context.OverallScore}}/100
 
             ## Executive summary
 
-            {context.ExecutiveSummary}
+            {{context.ExecutiveSummary}}
 
             ## Metrics
 
-            {metrics}
-
+            {{metrics}}
+            
+            ## Metric trends compared with previous period
+            
+            {{trends}}
+            
             ## Existing insights
 
-            {insights}
+            {{insights}}
 
             ## Detected risks
 
-            {risks}
+            {{risks}}
 
             ## Objective
 

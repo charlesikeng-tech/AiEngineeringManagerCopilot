@@ -14,5 +14,7 @@ public sealed class EngineeringReport
 
     public int OverallScore { get; set; }
 
+    public decimal DataCoverage { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 }

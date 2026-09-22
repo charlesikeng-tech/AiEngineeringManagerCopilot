@@ -1,5 +1,6 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.Health;
+using AiEngineeringManagerCopilot.Application.Metrics;
 using AiEngineeringManagerCopilot.Application.Risks;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Domain.Enums;
@@ -18,9 +19,21 @@ public sealed class EngineeringReportService(
     IEngineeringActionGenerator actionGenerator,
     IEngineeringMetricScoreCalculator metricScoreCalculator,
     IEngineeringRiskDetector riskDetector,
-    IEngineeringRiskRepository riskRepository)
+    IEngineeringRiskRepository riskRepository,
+    PreviousPeriodCalculator previousPeriodCalculator,
+    MetricTrendBuilder metricTrendBuilder,
+    EngineeringTrendInsightService trendInsightService)
     : IEngineeringReportService
 {
+    private readonly EngineeringTrendInsightService trendInsightService =
+        trendInsightService;
+    
+    private readonly MetricTrendBuilder metricTrendBuilder =
+        metricTrendBuilder;
+    
+    private readonly PreviousPeriodCalculator previousPeriodCalculator =
+        previousPeriodCalculator;
+    
     public async Task<EngineeringReportResponse?> GenerateAsync(
         Guid teamId,
         DateOnly periodStart,
@@ -48,16 +61,21 @@ public sealed class EngineeringReportService(
             return null;
         }
         
+        
         var metrics = await GetMetricsAsync(
             teamId,
             periodStart,
             periodEnd,
             cancellationToken);
+        
+        var trends = await GetTrendsAsync(
+            teamId,
+            periodStart,
+            periodEnd,
+            metrics,
+            cancellationToken);
 
         var generatedInsights = insightGenerator.Generate(metrics);
-        
-        var generatedActions = actionGenerator.Generate(
-            generatedInsights);
         
         var report = new EngineeringReport
         {
@@ -69,19 +87,33 @@ public sealed class EngineeringReportService(
                 healthScore.OverallScore,
                 healthScore.HealthLevel),
             OverallScore = healthScore.OverallScore,
+            DataCoverage = healthScore.DataCoverage,
             CreatedAt = DateTimeOffset.UtcNow
         };
+        
+        var trendInsights = trendInsightService.Generate(
+            trends,
+            generatedInsights);
+        
+        var allInsights = generatedInsights
+            .Concat(trendInsights)
+            .ToList();
         
         var generatedRisks = riskDetector.Detect(
             teamId,
             report.Id,
             metrics);
         
-        var reportInsights = generatedInsights
+        var generatedActions = actionGenerator.Generate(
+            generatedInsights,
+            generatedRisks);
+        
+        var reportInsights = allInsights
             .Select(insight => new EngineeringReportInsight
             {
                 Id = Guid.NewGuid(),
                 ReportId = report.Id,
+                MetricType = insight.MetricType,
                 Category = insight.Category,
                 Title = insight.Title,
                 Description = insight.Description,
@@ -142,7 +174,8 @@ public sealed class EngineeringReportService(
                 .ToList(),
             generatedRisks
                 .Select(ToRiskResponse)
-                .ToList());
+                .ToList(),
+            trends);
     }
 
     public async Task<EngineeringReportResponse?> GetByIdAsync(
@@ -188,9 +221,18 @@ public sealed class EngineeringReportService(
             report.PeriodEnd,
             cancellationToken);
         
+        var trends = await GetTrendsAsync(
+            teamId,
+            report.PeriodStart,
+            report.PeriodEnd,
+            metrics,
+            cancellationToken);
+        
         return ToResponse(
             report,
-            GetHealthLevel(report.OverallScore),
+            EngineeringHealthLevelResolver.Resolve(
+                report.OverallScore,
+                report.DataCoverage),
             metrics,
             insights
                 .Select(ToInsightResponse)
@@ -200,7 +242,8 @@ public sealed class EngineeringReportService(
                 .ToList(),
             risks
                 .Select(ToRiskResponse)
-                .ToList()
+                .ToList(),
+            trends
             );
     }
 
@@ -244,10 +287,19 @@ public sealed class EngineeringReportService(
                 report.PeriodEnd,
                 cancellationToken);
             
+            var trends = await GetTrendsAsync(
+                teamId,
+                report.PeriodStart,
+                report.PeriodEnd,
+                metrics,
+                cancellationToken);
+            
             responses.Add(
                 ToResponse(
                     report,
-                    GetHealthLevel(report.OverallScore),
+                    EngineeringHealthLevelResolver.Resolve(
+                        report.OverallScore,
+                        report.DataCoverage),
                     metrics,
                     insights
                         .Select(ToInsightResponse)
@@ -257,7 +309,8 @@ public sealed class EngineeringReportService(
                         .ToList(),
                     risks
                         .Select(ToRiskResponse)
-                        .ToList()));
+                        .ToList(),
+                    trends));
         }
 
         return responses;
@@ -269,8 +322,13 @@ public sealed class EngineeringReportService(
         IReadOnlyDictionary<MetricType, decimal> metrics,
         IReadOnlyList<EngineeringReportInsightResponse> insights,
         IReadOnlyList<EngineeringActionResponse> actions,
-        IReadOnlyList<EngineeringReportRiskResponse> risks)
+        IReadOnlyList<EngineeringReportRiskResponse> risks,
+        IReadOnlyList<MetricTrendResult> trends)
     {
+        var reportTrends = trends
+            .Select(ToTrendResponse)
+            .ToList();
+        
         var reportMetrics = metrics
             .OrderBy(x => x.Key)
             .Select(metric => new EngineeringReportMetricResponse(
@@ -289,11 +347,13 @@ public sealed class EngineeringReportService(
             report.ExecutiveSummary,
             report.OverallScore,
             healthLevel,
+            report.DataCoverage,
             report.CreatedAt,
             reportMetrics,
             insights,
             actions,
-            risks);
+            risks,
+            reportTrends);
     }
 
     private static string BuildExecutiveSummary(
@@ -304,31 +364,6 @@ public sealed class EngineeringReportService(
             $"Engineering team health is {healthLevel} " +
             $"with an overall score of {overallScore}/100 " +
             "for the selected period.";
-    }
-
-    private static string GetHealthLevel(int score)
-    {
-        if (score >= 90)
-        {
-            return "Excellent";
-        }
-
-        if (score >= 75)
-        {
-            return "Healthy";
-        }
-
-        if (score >= 60)
-        {
-            return "Needs Attention";
-        }
-
-        if (score >= 40)
-        {
-            return "At Risk";
-        }
-
-        return "Critical";
     }
     
     private async Task<Dictionary<MetricType, decimal>> GetMetricsAsync(
@@ -440,7 +475,7 @@ public sealed class EngineeringReportService(
         return new EngineeringReportInsightResponse(
             insight.Id,
             insight.ReportId,
-            insight.Category,
+            insight.Category.ToString(),
             insight.Title,
             insight.Description,
             insight.Impact,
@@ -474,5 +509,38 @@ public sealed class EngineeringReportService(
             risk.Description,
             risk.Recommendation,
             risk.CreatedAt);
+    }
+    
+    private static EngineeringMetricTrendResponse ToTrendResponse(
+        MetricTrendResult trend)
+    {
+        return new EngineeringMetricTrendResponse(
+            trend.MetricType.ToString(),
+            trend.CurrentValue,
+            trend.PreviousValue,
+            trend.ChangePercentage,
+            trend.Direction.ToString());
+    }
+    
+    private async Task<IReadOnlyList<MetricTrendResult>> GetTrendsAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        IReadOnlyDictionary<MetricType, decimal> currentMetrics,
+        CancellationToken cancellationToken)
+    {
+        var previousPeriod = previousPeriodCalculator.Calculate(
+            periodStart,
+            periodEnd);
+
+        var previousMetrics = await GetMetricsAsync(
+            teamId,
+            previousPeriod.Start,
+            previousPeriod.End,
+            cancellationToken);
+
+        return metricTrendBuilder.Build(
+            currentMetrics,
+            previousMetrics);
     }
 }

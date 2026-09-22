@@ -1090,6 +1090,7 @@ public sealed class MetricsEndpointsTests
         result!.TeamId.Should().Be(teamId);
         result.OverallScore.Should().Be(100);
         result.HealthLevel.Should().Be("Excellent");
+        result.DataCoverage.Should().Be(100m);
     }
     
     [Fact]
@@ -1136,4 +1137,41 @@ public sealed class MetricsEndpointsTests
 
         result.Value.Should().Be(1);
     }
+    
+    [Fact]
+    public async Task CalculateHealthScore_ShouldReturnPartialDataCoverage()
+    {
+        var team = await CreateTeamAsync();
+        var teamId = team.Id;
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            8m);
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.BlockedItems,
+            0m);
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/health/score" +
+            "?periodStart=2026-09-01" +
+            "&periodEnd=2026-09-30");
+
+        response.StatusCode
+            .Should()
+            .Be(HttpStatusCode.OK);
+
+        var result =
+            await response.Content
+                .ReadFromJsonAsync<EngineeringHealthScoreResponse>();
+
+        result.Should().NotBeNull();
+
+        result!.OverallScore.Should().Be(100);
+        result.HealthLevel.Should().Be("Excellent");
+        result.DataCoverage.Should().Be(30m);
+    }
+    
 }

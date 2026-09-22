@@ -1,3 +1,4 @@
+using AiEngineeringManagerCopilot.Application.Metrics;
 using AiEngineeringManagerCopilot.Application.Reports;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Domain.Enums;
@@ -11,4 +12,5 @@ public sealed record AIAnalysisContext(
     string ExecutiveSummary,
     IReadOnlyDictionary<MetricType, decimal> Metrics,
     IReadOnlyList<EngineeringInsight> Insights,
-    IReadOnlyList<EngineeringRisk> Risks);
+    IReadOnlyList<EngineeringRisk> Risks,
+    IReadOnlyList<MetricTrendResult> Trends);

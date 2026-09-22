@@ -40,7 +40,7 @@ public sealed class EngineeringInsightGeneratorTests
 
         result.Should().ContainSingle();
 
-        result[0].Category.Should().Be("Delivery");
+        result[0].Category.Should().Be(RiskCategory.Delivery);
         result[0].Title.Should().Be("Cycle time is too high");
     }
 
@@ -56,7 +56,7 @@ public sealed class EngineeringInsightGeneratorTests
 
         result.Should().ContainSingle();
 
-        result[0].Category.Should().Be("Review");
+        result[0].Category.Should().Be(RiskCategory.Review);
         result[0].Title.Should().Be(
             "Pull request review time is high");
     }
@@ -89,7 +89,7 @@ public sealed class EngineeringInsightGeneratorTests
 
         result.Should().ContainSingle();
 
-        result[0].Category.Should().Be("Quality");
+        result[0].Category.Should().Be(RiskCategory.Quality);
         result[0].Title.Should().Be(
             "Change failure rate is high");
     }
@@ -122,7 +122,7 @@ public sealed class EngineeringInsightGeneratorTests
 
         result.Should().ContainSingle();
 
-        result[0].Category.Should().Be("Review");
+        result[0].Category.Should().Be(RiskCategory.Review);
         result[0].Title.Should().Be(
             "Too many pull requests are open");
     }
@@ -155,7 +155,7 @@ public sealed class EngineeringInsightGeneratorTests
 
         result.Should().ContainSingle();
 
-        result[0].Category.Should().Be("Process");
+        result[0].Category.Should().Be(RiskCategory.Process);
         result[0].Title.Should().Be(
             "Too many items are blocked");
     }
@@ -188,5 +188,47 @@ public sealed class EngineeringInsightGeneratorTests
         var result = _generator.Generate(metrics);
 
         result.Should().BeEmpty();
+    }
+    
+    [Fact]
+    public void Generate_ShouldCreateDeploymentInsight_WhenFrequencyNeedsAttention()
+    {
+        var generator = new EngineeringInsightGenerator();
+
+        var metrics =
+            new Dictionary<MetricType, decimal>
+            {
+                [MetricType.DeploymentFrequency] = 7m
+            };
+
+        var insights = generator.Generate(metrics);
+
+        insights.Should().ContainSingle();
+
+        var insight = insights.Single();
+
+        insight.Category.Should().Be(RiskCategory.Delivery);
+        insight.Title.Should().Be("Deployment frequency is low");
+    }
+    
+    [Fact]
+    public void Generate_ShouldCreateMergedPullRequestsInsight_WhenThroughputNeedsAttention()
+    {
+        var generator = new EngineeringInsightGenerator();
+
+        var metrics =
+            new Dictionary<MetricType, decimal>
+            {
+                [MetricType.MergedPRs] = 7m
+            };
+
+        var insights = generator.Generate(metrics);
+
+        insights.Should().ContainSingle();
+
+        var insight = insights.Single();
+
+        insight.Category.Should().Be(RiskCategory.Delivery);
+        insight.Title.Should().Be("Low pull request throughput");
     }
 }

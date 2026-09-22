@@ -1,3 +1,5 @@
+using AiEngineeringManagerCopilot.Domain.Enums;
+
 namespace AiEngineeringManagerCopilot.Domain.Entities;
 
 public sealed class EngineeringReportInsight
@@ -6,7 +8,9 @@ public sealed class EngineeringReportInsight
 
     public Guid ReportId { get; set; }
 
-    public string Category { get; set; } = string.Empty;
+    public MetricType? MetricType { get; set; }
+
+    public RiskCategory Category { get; set; }
 
     public string Title { get; set; } = string.Empty;
 

@@ -5,4 +5,5 @@ public sealed record EngineeringHealthScoreResponse(
     DateOnly PeriodStart,
     DateOnly PeriodEnd,
     int OverallScore,
-    string HealthLevel);
+    string HealthLevel,
+    decimal DataCoverage);

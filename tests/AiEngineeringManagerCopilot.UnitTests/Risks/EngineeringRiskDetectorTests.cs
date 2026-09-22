@@ -197,4 +197,108 @@ public sealed class EngineeringRiskDetectorTests
 
         risks.Should().BeEmpty();
     }
+    
+    [Fact]
+    public void Detect_ShouldReturnNoRisks_WhenNoMetricsAreAvailable()
+    {
+        var detector = new EngineeringRiskDetector();
+
+        var metrics =
+            new Dictionary<MetricType, decimal>();
+
+        var risks = detector.Detect(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            metrics);
+
+        risks.Should().BeEmpty();
+    }
+    
+    [Fact]
+    public void Detect_ShouldDetectLowDeploymentFrequency_WhenValueIsZero()
+    {
+        var detector = new EngineeringRiskDetector();
+
+        var metrics =
+            new Dictionary<MetricType, decimal>
+            {
+                [MetricType.DeploymentFrequency] = 0m
+            };
+
+        var risks = detector.Detect(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            metrics);
+
+        risks.Should().ContainSingle();
+
+        var risk = risks.Single();
+
+        risk.Severity.Should().Be(RiskSeverity.High);
+        risk.Category.Should().Be(RiskCategory.Delivery);
+        risk.Title.Should().Be("Low deployment frequency");
+    }
+    
+    [Fact]
+    public void Detect_ShouldDetectLowDeliveryThroughput_WhenMergedPullRequestsIsZero()
+    {
+        var detector = new EngineeringRiskDetector();
+
+        var metrics =
+            new Dictionary<MetricType, decimal>
+            {
+                [MetricType.MergedPRs] = 0m
+            };
+
+        var risks = detector.Detect(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            metrics);
+
+        risks.Should().ContainSingle();
+
+        var risk = risks.Single();
+
+        risk.Severity.Should().Be(RiskSeverity.High);
+        risk.Category.Should().Be(RiskCategory.Delivery);
+        risk.Title.Should().Be("Low delivery throughput");
+    }
+    
+    [Fact]
+    public void Detect_ShouldNotCreateDeploymentRisk_WhenFrequencyNeedsAttention()
+    {
+        var detector = new EngineeringRiskDetector();
+
+        var metrics =
+            new Dictionary<MetricType, decimal>
+            {
+                [MetricType.DeploymentFrequency] = 7m
+            };
+
+        var risks = detector.Detect(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            metrics);
+
+        risks.Should().BeEmpty();
+    }
+    
+    [Fact]
+    public void Detect_ShouldNotCreateMergedPullRequestsRisk_WhenThroughputNeedsAttention()
+    {
+        var detector = new EngineeringRiskDetector();
+
+        var metrics =
+            new Dictionary<MetricType, decimal>
+            {
+                [MetricType.MergedPRs] = 7m
+            };
+
+        var risks = detector.Detect(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            metrics);
+
+        risks.Should().BeEmpty();
+    }
 }

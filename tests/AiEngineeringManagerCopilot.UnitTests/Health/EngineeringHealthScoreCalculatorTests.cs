@@ -91,4 +91,45 @@ public sealed class EngineeringHealthScoreCalculatorTests
         result.OverallScore.Should().Be(40);
         result.HealthLevel.Should().Be("At Risk");
     }
+    
+    [Fact]
+    public void Calculate_ShouldReturnNoData_WhenAllMetricsAreMissing()
+    {
+        var calculator = new EngineeringHealthScoreCalculator();
+
+        var result = calculator.Calculate(
+            cycleTimeHours: null,
+            prReviewTimeHours: null,
+            deploymentCount: null,
+            changeFailureRate: null,
+            leadTimeHours: null,
+            openPullRequests: null,
+            mergedPullRequests: null,
+            blockedItems: null);
+
+        result.OverallScore.Should().Be(0);
+        result.HealthLevel.Should().Be("No Data");
+        result.DataCoverage.Should().Be(0m);
+    }
+    
+    [Fact]
+    public void Calculate_ShouldExcludeMissingMetricsFromWeighting()
+    {
+        var calculator = new EngineeringHealthScoreCalculator();
+
+        var result = calculator.Calculate(
+            cycleTimeHours: 8m,
+            prReviewTimeHours: null,
+            deploymentCount: null,
+            changeFailureRate: null,
+            leadTimeHours: null,
+            openPullRequests: null,
+            mergedPullRequests: null,
+            blockedItems: 0);
+
+        result.OverallScore.Should().Be(100);
+        result.HealthLevel.Should().Be("Excellent");
+        result.DataCoverage.Should().Be(30m);
+    }
+    
 }

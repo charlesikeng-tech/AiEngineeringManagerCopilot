@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AiEngineeringManagerCopilot.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6fd75e8f958f4e5baee2f302903d3835c0127370")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+01840dba6528402f9a11cda5a5dd3b7fa7fe8f25")]
 [assembly: System.Reflection.AssemblyProductAttribute("AiEngineeringManagerCopilot.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AiEngineeringManagerCopilot.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

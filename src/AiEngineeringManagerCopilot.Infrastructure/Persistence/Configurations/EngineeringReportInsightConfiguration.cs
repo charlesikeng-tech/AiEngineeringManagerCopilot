@@ -19,7 +19,13 @@ public sealed class EngineeringReportInsightConfiguration
         builder.Property(x => x.ReportId)
             .IsRequired();
 
+        builder.Property(x => x.MetricType)
+            .HasConversion<string>()
+            .HasMaxLength(100)
+            .IsRequired(false);
+        
         builder.Property(x => x.Category)
+            .HasConversion<string>()
             .HasMaxLength(100)
             .IsRequired();
 

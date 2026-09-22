@@ -1,3 +1,4 @@
+using AiEngineeringManagerCopilot.Application.Health;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Domain.Enums;
 
@@ -31,7 +32,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         List<EngineeringRisk> risks)
     {
         if (!metrics.TryGetValue(MetricType.CycleTime, out var value) ||
-            value <= 48)
+            value <= EngineeringHealthPolicy.CycleTime.NeedsAttentionMax)
         {
             return;
         }
@@ -39,6 +40,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         risks.Add(CreateRisk(
             teamId,
             reportId,
+            MetricType.CycleTime,
             RiskSeverity.High,
             RiskCategory.Delivery,
             "High cycle time",
@@ -53,7 +55,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         List<EngineeringRisk> risks)
     {
         if (!metrics.TryGetValue(MetricType.PRReviewTime, out var value) ||
-            value <= 24)
+            value <= EngineeringHealthPolicy.PrReviewTime.NeedsAttentionMax)
         {
             return;
         }
@@ -61,6 +63,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         risks.Add(CreateRisk(
             teamId,
             reportId,
+            MetricType.PRReviewTime,
             RiskSeverity.High,
             RiskCategory.Review,
             "Slow pull request reviews",
@@ -75,7 +78,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         List<EngineeringRisk> risks)
     {
         if (!metrics.TryGetValue(MetricType.DeploymentFrequency, out var value) ||
-            value >= 5)
+            value >= EngineeringHealthPolicy.DeploymentFrequency.NeedsAttentionMin)
         {
             return;
         }
@@ -83,6 +86,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         risks.Add(CreateRisk(
             teamId,
             reportId,
+            MetricType.DeploymentFrequency,
             RiskSeverity.High,
             RiskCategory.Delivery,
             "Low deployment frequency",
@@ -97,7 +101,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         List<EngineeringRisk> risks)
     {
         if (!metrics.TryGetValue(MetricType.ChangeFailureRate, out var value) ||
-            value <= 20)
+            value <= EngineeringHealthPolicy.ChangeFailureRate.NeedsAttentionMax)
         {
             return;
         }
@@ -105,6 +109,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         risks.Add(CreateRisk(
             teamId,
             reportId,
+            MetricType.ChangeFailureRate,
             RiskSeverity.Critical,
             RiskCategory.Reliability,
             "High change failure rate",
@@ -119,7 +124,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         List<EngineeringRisk> risks)
     {
         if (!metrics.TryGetValue(MetricType.LeadTime, out var value) ||
-            value <= 72)
+            value <= EngineeringHealthPolicy.LeadTime.NeedsAttentionMax)
         {
             return;
         }
@@ -127,6 +132,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         risks.Add(CreateRisk(
             teamId,
             reportId,
+            MetricType.LeadTime,
             RiskSeverity.High,
             RiskCategory.Delivery,
             "High lead time",
@@ -141,7 +147,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         List<EngineeringRisk> risks)
     {
         if (!metrics.TryGetValue(MetricType.OpenPRs, out var value) ||
-            value <= 10)
+            value <= EngineeringHealthPolicy.OpenPullRequests.NeedsAttentionMax)
         {
             return;
         }
@@ -149,6 +155,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         risks.Add(CreateRisk(
             teamId,
             reportId,
+            MetricType.OpenPRs,
             RiskSeverity.Medium,
             RiskCategory.Review,
             "Too many open pull requests",
@@ -163,7 +170,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         List<EngineeringRisk> risks)
     {
         if (!metrics.TryGetValue(MetricType.MergedPRs, out var value) ||
-            value >= 5)
+            value >= EngineeringHealthPolicy.MergedPullRequests.NeedsAttentionMin)
         {
             return;
         }
@@ -171,6 +178,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         risks.Add(CreateRisk(
             teamId,
             reportId,
+            MetricType.MergedPRs,
             RiskSeverity.High,
             RiskCategory.Delivery,
             "Low delivery throughput",
@@ -185,7 +193,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         List<EngineeringRisk> risks)
     {
         if (!metrics.TryGetValue(MetricType.BlockedItems, out var value) ||
-            value <= 5)
+            value <= EngineeringHealthPolicy.BlockedItems.NeedsAttentionMax)
         {
             return;
         }
@@ -193,6 +201,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         risks.Add(CreateRisk(
             teamId,
             reportId,
+            MetricType.BlockedItems,
             RiskSeverity.High,
             RiskCategory.Process,
             "Too many blocked items",
@@ -203,6 +212,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
     private static EngineeringRisk CreateRisk(
         Guid teamId,
         Guid reportId,
+        MetricType metricType,
         RiskSeverity severity,
         RiskCategory category,
         string title,
@@ -214,6 +224,7 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
             Id = Guid.NewGuid(),
             TeamId = teamId,
             ReportId = reportId,
+            MetricType = metricType,
             Severity = severity,
             Category = category,
             Title = title,

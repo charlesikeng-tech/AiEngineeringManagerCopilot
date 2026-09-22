@@ -9,6 +9,8 @@ public sealed class EngineeringRisk
     public Guid TeamId { get; set; }
 
     public Guid ReportId { get; set; }
+    
+    public MetricType? MetricType { get; set; }
 
     public RiskSeverity Severity { get; set; }
 

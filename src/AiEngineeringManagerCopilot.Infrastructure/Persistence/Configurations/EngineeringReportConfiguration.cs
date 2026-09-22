@@ -16,6 +16,10 @@ public sealed class EngineeringReportConfiguration
                 t.HasCheckConstraint(
                     "CK_engineering_reports_overall_score",
                     "\"OverallScore\" >= 0 AND \"OverallScore\" <= 100");
+                
+                t.HasCheckConstraint(
+                    "CK_engineering_reports_data_coverage",
+                    "\"DataCoverage\" >= 0 AND \"DataCoverage\" <= 100");
             });
 
         builder.HasKey(x => x.Id);
@@ -37,6 +41,10 @@ public sealed class EngineeringReportConfiguration
             .IsRequired();
 
         builder.Property(x => x.OverallScore)
+            .IsRequired();
+        
+        builder.Property(x => x.DataCoverage)
+            .HasPrecision(5, 2)
             .IsRequired();
 
         builder.Property(x => x.CreatedAt)

@@ -1,3 +1,4 @@
+using AiEngineeringManagerCopilot.Application.Health;
 using AiEngineeringManagerCopilot.Domain.Enums;
 
 namespace AiEngineeringManagerCopilot.Application.Reports;
@@ -33,14 +34,15 @@ public sealed class EngineeringInsightGenerator
             return;
         }
 
-        if (hours <= 24)
+        if (hours <= EngineeringHealthPolicy.CycleTime.HealthyMax)
         {
             return;
         }
 
         insights.Add(
             new EngineeringInsight(
-                "Delivery",
+                MetricType.CycleTime,
+                RiskCategory.Delivery,
                 "Cycle time is too high",
                 $"Average cycle time is {hours:F1} hours.",
                 "Work takes longer than expected to move from creation to completion.",
@@ -58,14 +60,15 @@ public sealed class EngineeringInsightGenerator
             return;
         }
 
-        if (hours <= 12)
+        if (hours <= EngineeringHealthPolicy.PrReviewTime.HealthyMax)
         {
             return;
         }
 
         insights.Add(
             new EngineeringInsight(
-                "Review",
+                MetricType.PRReviewTime,
+                RiskCategory.Review,
                 "Pull request review time is high",
                 $"Average first review time is {hours:F1} hours.",
                 "Slow reviews can create delivery bottlenecks.",
@@ -83,14 +86,15 @@ public sealed class EngineeringInsightGenerator
             return;
         }
 
-        if (count >= 5)
+        if (count >= EngineeringHealthPolicy.DeploymentFrequency.HealthyMin)
         {
             return;
         }
 
         insights.Add(
             new EngineeringInsight(
-                "Delivery",
+                MetricType.DeploymentFrequency,
+                RiskCategory.Delivery,
                 "Deployment frequency is low",
                 $"Only {count:F0} successful deployments were recorded.",
                 "Low deployment frequency can indicate large batches or release friction.",
@@ -108,14 +112,15 @@ public sealed class EngineeringInsightGenerator
             return;
         }
 
-        if (rate <= 10)
+        if (rate <= EngineeringHealthPolicy.ChangeFailureRate.HealthyMax)
         {
             return;
         }
 
         insights.Add(
             new EngineeringInsight(
-                "Quality",
+                MetricType.ChangeFailureRate,
+                RiskCategory.Quality,
                 "Change failure rate is high",
                 $"Change failure rate is {rate:F1}%.",
                 "A high failure rate indicates increased delivery risk and rework.",
@@ -133,14 +138,15 @@ public sealed class EngineeringInsightGenerator
             return;
         }
 
-        if (hours <= 48)
+        if (hours <= EngineeringHealthPolicy.LeadTime.HealthyMax)
         {
             return;
         }
 
         insights.Add(
             new EngineeringInsight(
-                "Delivery",
+                MetricType.LeadTime,
+                RiskCategory.Delivery,
                 "Lead time is high",
                 $"Average lead time is {hours:F1} hours.",
                 "Long lead times reduce delivery predictability.",
@@ -158,14 +164,15 @@ public sealed class EngineeringInsightGenerator
             return;
         }
 
-        if (count <= 5)
+        if (count <= EngineeringHealthPolicy.OpenPullRequests.HealthyMax)
         {
             return;
         }
 
         insights.Add(
             new EngineeringInsight(
-                "Review",
+                MetricType.OpenPRs,
+                RiskCategory.Review,
                 "Too many pull requests are open",
                 $"{count:F0} pull requests are currently open.",
                 "A large PR backlog can increase context switching and review delays.",
@@ -183,14 +190,15 @@ public sealed class EngineeringInsightGenerator
             return;
         }
 
-        if (count >= 5)
+        if (count >= EngineeringHealthPolicy.MergedPullRequests.HealthyMin)
         {
             return;
         }
 
         insights.Add(
             new EngineeringInsight(
-                "Delivery",
+                MetricType.MergedPRs,
+                RiskCategory.Delivery,
                 "Low pull request throughput",
                 $"Only {count:F0} pull requests were merged.",
                 "Low throughput can indicate delivery bottlenecks or oversized work items.",
@@ -208,14 +216,15 @@ public sealed class EngineeringInsightGenerator
             return;
         }
 
-        if (count <= 2)
+        if (count <= EngineeringHealthPolicy.BlockedItems.HealthyMax)
         {
             return;
         }
 
         insights.Add(
             new EngineeringInsight(
-                "Process",
+                MetricType.BlockedItems,
+                RiskCategory.Process,
                 "Too many items are blocked",
                 $"{count:F0} items are currently blocked.",
                 "Blocked work increases delivery risk and reduces team flow.",
