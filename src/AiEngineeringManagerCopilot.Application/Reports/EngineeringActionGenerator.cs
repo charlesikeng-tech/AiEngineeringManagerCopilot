@@ -39,6 +39,7 @@ public sealed class EngineeringActionGenerator
                 ToActionPriority(matchingRisk.Severity));
 
         return new EngineeringActionSuggestion(
+            insight.MetricType,
             insight.Title,
             insight.Recommendation,
             priority);

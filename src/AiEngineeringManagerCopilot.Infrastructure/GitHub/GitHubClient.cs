@@ -75,43 +75,11 @@ public sealed class GitHubClient(
             string accessToken,
             CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            $"orgs/{Uri.EscapeDataString(organization)}/repos?per_page=100");
-
-        request.Headers.Authorization =
-            new AuthenticationHeaderValue(
-                "Bearer",
-                accessToken);
-
-        request.Headers.UserAgent.ParseAdd(
-            "AiEngineeringManagerCopilot/1.0");
-
-        request.Headers.Accept.Add(
-            new MediaTypeWithQualityHeaderValue(
-                "application/vnd.github+json"));
-
-        using var response = await httpClient.SendAsync(
-            request,
-            cancellationToken);
-
-        response.EnsureSuccessStatusCode();
-
-        await using var stream =
-            await response.Content.ReadAsStreamAsync(
-                cancellationToken);
-
         var repositories =
-            await JsonSerializer.DeserializeAsync<
-                List<GitHubRepositoryDto>>(
-                stream,
-                JsonOptions,
+            await GetAllPagesAsync<GitHubRepositoryDto>(
+                $"orgs/{Uri.EscapeDataString(organization)}/repos",
+                accessToken,
                 cancellationToken);
-
-        if (repositories is null)
-        {
-            return [];
-        }
 
         return repositories
             .Select(x => new GitHubRepository(
@@ -130,45 +98,13 @@ public sealed class GitHubClient(
             string repository,
             CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            $"repos/{Uri.EscapeDataString(owner)}/" +
-            $"{Uri.EscapeDataString(repository)}/pulls" +
-            "?state=all&per_page=100");
-
-        request.Headers.Authorization =
-            new AuthenticationHeaderValue(
-                "Bearer",
-                accessToken);
-
-        request.Headers.UserAgent.ParseAdd(
-            "AiEngineeringManagerCopilot/1.0");
-
-        request.Headers.Accept.Add(
-            new MediaTypeWithQualityHeaderValue(
-                "application/vnd.github+json"));
-
-        using var response = await httpClient.SendAsync(
-            request,
-            cancellationToken);
-
-        response.EnsureSuccessStatusCode();
-
-        await using var stream =
-            await response.Content.ReadAsStreamAsync(
-                cancellationToken);
-
         var pullRequests =
-            await JsonSerializer.DeserializeAsync<
-                List<GitHubPullRequestDto>>(
-                stream,
-                JsonOptions,
+            await GetAllPagesAsync<GitHubPullRequestDto>(
+                $"repos/{Uri.EscapeDataString(owner)}/" +
+                $"{Uri.EscapeDataString(repository)}/pulls" +
+                "?state=all",
+                accessToken,
                 cancellationToken);
-
-        if (pullRequests is null)
-        {
-            return [];
-        }
 
         return pullRequests
             .Select(x => new GitHubPullRequest(
@@ -191,45 +127,13 @@ public sealed class GitHubClient(
             int pullRequestNumber,
             CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            $"repos/{Uri.EscapeDataString(owner)}/" +
-            $"{Uri.EscapeDataString(repository)}/pulls/" +
-            $"{pullRequestNumber}/reviews?per_page=100");
-
-        request.Headers.Authorization =
-            new AuthenticationHeaderValue(
-                "Bearer",
-                accessToken);
-
-        request.Headers.UserAgent.ParseAdd(
-            "AiEngineeringManagerCopilot/1.0");
-
-        request.Headers.Accept.Add(
-            new MediaTypeWithQualityHeaderValue(
-                "application/vnd.github+json"));
-
-        using var response = await httpClient.SendAsync(
-            request,
-            cancellationToken);
-
-        response.EnsureSuccessStatusCode();
-
-        await using var stream =
-            await response.Content.ReadAsStreamAsync(
-                cancellationToken);
-
         var reviews =
-            await JsonSerializer.DeserializeAsync<
-                List<GitHubPullRequestReviewDto>>(
-                stream,
-                JsonOptions,
+            await GetAllPagesAsync<GitHubPullRequestReviewDto>(
+                $"repos/{Uri.EscapeDataString(owner)}/" +
+                $"{Uri.EscapeDataString(repository)}/pulls/" +
+                $"{pullRequestNumber}/reviews",
+                accessToken,
                 cancellationToken);
-
-        if (reviews is null)
-        {
-            return [];
-        }
 
         return reviews
             .Select(x => new GitHubPullRequestReview(
@@ -247,44 +151,12 @@ public sealed class GitHubClient(
             string repository,
             CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            $"repos/{Uri.EscapeDataString(owner)}/" +
-            $"{Uri.EscapeDataString(repository)}/deployments?per_page=100");
-
-        request.Headers.Authorization =
-            new AuthenticationHeaderValue(
-                "Bearer",
-                accessToken);
-
-        request.Headers.UserAgent.ParseAdd(
-            "AiEngineeringManagerCopilot/1.0");
-
-        request.Headers.Accept.Add(
-            new MediaTypeWithQualityHeaderValue(
-                "application/vnd.github+json"));
-
-        using var response = await httpClient.SendAsync(
-            request,
-            cancellationToken);
-
-        response.EnsureSuccessStatusCode();
-
-        await using var stream =
-            await response.Content.ReadAsStreamAsync(
-                cancellationToken);
-
         var deployments =
-            await JsonSerializer.DeserializeAsync<
-                List<GitHubDeploymentDto>>(
-                stream,
-                JsonOptions,
+            await GetAllPagesAsync<GitHubDeploymentDto>(
+                $"repos/{Uri.EscapeDataString(owner)}/" +
+                $"{Uri.EscapeDataString(repository)}/deployments",
+                accessToken,
                 cancellationToken);
-
-        if (deployments is null)
-        {
-            return [];
-        }
 
         return deployments
             .Select(x => new GitHubDeployment(
@@ -302,45 +174,13 @@ public sealed class GitHubClient(
             long deploymentId,
             CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            $"repos/{Uri.EscapeDataString(owner)}/" +
-            $"{Uri.EscapeDataString(repository)}/deployments/" +
-            $"{deploymentId}/statuses?per_page=100");
-
-        request.Headers.Authorization =
-            new AuthenticationHeaderValue(
-                "Bearer",
-                accessToken);
-
-        request.Headers.UserAgent.ParseAdd(
-            "AiEngineeringManagerCopilot/1.0");
-
-        request.Headers.Accept.Add(
-            new MediaTypeWithQualityHeaderValue(
-                "application/vnd.github+json"));
-
-        using var response = await httpClient.SendAsync(
-            request,
-            cancellationToken);
-
-        response.EnsureSuccessStatusCode();
-
-        await using var stream =
-            await response.Content.ReadAsStreamAsync(
-                cancellationToken);
-
         var statuses =
-            await JsonSerializer.DeserializeAsync<
-                List<GitHubDeploymentStatusDto>>(
-                stream,
-                JsonOptions,
+            await GetAllPagesAsync<GitHubDeploymentStatusDto>(
+                $"repos/{Uri.EscapeDataString(owner)}/" +
+                $"{Uri.EscapeDataString(repository)}/deployments/" +
+                $"{deploymentId}/statuses",
+                accessToken,
                 cancellationToken);
-
-        if (statuses is null)
-        {
-            return [];
-        }
 
         return statuses
             .Select(x => new GitHubDeploymentStatus(
@@ -348,6 +188,74 @@ public sealed class GitHubClient(
                 x.State,
                 x.CreatedAt))
             .ToList();
+    }
+    
+    private async Task<IReadOnlyList<T>> GetAllPagesAsync<T>(
+        string relativeUrl,
+        string accessToken,
+        CancellationToken cancellationToken)
+    {
+        var results = new List<T>();
+        var page = 1;
+
+        while (true)
+        {
+            var separator = relativeUrl.Contains('?')
+                ? "&"
+                : "?";
+
+            var url =
+                $"{relativeUrl}{separator}per_page=100&page={page}";
+
+            using var request = new HttpRequestMessage(
+                HttpMethod.Get,
+                url);
+
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue(
+                    "Bearer",
+                    accessToken);
+
+            request.Headers.UserAgent.ParseAdd(
+                "AiEngineeringManagerCopilot/1.0");
+
+            request.Headers.Accept.Add(
+                new MediaTypeWithQualityHeaderValue(
+                    "application/vnd.github+json"));
+
+            using var response = await httpClient.SendAsync(
+                request,
+                cancellationToken);
+
+            response.EnsureSuccessStatusCode();
+
+            await using var stream =
+                await response.Content.ReadAsStreamAsync(
+                    cancellationToken);
+
+            var pageResults =
+                await JsonSerializer.DeserializeAsync<List<T>>(
+                    stream,
+                    JsonOptions,
+                    cancellationToken);
+
+            if (pageResults is null ||
+                pageResults.Count == 0)
+            {
+                break;
+            }
+
+            results.AddRange(pageResults);
+
+            if (pageResults.Count < 100)
+            {
+                break;
+            }
+
+            page++;
+        }
+
+        return results;
     }
 
     private sealed record GitHubOrganizationDto(

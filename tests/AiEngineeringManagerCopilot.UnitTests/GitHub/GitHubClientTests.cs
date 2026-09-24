@@ -1,4 +1,6 @@
 using System.Net;
+using System.Text;
+using System.Text.Json;
 using AiEngineeringManagerCopilot.Infrastructure.GitHub;
 using FluentAssertions;
 
@@ -216,7 +218,7 @@ public sealed class GitHubClientTests
             .Should()
             .Be(
                 "/repos/my-company/backend/pulls" +
-                "?state=all&per_page=100");
+                "?state=all&per_page=100&page=1");
 
         handler.LastRequest!
             .Headers.Authorization!
@@ -237,20 +239,190 @@ public sealed class GitHubClientTests
             .NotContain("secret-token");
     }
 
-    private sealed class FakeHttpMessageHandler(
-        HttpStatusCode statusCode,
-        string responseBody)
+    [Fact]
+    public async Task GetPullRequestsAsync_ShouldReturnAllPages()
+    {
+        var firstPage = Enumerable.Range(1, 100)
+            .Select(i => new
+            {
+                id = (long)i,
+                number = i,
+                title = $"PR {i}",
+                user = new { id = 1000L + i },
+                state = "open",
+                created_at = DateTimeOffset.UtcNow,
+                merged_at = (DateTimeOffset?)null,
+                closed_at = (DateTimeOffset?)null
+            })
+            .ToArray();
+
+        var secondPage = Enumerable.Range(101, 25)
+            .Select(i => new
+            {
+                id = (long)i,
+                number = i,
+                title = $"PR {i}",
+                user = new { id = 1000L + i },
+                state = "open",
+                created_at = DateTimeOffset.UtcNow,
+                merged_at = (DateTimeOffset?)null,
+                closed_at = (DateTimeOffset?)null
+            })
+            .ToArray();
+
+        var handler = new FakeHttpMessageHandler(
+            HttpStatusCode.OK,
+            request =>
+            {
+                var query = request.RequestUri!.Query;
+
+                return query.Contains("page=2")
+                    ? JsonSerializer.Serialize(secondPage)
+                    : JsonSerializer.Serialize(firstPage);
+            });
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(
+                "https://api.github.com/")
+        };
+
+        var client = new GitHubClient(httpClient);
+
+        var result = await client.GetPullRequestsAsync(
+            "secret-token",
+            "my-company",
+            "backend",
+            CancellationToken.None);
+
+        result.Should().HaveCount(125);
+
+        result.First().Number.Should().Be(1);
+        result.Last().Number.Should().Be(125);
+
+        handler.Requests.Should().HaveCount(2);
+
+        handler.Requests[0]
+            .RequestUri!
+            .PathAndQuery
+            .Should()
+            .EndWith("per_page=100&page=1");
+
+        handler.Requests[1]
+            .RequestUri!
+            .PathAndQuery
+            .Should()
+            .EndWith("per_page=100&page=2");
+    }
+    
+    [Fact]
+    public async Task GetRepositoriesAsync_ShouldReturnAllPages()
+    {
+        var firstPage = Enumerable.Range(1, 100)
+            .Select(i => new
+            {
+                id = (long)i,
+                name = $"repo-{i}",
+                full_name = $"my-company/repo-{i}",
+                html_url = $"https://github.com/my-company/repo-{i}",
+                default_branch = "main"
+            })
+            .ToArray();
+
+        var secondPage = Enumerable.Range(101, 25)
+            .Select(i => new
+            {
+                id = (long)i,
+                name = $"repo-{i}",
+                full_name = $"my-company/repo-{i}",
+                html_url = $"https://github.com/my-company/repo-{i}",
+                default_branch = "main"
+            })
+            .ToArray();
+
+        var handler = new FakeHttpMessageHandler(
+            HttpStatusCode.OK,
+            request =>
+            {
+                var query = request.RequestUri!.Query;
+
+                return query.Contains("page=2")
+                    ? JsonSerializer.Serialize(secondPage)
+                    : JsonSerializer.Serialize(firstPage);
+            });
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(
+                "https://api.github.com/")
+        };
+
+        var client = new GitHubClient(httpClient);
+
+        var result = await client.GetRepositoriesAsync(
+            "my-company",
+            "secret-token",
+            CancellationToken.None);
+
+        result.Should().HaveCount(125);
+
+        result.First().Name.Should().Be("repo-1");
+        result.Last().Name.Should().Be("repo-125");
+
+        handler.Requests.Should().HaveCount(2);
+
+        handler.Requests[0]
+            .RequestUri!
+            .PathAndQuery
+            .Should()
+            .Be("/orgs/my-company/repos?per_page=100&page=1");
+
+        handler.Requests[1]
+            .RequestUri!
+            .PathAndQuery
+            .Should()
+            .Be("/orgs/my-company/repos?per_page=100&page=2");
+    }
+    
+    private sealed class FakeHttpMessageHandler
         : HttpMessageHandler
     {
+        private readonly HttpStatusCode _statusCode;
+        private readonly string? _responseBody;
+        private readonly Func<HttpRequestMessage, string>? _responseFactory;
+
         public HttpRequestMessage? LastRequest { get; private set; }
+
+        public List<HttpRequestMessage> Requests { get; } = [];
+
+        public FakeHttpMessageHandler(
+            HttpStatusCode statusCode,
+            string responseBody)
+        {
+            _statusCode = statusCode;
+            _responseBody = responseBody;
+        }
+
+        public FakeHttpMessageHandler(
+            HttpStatusCode statusCode,
+            Func<HttpRequestMessage, string> responseFactory)
+        {
+            _statusCode = statusCode;
+            _responseFactory = responseFactory;
+        }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
             LastRequest = request;
+            Requests.Add(request);
 
-            var response = new HttpResponseMessage(statusCode)
+            var responseBody = _responseFactory is not null
+                ? _responseFactory(request)
+                : _responseBody!;
+
+            var response = new HttpResponseMessage(_statusCode)
             {
                 Content = new StringContent(responseBody)
             };
@@ -495,7 +667,7 @@ public sealed class GitHubClientTests
             .Should()
             .Be(
                 "/repos/my-company/backend/pulls/" +
-                "42/reviews?per_page=100");
+                "42/reviews?per_page=100&page=1");
 
         handler.LastRequest!
             .Headers.Authorization!
@@ -598,7 +770,7 @@ public sealed class GitHubClientTests
             .PathAndQuery
             .Should()
             .Be(
-                "/repos/my-company/backend/deployments?per_page=100");
+                "/repos/my-company/backend/deployments?per_page=100&page=1");
 
         handler.LastRequest!
             .Headers.Authorization!
@@ -705,7 +877,7 @@ public sealed class GitHubClientTests
             .Should()
             .Be(
                 "/repos/my-company/backend/deployments/" +
-                "8001/statuses?per_page=100");
+                "8001/statuses?per_page=100&page=1");
 
         handler.LastRequest!
             .Headers.Authorization!
@@ -724,5 +896,219 @@ public sealed class GitHubClientTests
             .ToString()
             .Should()
             .NotContain("secret-token");
+    }
+    
+    [Fact]
+    public async Task GetPullRequestReviewsAsync_ShouldReturnAllPages()
+    {
+        var firstPage = Enumerable.Range(1, 100)
+            .Select(i => new
+            {
+                id = (long)i,
+                user = new { id = 1000L + i },
+                state = "APPROVED",
+                submitted_at = DateTimeOffset.UtcNow
+            })
+            .ToArray();
+
+        var secondPage = Enumerable.Range(101, 25)
+            .Select(i => new
+            {
+                id = (long)i,
+                user = new { id = 1000L + i },
+                state = "APPROVED",
+                submitted_at = DateTimeOffset.UtcNow
+            })
+            .ToArray();
+
+        var handler = new FakeHttpMessageHandler(
+            HttpStatusCode.OK,
+            request =>
+            {
+                var query = request.RequestUri!.Query;
+
+                return query.Contains("page=2")
+                    ? JsonSerializer.Serialize(secondPage)
+                    : JsonSerializer.Serialize(firstPage);
+            });
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(
+                "https://api.github.com/")
+        };
+
+        var client = new GitHubClient(httpClient);
+
+        var result = await client.GetPullRequestReviewsAsync(
+            "secret-token",
+            "my-company",
+            "backend",
+            42,
+            CancellationToken.None);
+
+        result.Should().HaveCount(125);
+
+        result.First().Id.Should().Be(1);
+        result.Last().Id.Should().Be(125);
+
+        handler.Requests.Should().HaveCount(2);
+
+        handler.Requests[0]
+            .RequestUri!
+            .PathAndQuery
+            .Should()
+            .Be(
+                "/repos/my-company/backend/pulls/42/reviews" +
+                "?per_page=100&page=1");
+
+        handler.Requests[1]
+            .RequestUri!
+            .PathAndQuery
+            .Should()
+            .Be(
+                "/repos/my-company/backend/pulls/42/reviews" +
+                "?per_page=100&page=2");
+    }
+    
+    [Fact]
+    public async Task GetDeploymentsAsync_ShouldReturnAllPages()
+    {
+        var firstPage = Enumerable.Range(1, 100)
+            .Select(i => new
+            {
+                id = (long)i,
+                environment = "production",
+                created_at = DateTimeOffset.UtcNow
+            })
+            .ToArray();
+
+        var secondPage = Enumerable.Range(101, 25)
+            .Select(i => new
+            {
+                id = (long)i,
+                environment = "production",
+                created_at = DateTimeOffset.UtcNow
+            })
+            .ToArray();
+
+        var handler = new FakeHttpMessageHandler(
+            HttpStatusCode.OK,
+            request =>
+            {
+                var query = request.RequestUri!.Query;
+
+                return query.Contains("page=2")
+                    ? JsonSerializer.Serialize(secondPage)
+                    : JsonSerializer.Serialize(firstPage);
+            });
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(
+                "https://api.github.com/")
+        };
+
+        var client = new GitHubClient(httpClient);
+
+        var result = await client.GetDeploymentsAsync(
+            "secret-token",
+            "my-company",
+            "backend",
+            CancellationToken.None);
+
+        result.Should().HaveCount(125);
+
+        result.First().Id.Should().Be(1);
+        result.Last().Id.Should().Be(125);
+
+        handler.Requests.Should().HaveCount(2);
+
+        handler.Requests[0]
+            .RequestUri!
+            .PathAndQuery
+            .Should()
+            .Be(
+                "/repos/my-company/backend/deployments" +
+                "?per_page=100&page=1");
+
+        handler.Requests[1]
+            .RequestUri!
+            .PathAndQuery
+            .Should()
+            .Be(
+                "/repos/my-company/backend/deployments" +
+                "?per_page=100&page=2");
+    }
+    
+    [Fact]
+    public async Task GetDeploymentStatusesAsync_ShouldReturnAllPages()
+    {
+        var firstPage = Enumerable.Range(1, 100)
+            .Select(i => new
+            {
+                id = (long)i,
+                state = "success",
+                created_at = DateTimeOffset.UtcNow
+            })
+            .ToArray();
+
+        var secondPage = Enumerable.Range(101, 25)
+            .Select(i => new
+            {
+                id = (long)i,
+                state = "success",
+                created_at = DateTimeOffset.UtcNow
+            })
+            .ToArray();
+
+        var handler = new FakeHttpMessageHandler(
+            HttpStatusCode.OK,
+            request =>
+            {
+                var query = request.RequestUri!.Query;
+
+                return query.Contains("page=2")
+                    ? JsonSerializer.Serialize(secondPage)
+                    : JsonSerializer.Serialize(firstPage);
+            });
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(
+                "https://api.github.com/")
+        };
+
+        var client = new GitHubClient(httpClient);
+
+        var result = await client.GetDeploymentStatusesAsync(
+            "secret-token",
+            "my-company",
+            "backend",
+            123,
+            CancellationToken.None);
+
+        result.Should().HaveCount(125);
+
+        result.First().Id.Should().Be(1);
+        result.Last().Id.Should().Be(125);
+
+        handler.Requests.Should().HaveCount(2);
+
+        handler.Requests[0]
+            .RequestUri!
+            .PathAndQuery
+            .Should()
+            .Be(
+                "/repos/my-company/backend/deployments/123/statuses" +
+                "?per_page=100&page=1");
+
+        handler.Requests[1]
+            .RequestUri!
+            .PathAndQuery
+            .Should()
+            .Be(
+                "/repos/my-company/backend/deployments/123/statuses" +
+                "?per_page=100&page=2");
     }
 }

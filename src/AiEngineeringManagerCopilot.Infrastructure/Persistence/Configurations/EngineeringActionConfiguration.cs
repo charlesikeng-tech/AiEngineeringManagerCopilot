@@ -18,6 +18,10 @@ public sealed class EngineeringActionConfiguration
 
         builder.Property(x => x.ReportId)
             .IsRequired();
+        
+        builder.Property(x => x.MetricType)
+            .HasConversion<string>()
+            .HasMaxLength(100);
 
         builder.Property(x => x.Title)
             .HasMaxLength(500)

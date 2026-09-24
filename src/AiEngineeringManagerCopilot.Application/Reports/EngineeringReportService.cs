@@ -105,7 +105,7 @@ public sealed class EngineeringReportService(
             metrics);
         
         var generatedActions = actionGenerator.Generate(
-            generatedInsights,
+            allInsights,
             generatedRisks);
         
         var reportInsights = allInsights
@@ -127,6 +127,7 @@ public sealed class EngineeringReportService(
             {
                 Id = Guid.NewGuid(),
                 ReportId = report.Id,
+                MetricType = action.MetricType,
                 Title = action.Title,
                 Description = action.Description,
                 Priority = action.Priority,
@@ -475,6 +476,7 @@ public sealed class EngineeringReportService(
         return new EngineeringReportInsightResponse(
             insight.Id,
             insight.ReportId,
+            insight.MetricType.ToString(),
             insight.Category.ToString(),
             insight.Title,
             insight.Description,
@@ -488,6 +490,7 @@ public sealed class EngineeringReportService(
         return new EngineeringActionResponse(
             action.Id,
             action.ReportId,
+            action.MetricType?.ToString(),
             action.Title,
             action.Description,
             action.Priority,

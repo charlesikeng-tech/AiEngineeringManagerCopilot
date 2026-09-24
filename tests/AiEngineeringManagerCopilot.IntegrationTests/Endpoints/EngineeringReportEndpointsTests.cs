@@ -1394,8 +1394,8 @@ public sealed class EngineeringReportEndpointsTests
         report!.Insights
             .Should()
             .ContainSingle(x =>
-                x.Title.Contains("Early warning") &&
-                x.Title.Contains("CycleTime"));
+                x.MetricType == MetricType.CycleTime.ToString() &&
+                x.Title.Contains("Early warning"));
     }
     
     [Fact]
@@ -1444,5 +1444,106 @@ public sealed class EngineeringReportEndpointsTests
             .Should()
             .NotContain(x =>
                 x.Title.Contains("Early warning"));
+    }
+    
+    [Fact]
+    public async Task GenerateReport_ShouldCreateActionFromEarlyWarningInsight()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            10m,
+            new DateOnly(2026, 8, 2),
+            new DateOnly(2026, 8, 31));
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            20m,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        var response = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01" +
+            "&periodEnd=2026-09-30",
+            null);
+
+        response.StatusCode
+            .Should()
+            .Be(HttpStatusCode.Created);
+
+        var report = await response.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        report!.Insights
+            .Should()
+            .ContainSingle(x =>
+                x.Title.Contains("Early warning") &&
+                x.Title.Contains("CycleTime"));
+
+        report.Actions
+            .Should()
+            .ContainSingle(x =>
+                x.MetricType == MetricType.CycleTime.ToString());
+    }
+    
+    [Fact]
+    public async Task AnalyzeReport_ShouldIncludeEarlyWarningInsightInPrompt()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            10m,
+            new DateOnly(2026, 8, 2),
+            new DateOnly(2026, 8, 31));
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            20m,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        var reportResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01" +
+            "&periodEnd=2026-09-30",
+            null);
+
+        reportResponse.StatusCode
+            .Should()
+            .Be(HttpStatusCode.Created);
+
+        var report = await reportResponse.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        var analysisResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports/{report!.Id}/analyze",
+            null);
+
+        analysisResponse.StatusCode
+            .Should()
+            .Be(HttpStatusCode.OK);
+
+        var llmProvider = _factory.Services
+            .GetRequiredService<ILlmProvider>();
+
+        var fakeLlmProvider = llmProvider
+            .Should()
+            .BeOfType<FakeLlmProvider>()
+            .Subject;
+
+        fakeLlmProvider.LastPrompt
+            .Should()
+            .Contain("Early warning: CycleTime is degrading");
     }
 }
