@@ -390,6 +390,7 @@ public sealed class GitHubClientTests
         private readonly HttpStatusCode _statusCode;
         private readonly string? _responseBody;
         private readonly Func<HttpRequestMessage, string>? _responseFactory;
+        private readonly Queue<HttpResponseMessage>? _responses;
 
         public HttpRequestMessage? LastRequest { get; private set; }
 
@@ -411,6 +412,13 @@ public sealed class GitHubClientTests
             _responseFactory = responseFactory;
         }
 
+        public FakeHttpMessageHandler(
+            params HttpResponseMessage[] responses)
+        {
+            _responses =
+                new Queue<HttpResponseMessage>(responses);
+        }
+
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
@@ -418,16 +426,27 @@ public sealed class GitHubClientTests
             LastRequest = request;
             Requests.Add(request);
 
+            if (_responses is not null)
+            {
+                if (_responses.Count == 0)
+                {
+                    throw new InvalidOperationException(
+                        "No fake HTTP response configured.");
+                }
+
+                return Task.FromResult(
+                    _responses.Dequeue());
+            }
+
             var responseBody = _responseFactory is not null
                 ? _responseFactory(request)
                 : _responseBody!;
 
-            var response = new HttpResponseMessage(_statusCode)
-            {
-                Content = new StringContent(responseBody)
-            };
-
-            return Task.FromResult(response);
+            return Task.FromResult(
+                new HttpResponseMessage(_statusCode)
+                {
+                    Content = new StringContent(responseBody)
+                });
         }
     }
     
@@ -1110,5 +1129,245 @@ public sealed class GitHubClientTests
             .Be(
                 "/repos/my-company/backend/deployments/123/statuses" +
                 "?per_page=100&page=2");
+    }
+    
+    [Fact]
+    public async Task GetOrganizationAsync_WhenServerError_ShouldRetry()
+    {
+        var firstResponse =
+            new HttpResponseMessage(
+                HttpStatusCode.InternalServerError);
+
+        var secondResponse =
+            new HttpResponseMessage(
+                HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """
+                    {
+                        "id": 123456,
+                        "login": "my-company",
+                        "name": "My Company",
+                        "html_url": "https://github.com/my-company"
+                    }
+                    """)
+            };
+
+        var handler = new FakeHttpMessageHandler(
+            firstResponse,
+            secondResponse);
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(
+                "https://api.github.com/")
+        };
+
+        var client = new GitHubClient(httpClient);
+
+        var result = await client.GetOrganizationAsync(
+            "my-company",
+            "secret-token",
+            CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.Login.Should().Be("my-company");
+
+        handler.Requests.Should().HaveCount(2);
+    }
+    
+    [Fact]
+    public async Task GetPullRequestsAsync_WhenServerError_ShouldRetry()
+    {
+        var firstResponse =
+            new HttpResponseMessage(
+                HttpStatusCode.InternalServerError);
+
+        var secondResponse =
+            new HttpResponseMessage(
+                HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """
+                    [
+                        {
+                            "id": 1001,
+                            "number": 42,
+                            "title": "Retry successful",
+                            "user": {
+                                "id": 98765
+                            },
+                            "state": "open",
+                            "created_at": "2026-09-24T08:00:00Z",
+                            "merged_at": null,
+                            "closed_at": null
+                        }
+                    ]
+                    """)
+            };
+
+        var handler = new FakeHttpMessageHandler(
+            firstResponse,
+            secondResponse);
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(
+                "https://api.github.com/")
+        };
+
+        var client = new GitHubClient(httpClient);
+
+        var result = await client.GetPullRequestsAsync(
+            "secret-token",
+            "my-company",
+            "backend",
+            CancellationToken.None);
+
+        result.Should().ContainSingle();
+
+        result.Single().Number.Should().Be(42);
+
+        handler.Requests.Should().HaveCount(2);
+
+        handler.Requests[0]
+            .RequestUri!
+            .PathAndQuery
+            .Should()
+            .Be(
+                "/repos/my-company/backend/pulls" +
+                "?state=all&per_page=100&page=1");
+
+        handler.Requests[1]
+            .RequestUri!
+            .PathAndQuery
+            .Should()
+            .Be(
+                "/repos/my-company/backend/pulls" +
+                "?state=all&per_page=100&page=1");
+    }
+    
+    [Fact]
+    public async Task GetOrganizationAsync_WhenTooManyRequests_ShouldRetry()
+    {
+        var firstResponse =
+            new HttpResponseMessage(
+                HttpStatusCode.TooManyRequests);
+
+        var secondResponse =
+            new HttpResponseMessage(
+                HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """
+                    {
+                        "id": 123456,
+                        "login": "my-company",
+                        "name": "My Company",
+                        "html_url": "https://github.com/my-company"
+                    }
+                    """)
+            };
+
+        var handler = new FakeHttpMessageHandler(
+            firstResponse,
+            secondResponse);
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(
+                "https://api.github.com/")
+        };
+
+        var client = new GitHubClient(httpClient);
+
+        var result = await client.GetOrganizationAsync(
+            "my-company",
+            "secret-token",
+            CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.Login.Should().Be("my-company");
+
+        handler.Requests.Should().HaveCount(2);
+    }
+    
+    [Fact]
+    public async Task GetOrganizationAsync_WhenForbidden_ShouldNotRetry()
+    {
+        var response =
+            new HttpResponseMessage(
+                HttpStatusCode.Forbidden);
+
+        var handler = new FakeHttpMessageHandler(
+            response);
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(
+                "https://api.github.com/")
+        };
+
+        var client = new GitHubClient(httpClient);
+
+        var act = async () =>
+            await client.GetOrganizationAsync(
+                "my-company",
+                "secret-token",
+                CancellationToken.None);
+
+        await act.Should()
+            .ThrowAsync<HttpRequestException>();
+
+        handler.Requests.Should().ContainSingle();
+    }
+    
+    [Fact]
+    public async Task GetOrganizationAsync_WhenRateLimitExceeded_ShouldRetry()
+    {
+        var rateLimitResponse =
+            new HttpResponseMessage(
+                HttpStatusCode.Forbidden);
+
+        rateLimitResponse.Headers.Add(
+            "X-RateLimit-Remaining",
+            "0");
+
+        var successResponse =
+            new HttpResponseMessage(
+                HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """
+                    {
+                        "id": 123456,
+                        "login": "my-company",
+                        "name": "My Company",
+                        "html_url": "https://github.com/my-company"
+                    }
+                    """)
+            };
+
+        var handler = new FakeHttpMessageHandler(
+            rateLimitResponse,
+            successResponse);
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(
+                "https://api.github.com/")
+        };
+
+        var client = new GitHubClient(httpClient);
+
+        var result = await client.GetOrganizationAsync(
+            "my-company",
+            "secret-token",
+            CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.Login.Should().Be("my-company");
+
+        handler.Requests.Should().HaveCount(2);
     }
 }

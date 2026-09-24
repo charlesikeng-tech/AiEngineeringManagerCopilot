@@ -35,8 +35,10 @@ public sealed class GitHubClient(
             new MediaTypeWithQualityHeaderValue(
                 "application/vnd.github+json"));
 
-        using var response = await httpClient.SendAsync(
-            request,
+        using var response = await SendWithRetryAsync(
+            () => CreateRequest(
+                $"orgs/{Uri.EscapeDataString(organization)}",
+                accessToken),
             cancellationToken);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
@@ -207,24 +209,10 @@ public sealed class GitHubClient(
             var url =
                 $"{relativeUrl}{separator}per_page=100&page={page}";
 
-            using var request = new HttpRequestMessage(
-                HttpMethod.Get,
-                url);
-
-            request.Headers.Authorization =
-                new AuthenticationHeaderValue(
-                    "Bearer",
-                    accessToken);
-
-            request.Headers.UserAgent.ParseAdd(
-                "AiEngineeringManagerCopilot/1.0");
-
-            request.Headers.Accept.Add(
-                new MediaTypeWithQualityHeaderValue(
-                    "application/vnd.github+json"));
-
-            using var response = await httpClient.SendAsync(
-                request,
+            using var response = await SendWithRetryAsync(
+                () => CreateRequest(
+                    url,
+                    accessToken),
                 cancellationToken);
 
             response.EnsureSuccessStatusCode();
@@ -256,6 +244,85 @@ public sealed class GitHubClient(
         }
 
         return results;
+    }
+    
+    private async Task<HttpResponseMessage> SendWithRetryAsync(
+        Func<HttpRequestMessage> requestFactory,
+        CancellationToken cancellationToken)
+    {
+        const int maxAttempts = 2;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            using var request = requestFactory();
+
+            var response = await httpClient.SendAsync(
+                request,
+                cancellationToken);
+
+            if (!ShouldRetry(response) ||
+                attempt == maxAttempts)
+            {
+                return response;
+            }
+            
+            response.Dispose();
+        }
+
+        throw new InvalidOperationException(
+            "Unexpected retry state.");
+    }
+    
+    private static HttpRequestMessage CreateRequest(
+        string relativeUrl,
+        string accessToken)
+    {
+        var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            relativeUrl);
+
+        request.Headers.Authorization =
+            new AuthenticationHeaderValue(
+                "Bearer",
+                accessToken);
+
+        request.Headers.UserAgent.ParseAdd(
+            "AiEngineeringManagerCopilot/1.0");
+
+        request.Headers.Accept.Add(
+            new MediaTypeWithQualityHeaderValue(
+                "application/vnd.github+json"));
+
+        return request;
+    }
+    
+    private static bool ShouldRetry(
+        HttpResponseMessage response)
+    {
+        var statusCode = (int)response.StatusCode;
+
+        if (response.StatusCode ==
+            HttpStatusCode.TooManyRequests)
+        {
+            return true;
+        }
+
+        if (statusCode is >= 500 and <= 599)
+        {
+            return true;
+        }
+
+        if (response.StatusCode ==
+            HttpStatusCode.Forbidden &&
+            response.Headers.TryGetValues(
+                "X-RateLimit-Remaining",
+                out var values) &&
+            values.Any(value => value == "0"))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private sealed record GitHubOrganizationDto(
