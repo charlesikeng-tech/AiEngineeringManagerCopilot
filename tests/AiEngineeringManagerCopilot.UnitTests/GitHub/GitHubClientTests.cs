@@ -450,6 +450,21 @@ public sealed class GitHubClientTests
         }
     }
     
+    private sealed class FakeRetryDelay
+        : IRetryDelay
+    {
+        public List<TimeSpan> Delays { get; } = [];
+
+        public Task DelayAsync(
+            TimeSpan delay,
+            CancellationToken cancellationToken)
+        {
+            Delays.Add(delay);
+
+            return Task.CompletedTask;
+        }
+    }
+    
     [Fact]
     public async Task GetOrganizationAsync_ShouldNotSendTokenInUrl()
     {
@@ -1163,7 +1178,11 @@ public sealed class GitHubClientTests
                 "https://api.github.com/")
         };
 
-        var client = new GitHubClient(httpClient);
+        var retryDelay = new FakeRetryDelay();
+
+        var client = new GitHubClient(
+            httpClient,
+            retryDelay);
 
         var result = await client.GetOrganizationAsync(
             "my-company",
@@ -1216,7 +1235,11 @@ public sealed class GitHubClientTests
                 "https://api.github.com/")
         };
 
-        var client = new GitHubClient(httpClient);
+        var retryDelay = new FakeRetryDelay();
+
+        var client = new GitHubClient(
+            httpClient,
+            retryDelay);
 
         var result = await client.GetPullRequestsAsync(
             "secret-token",
@@ -1279,7 +1302,11 @@ public sealed class GitHubClientTests
                 "https://api.github.com/")
         };
 
-        var client = new GitHubClient(httpClient);
+        var retryDelay = new FakeRetryDelay();
+
+        var client = new GitHubClient(
+            httpClient,
+            retryDelay);
 
         var result = await client.GetOrganizationAsync(
             "my-company",
@@ -1358,7 +1385,11 @@ public sealed class GitHubClientTests
                 "https://api.github.com/")
         };
 
-        var client = new GitHubClient(httpClient);
+        var retryDelay = new FakeRetryDelay();
+
+        var client = new GitHubClient(
+            httpClient,
+            retryDelay);
 
         var result = await client.GetOrganizationAsync(
             "my-company",
@@ -1367,6 +1398,137 @@ public sealed class GitHubClientTests
 
         result.Should().NotBeNull();
         result!.Login.Should().Be("my-company");
+
+        handler.Requests.Should().HaveCount(2);
+    }
+    
+    [Fact]
+    public async Task GetOrganizationAsync_WhenRetryAfterIsProvided_ShouldWaitBeforeRetry()
+    {
+        var rateLimitResponse =
+            new HttpResponseMessage(
+                HttpStatusCode.TooManyRequests);
+
+        rateLimitResponse.Headers.RetryAfter =
+            new System.Net.Http.Headers.RetryConditionHeaderValue(
+                TimeSpan.FromSeconds(2));
+
+        var successResponse =
+            new HttpResponseMessage(
+                HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """
+                    {
+                        "id": 123456,
+                        "login": "my-company",
+                        "name": "My Company",
+                        "html_url": "https://github.com/my-company"
+                    }
+                    """)
+            };
+
+        var handler = new FakeHttpMessageHandler(
+            rateLimitResponse,
+            successResponse);
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(
+                "https://api.github.com/")
+        };
+
+        var retryDelay = new FakeRetryDelay();
+
+        var client = new GitHubClient(
+            httpClient,
+            retryDelay);
+
+        var result = await client.GetOrganizationAsync(
+            "my-company",
+            "secret-token",
+            CancellationToken.None);
+
+        result.Should().NotBeNull();
+
+        retryDelay.Delays
+            .Should()
+            .ContainSingle()
+            .Which
+            .Should()
+            .Be(TimeSpan.FromSeconds(2));
+
+        handler.Requests.Should().HaveCount(2);
+    }
+    
+    [Fact]
+    public async Task GetOrganizationAsync_WhenRateLimitResetIsProvided_ShouldWaitBeforeRetry()
+    {
+        var rateLimitResponse =
+            new HttpResponseMessage(
+                HttpStatusCode.Forbidden);
+
+        rateLimitResponse.Headers.Add(
+            "X-RateLimit-Remaining",
+            "0");
+
+        var resetAt =
+            DateTimeOffset.UtcNow.AddSeconds(60);
+
+        rateLimitResponse.Headers.Add(
+            "X-RateLimit-Reset",
+            resetAt.ToUnixTimeSeconds().ToString());
+
+        var successResponse =
+            new HttpResponseMessage(
+                HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """
+                    {
+                        "id": 123456,
+                        "login": "my-company",
+                        "name": "My Company",
+                        "html_url": "https://github.com/my-company"
+                    }
+                    """)
+            };
+
+        var handler = new FakeHttpMessageHandler(
+            rateLimitResponse,
+            successResponse);
+
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(
+                "https://api.github.com/")
+        };
+
+        var retryDelay = new FakeRetryDelay();
+
+        var client = new GitHubClient(
+            httpClient,
+            retryDelay);
+
+        var result = await client.GetOrganizationAsync(
+            "my-company",
+            "secret-token",
+            CancellationToken.None);
+
+        result.Should().NotBeNull();
+
+        retryDelay.Delays
+            .Should()
+            .ContainSingle();
+
+        retryDelay.Delays.Single()
+            .Should()
+            .BeGreaterThan(TimeSpan.Zero);
+
+        retryDelay.Delays.Single()
+            .Should()
+            .BeLessThanOrEqualTo(
+                TimeSpan.FromSeconds(60));
 
         handler.Requests.Should().HaveCount(2);
     }

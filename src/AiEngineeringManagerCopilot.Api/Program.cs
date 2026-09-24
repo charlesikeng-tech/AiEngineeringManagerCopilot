@@ -128,6 +128,8 @@ builder.Services.AddSingleton<
     ILlmAnalysisParser,
     LlmAnalysisJsonParser>();
 
+builder.Services.AddSingleton<IRetryDelay, RetryDelay>();
+
 builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(
     client =>
     {

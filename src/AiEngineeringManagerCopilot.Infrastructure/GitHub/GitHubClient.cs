@@ -8,9 +8,13 @@ using AiEngineeringManagerCopilot.Application.GitHub;
 namespace AiEngineeringManagerCopilot.Infrastructure.GitHub;
 
 public sealed class GitHubClient(
-    HttpClient httpClient)
+    HttpClient httpClient,
+    IRetryDelay? retryDelay = null)
     : IGitHubClient
 {
+    private readonly IRetryDelay _retryDelay =
+        retryDelay ?? new RetryDelay();
+    
     private static readonly JsonSerializerOptions JsonOptions =
         new(JsonSerializerDefaults.Web);
 
@@ -266,6 +270,12 @@ public sealed class GitHubClient(
                 return response;
             }
             
+            var delay = GetRetryDelay(response);
+
+            await _retryDelay.DelayAsync(
+                delay,
+                cancellationToken);
+            
             response.Dispose();
         }
 
@@ -323,6 +333,67 @@ public sealed class GitHubClient(
         }
 
         return false;
+    }
+    
+    private static TimeSpan GetRetryDelay(
+        HttpResponseMessage response)
+    {
+        var retryAfter = response.Headers.RetryAfter;
+
+        if (retryAfter?.Delta is not null)
+        {
+            return retryAfter.Delta.Value;
+        }
+
+        if (retryAfter?.Date is not null)
+        {
+            var delay =
+                retryAfter.Date.Value -
+                DateTimeOffset.UtcNow;
+
+            return delay > TimeSpan.Zero
+                ? delay
+                : TimeSpan.Zero;
+        }
+
+        var githubRateLimitDelay =
+            GetGitHubRateLimitDelay(response);
+
+        if (githubRateLimitDelay is not null)
+        {
+            return githubRateLimitDelay.Value;
+        }
+
+        return TimeSpan.FromSeconds(1);
+    }
+    
+    private static TimeSpan? GetGitHubRateLimitDelay(
+        HttpResponseMessage response)
+    {
+        if (!response.Headers.TryGetValues(
+                "X-RateLimit-Reset",
+                out var values))
+        {
+            return null;
+        }
+
+        var value = values.FirstOrDefault();
+
+        if (!long.TryParse(value, out var unixTimestamp))
+        {
+            return null;
+        }
+
+        var resetAt =
+            DateTimeOffset.FromUnixTimeSeconds(
+                unixTimestamp);
+
+        var delay =
+            resetAt - DateTimeOffset.UtcNow;
+
+        return delay > TimeSpan.Zero
+            ? delay
+            : TimeSpan.Zero;
     }
 
     private sealed record GitHubOrganizationDto(
