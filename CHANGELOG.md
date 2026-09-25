@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.2.5...v1.3.0) (2026-09-22)
+
+
+### Features
+
+* add metric trends and early warning insights ([758f93d](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/758f93d845c27330ff7a2efe7c2ff0408f37f0d6))
+
+
+### Bug Fixes
+
+* align engineering metrics with lifecycle dates ([01840db](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/01840dba6528402f9a11cda5a5dd3b7fa7fe8f25))
+
 ## [1.2.5](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.2.4...v1.2.5) (2026-09-20)
 
 
