@@ -4,6 +4,7 @@ using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.GitHub;
 using AiEngineeringManagerCopilot.Application.Metrics;
 using AiEngineeringManagerCopilot.Application.Teams;
+using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.IntegrationTests.Fakes;
@@ -12,7 +13,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AiEngineeringManagerCopilot.IntegrationTests.Teams;
+namespace AiEngineeringManagerCopilot.IntegrationTests.GitHub;
 
 public sealed class GitHubSyncEndpointsTests
     : IClassFixture<CustomWebApplicationFactory>
@@ -25,6 +26,8 @@ public sealed class GitHubSyncEndpointsTests
     {
         _factory = factory;
         _client = factory.CreateClient();
+        
+        GetFakeGitHubClient().Reset();
     }
 
     private async Task<TeamResponse> CreateTeamAsync()
@@ -482,6 +485,8 @@ public sealed class GitHubSyncEndpointsTests
         await CreateGitHubConnectionAsync(team.Id);
 
         var fakeGitHubClient = GetFakeGitHubClient();
+        
+        fakeGitHubClient.Reset();
 
         fakeGitHubClient.Repositories =
         [
@@ -737,6 +742,7 @@ public sealed class GitHubSyncEndpointsTests
     await CreateGitHubConnectionAsync(team.Id);
 
     var fakeGitHubClient = GetFakeGitHubClient();
+    fakeGitHubClient.Reset();
 
     fakeGitHubClient.Repositories =
     [
@@ -885,6 +891,7 @@ public sealed class GitHubSyncEndpointsTests
     await CreateGitHubConnectionAsync(team.Id);
 
     var fakeGitHubClient = GetFakeGitHubClient();
+    fakeGitHubClient.Reset();
 
     fakeGitHubClient.Repositories =
     [
@@ -999,6 +1006,7 @@ public sealed class GitHubSyncEndpointsTests
     await CreateGitHubConnectionAsync(team.Id);
 
     var fakeGitHubClient = GetFakeGitHubClient();
+    fakeGitHubClient.Reset();
 
     fakeGitHubClient.Repositories =
     [
@@ -1414,5 +1422,490 @@ public sealed class GitHubSyncEndpointsTests
 
         metric.PeriodEnd.Should()
             .Be(new DateOnly(2026, 9, 30));
+    }
+    
+    [Fact]
+    public async Task GitHubSync_WhenOneRepositoryFails_ShouldContinueWithOtherRepositories()
+    {
+        // Arrange
+        var team = await CreateTeamAsync();
+
+        await CreateGitHubConnectionAsync(team.Id);
+
+        var fakeGitHubClient = GetFakeGitHubClient();
+
+        fakeGitHubClient.Reset();
+
+        fakeGitHubClient.Repositories =
+        [
+            new GitHubRepository(
+                1001,
+                "backend",
+                "my-company/backend",
+                "https://github.com/my-company/backend",
+                "main"),
+
+            new GitHubRepository(
+                1002,
+                "frontend",
+                "my-company/frontend",
+                "https://github.com/my-company/frontend",
+                "main")
+        ];
+
+        fakeGitHubClient.PullRequestExceptionsByRepository[
+            "backend"] =
+            new HttpRequestException(
+                "GitHub unavailable for backend");
+        
+        fakeGitHubClient.PullRequestsByRepository["frontend"] =
+        [
+            new GitHubPullRequest(
+                5002,
+                42,
+                "Frontend feature",
+                "67890",
+                "open",
+                new DateTimeOffset(
+                    2026, 9, 20, 10, 0, 0,
+                    TimeSpan.Zero),
+                null,
+                null)
+        ];
+
+        // Act
+        var response = await _client.PostAsync(
+            $"/teams/{team.Id}/github/sync",
+            null);
+
+        // Assert
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        using var scope =
+            _factory.Services.CreateScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<AppDbContext>();
+
+        var repositories =
+            await dbContext.Repositories
+                .Where(x => x.TeamId == team.Id)
+                .ToListAsync();
+
+        var backend = repositories.Single(
+            x => x.ExternalId == 1001);
+
+        var frontend = repositories.Single(
+            x => x.ExternalId == 1002);
+
+        var backendPullRequests =
+            await dbContext.PullRequests
+                .Where(x =>
+                    x.RepositoryId == backend.Id)
+                .ToListAsync();
+
+        var frontendPullRequests =
+            await dbContext.PullRequests
+                .Where(x =>
+                    x.RepositoryId == frontend.Id)
+                .ToListAsync();
+
+        backendPullRequests.Should().BeEmpty();
+
+        frontendPullRequests.Should()
+            .ContainSingle();
+
+        frontendPullRequests.Single()
+            .ExternalId.Should()
+            .Be(5002);
+    }
+    
+    [Fact]
+    public async Task GitHubSync_WhenReviewsFail_ShouldContinueWithOtherRepositories()
+    {
+        // Arrange
+        var team = await CreateTeamAsync();
+
+        await CreateGitHubConnectionAsync(team.Id);
+
+        var fakeGitHubClient = GetFakeGitHubClient();
+
+        fakeGitHubClient.Reset();
+
+        fakeGitHubClient.Repositories =
+        [
+            new GitHubRepository(
+                1001,
+                "backend",
+                "my-company/backend",
+                "https://github.com/my-company/backend",
+                "main"),
+
+            new GitHubRepository(
+                1002,
+                "frontend",
+                "my-company/frontend",
+                "https://github.com/my-company/frontend",
+                "main")
+        ];
+
+        fakeGitHubClient.PullRequestsByRepository["backend"] =
+        [
+            new GitHubPullRequest(
+                5001,
+                41,
+                "Backend feature",
+                "12345",
+                "open",
+                new DateTimeOffset(
+                    2026, 9, 20, 10, 0, 0,
+                    TimeSpan.Zero),
+                null,
+                null)
+        ];
+
+        fakeGitHubClient.ReviewExceptionsByPullRequestNumber[41] =
+            new HttpRequestException(
+                "GitHub reviews unavailable");
+
+        fakeGitHubClient.PullRequestsByRepository["frontend"] =
+        [
+            new GitHubPullRequest(
+                5002,
+                42,
+                "Frontend feature",
+                "67890",
+                "open",
+                new DateTimeOffset(
+                    2026, 9, 21, 10, 0, 0,
+                    TimeSpan.Zero),
+                null,
+                null)
+        ];
+
+        // Act
+        var response = await _client.PostAsync(
+            $"/teams/{team.Id}/github/sync",
+            null);
+
+        // Assert
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        using var scope =
+            _factory.Services.CreateScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<AppDbContext>();
+
+        var frontendRepository =
+            await dbContext.Repositories.SingleAsync(
+                x =>
+                    x.TeamId == team.Id &&
+                    x.ExternalId == 1002);
+        
+        var backendRepository =
+            await dbContext.Repositories.SingleAsync(
+                x =>
+                    x.TeamId == team.Id &&
+                    x.ExternalId == 1001);
+        
+        var backendPullRequests =
+            await dbContext.PullRequests
+                .Where(x =>
+                    x.RepositoryId ==
+                    backendRepository.Id)
+                .ToListAsync();
+
+        backendPullRequests.Should()
+            .ContainSingle();
+
+        backendPullRequests.Single()
+            .ExternalId.Should()
+            .Be(5001);
+
+        var frontendPullRequests =
+            await dbContext.PullRequests
+                .Where(x =>
+                    x.RepositoryId ==
+                    frontendRepository.Id)
+                .ToListAsync();
+
+        frontendPullRequests.Should()
+            .ContainSingle();
+
+        frontendPullRequests.Single()
+            .ExternalId.Should()
+            .Be(5002);
+    }
+    
+    [Fact]
+    public async Task GitHubSync_WhenDeploymentsFail_ShouldContinueWithOtherRepositories()
+    {
+        // Arrange
+        var team = await CreateTeamAsync();
+
+        await CreateGitHubConnectionAsync(team.Id);
+
+        var fakeGitHubClient = GetFakeGitHubClient();
+
+        fakeGitHubClient.Reset();
+
+        fakeGitHubClient.Repositories =
+        [
+            new GitHubRepository(
+                1001,
+                "backend",
+                "my-company/backend",
+                "https://github.com/my-company/backend",
+                "main"),
+
+            new GitHubRepository(
+                1002,
+                "frontend",
+                "my-company/frontend",
+                "https://github.com/my-company/frontend",
+                "main")
+        ];
+        
+        fakeGitHubClient.PullRequestsByRepository["frontend"] =
+        [
+            new GitHubPullRequest(
+                5002,
+                42,
+                "Frontend feature",
+                "67890",
+                "open",
+                new DateTimeOffset(
+                    2026, 9, 19, 10, 0, 0,
+                    TimeSpan.Zero),
+                null,
+                null)
+        ];
+
+        fakeGitHubClient.DeploymentExceptionsByRepository[
+            "backend"] =
+            new HttpRequestException(
+                "GitHub deployments unavailable");
+
+        var deployedAt = new DateTimeOffset(
+            2026, 9, 20, 10, 0, 0,
+            TimeSpan.Zero);
+
+        fakeGitHubClient.DeploymentsByRepository["frontend"] =
+        [
+            new GitHubDeployment(
+                8002,
+                "production",
+                deployedAt)
+        ];
+
+        fakeGitHubClient.DeploymentStatusesByDeploymentId[8002] =
+        [
+            new GitHubDeploymentStatus(
+                9002,
+                "success",
+                deployedAt.AddMinutes(5))
+        ];
+
+        // Act
+        var response = await _client.PostAsync(
+            $"/teams/{team.Id}/github/sync",
+            null);
+
+        // Assert
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        using var scope =
+            _factory.Services.CreateScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<AppDbContext>();
+
+        var frontendRepository =
+            await dbContext.Repositories.SingleAsync(
+                x =>
+                    x.TeamId == team.Id &&
+                    x.ExternalId == 1002);
+
+        var deployments =
+            await dbContext.Deployments
+                .Where(x =>
+                    x.RepositoryId ==
+                    frontendRepository.Id)
+                .ToListAsync();
+
+        deployments.Should()
+            .ContainSingle();
+
+        deployments.Single()
+            .ExternalId.Should()
+            .Be(8002);
+
+        deployments.Single()
+            .Status.Should()
+            .Be("success");
+    }
+    
+    [Fact]
+    public async Task GitHubSync_WhenDeploymentStatusFails_ShouldContinueWithOtherDeployments()
+    {
+        // Arrange
+        var team = await CreateTeamAsync();
+
+        await CreateGitHubConnectionAsync(team.Id);
+
+        var fakeGitHubClient = GetFakeGitHubClient();
+        fakeGitHubClient.Reset();
+
+        fakeGitHubClient.Repositories =
+        [
+            new GitHubRepository(
+                1001,
+                "backend",
+                "my-company/backend",
+                "https://github.com/my-company/backend",
+                "main")
+        ];
+
+        var firstDeploymentAt = new DateTimeOffset(
+            2026, 9, 20, 10, 0, 0,
+            TimeSpan.Zero);
+
+        var secondDeploymentAt = new DateTimeOffset(
+            2026, 9, 20, 11, 0, 0,
+            TimeSpan.Zero);
+
+        fakeGitHubClient.DeploymentsByRepository["backend"] =
+        [
+            new GitHubDeployment(
+                8001,
+                "production",
+                firstDeploymentAt),
+
+            new GitHubDeployment(
+                8002,
+                "production",
+                secondDeploymentAt)
+        ];
+
+        fakeGitHubClient
+            .DeploymentStatusExceptionsByDeploymentId[8001] =
+            new HttpRequestException(
+                "GitHub deployment statuses unavailable");
+
+        fakeGitHubClient
+            .DeploymentStatusesByDeploymentId[8002] =
+        [
+            new GitHubDeploymentStatus(
+                9002,
+                "success",
+                secondDeploymentAt.AddMinutes(5))
+        ];
+
+        // Act
+        var response = await _client.PostAsync(
+            $"/teams/{team.Id}/github/sync",
+            null);
+
+        // Assert
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        using var scope =
+            _factory.Services.CreateScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<AppDbContext>();
+
+        var repository =
+            await dbContext.Repositories.SingleAsync(
+                x =>
+                    x.TeamId == team.Id &&
+                    x.ExternalId == 1001);
+
+        var deployments =
+            await dbContext.Deployments
+                .Where(x =>
+                    x.RepositoryId == repository.Id)
+                .ToListAsync();
+
+        deployments.Should().ContainSingle();
+
+        deployments.Single()
+            .ExternalId.Should()
+            .Be(8002);
+
+        deployments.Single()
+            .Status.Should()
+            .Be("success");
+    } 
+    
+    [Fact]
+    public async Task SyncGitHubRepositories_ShouldReturn404_WhenTeamBelongsToAnotherUser()
+    {
+        // Arrange
+        var otherUserId = Guid.NewGuid();
+        var teamId = Guid.NewGuid();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext =
+                scope.ServiceProvider
+                    .GetRequiredService<AppDbContext>();
+
+            dbContext.Users.Add(
+                new User
+                {
+                    Id = otherUserId,
+                    Email = $"other-{Guid.NewGuid():N}@example.com",
+                    Name = "Other User",
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+
+            dbContext.Teams.Add(
+                new Team
+                {
+                    Id = teamId,
+                    OwnerUserId = otherUserId,
+                    Name = "Other user's team",
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+
+            await dbContext.SaveChangesAsync();
+        }
+
+        var fakeGitHubClient = GetFakeGitHubClient();
+
+        fakeGitHubClient.Repositories =
+        [
+            new GitHubRepository(
+                1001,
+                "backend",
+                "my-company/backend",
+                "https://github.com/my-company/backend",
+                "main")
+        ];
+
+        // Act
+        var response = await _client.PostAsync(
+            $"/teams/{teamId}/github/sync",
+            null);
+
+        // Assert
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.NotFound);
+
+        fakeGitHubClient.ReceivedOrganization.Should()
+            .BeNull();
+
+        fakeGitHubClient.ReceivedAccessToken.Should()
+            .BeNull();
     }
 }

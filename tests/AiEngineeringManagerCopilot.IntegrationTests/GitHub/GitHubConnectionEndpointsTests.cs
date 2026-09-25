@@ -7,7 +7,7 @@ using AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AiEngineeringManagerCopilot.IntegrationTests.Teams;
+namespace AiEngineeringManagerCopilot.IntegrationTests.GitHub;
 
 public sealed class GitHubConnectionEndpointsTests
     : IClassFixture<CustomWebApplicationFactory>
@@ -21,6 +21,8 @@ public sealed class GitHubConnectionEndpointsTests
         _client = factory.CreateClient();
         _fakeGitHubClient =
             factory.Services.GetRequiredService<FakeGitHubClient>();
+        
+        _fakeGitHubClient.Reset();
     }
 
     private async Task<TeamResponse> CreateTeamAsync()
@@ -336,6 +338,7 @@ public sealed class GitHubConnectionEndpointsTests
     [Fact]
     public async Task TestConnection_ShouldReturn200_WhenConnectionIsValid()
     {
+        // Arrange
         var team = await CreateTeamAsync();
         var teamId = team.Id;
 
@@ -344,10 +347,12 @@ public sealed class GitHubConnectionEndpointsTests
             "my-company",
             "secret-token");
 
+        // Act
         var response = await _client.PostAsync(
             $"/teams/{teamId}/github/test",
             null);
 
+        // Assert
         response.StatusCode.Should()
             .Be(HttpStatusCode.OK);
 
@@ -358,7 +363,8 @@ public sealed class GitHubConnectionEndpointsTests
         result.Should().NotBeNull();
         result!.Success.Should().BeTrue();
         result.Organization.Should().Be("my-company");
-        result.Message.Should().Be("GitHub connection is valid.");
+        result.Message.Should().Be(
+            "GitHub connection is valid.");
     }
     
     [Fact]
@@ -463,6 +469,5 @@ public sealed class GitHubConnectionEndpointsTests
             .Should()
             .Be(accessToken);
     }
-    
     
 }

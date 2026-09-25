@@ -1,8 +1,11 @@
+using AiEngineeringManagerCopilot.Api.Authentication;
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.Jira;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
+using AiEngineeringManagerCopilot.IntegrationTests.Authentication;
 using AiEngineeringManagerCopilot.IntegrationTests.Fakes;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +23,18 @@ public sealed class CustomWebApplicationFactory
         IWebHostBuilder builder)
     {
         builder.UseEnvironment("Test");
+        
+        builder.UseSetting(
+            "Jwt:Issuer",
+            "AiEngineeringManagerCopilot.Tests");
+
+        builder.UseSetting(
+            "Jwt:Audience",
+            "AiEngineeringManagerCopilot.Tests");
+
+        builder.UseSetting(
+            "Jwt:Key",
+            "ai-engineering-manager-copilot-test-key-2026-secure-enough-for-tests");
 
         builder.UseSetting(
             "ConnectionStrings:Default",
@@ -43,6 +58,25 @@ public sealed class CustomWebApplicationFactory
 
                 SeedTestUser(dbContext);
             }
+            
+            services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme =
+                        TestAuthHandler.Scheme;
+
+                    options.DefaultChallengeScheme =
+                        TestAuthHandler.Scheme;
+                })
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                    TestAuthHandler.Scheme,
+                    _ => { });
+
+            services.RemoveAll<ICurrentUser>();
+
+            services.AddScoped<
+                ICurrentUser,
+                HttpCurrentUser>();
 
             services.RemoveAll<IGitHubClient>();
 

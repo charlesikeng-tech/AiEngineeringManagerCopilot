@@ -1,8 +1,11 @@
+using System.Text;
+using AiEngineeringManagerCopilot.Api.Authentication;
 using AiEngineeringManagerCopilot.Api.Endpoints;
 using AiEngineeringManagerCopilot.Api.Middleware;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.AI;
+using AiEngineeringManagerCopilot.Application.BackgroundJobs;
 using AiEngineeringManagerCopilot.Application.GitHub;
 using AiEngineeringManagerCopilot.Application.GitHub.Validation;
 using AiEngineeringManagerCopilot.Application.Health;
@@ -17,11 +20,12 @@ using AiEngineeringManagerCopilot.Application.Teams.Validation;
 using AiEngineeringManagerCopilot.Infrastructure.AI;
 using AiEngineeringManagerCopilot.Infrastructure.Authentication;
 using AiEngineeringManagerCopilot.Infrastructure.GitHub;
-using AiEngineeringManagerCopilot.Infrastructure.Jira;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence.Repositories;
 using AiEngineeringManagerCopilot.Infrastructure.Security;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +41,52 @@ builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddHttpContextAccessor();
+var jwtOptions = builder.Configuration
+                     .GetSection(JwtOptions.SectionName)
+                     .Get<JwtOptions>()
+                 ?? throw new InvalidOperationException(
+                     "JWT configuration is missing.");
+
+builder.Services
+    .AddAuthentication(
+        JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters =
+            new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = jwtOptions.Issuer,
+
+                ValidateAudience = true,
+                ValidAudience = jwtOptions.Audience,
+
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(
+                            jwtOptions.Key)),
+
+                ValidateLifetime = true,
+
+                ClockSkew = TimeSpan.FromSeconds(30)
+            };
+    });
+
+builder.Services.AddAuthorization();
+
+
+if (builder.Environment.IsDevelopment() ||
+    builder.Environment.IsEnvironment("Test"))
+{
+    builder.Services.AddScoped<ICurrentUser, DevelopmentCurrentUser>();
+}
+else
+{
+    builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("Default");
@@ -49,8 +99,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
     options.UseNpgsql(connectionString);
 });
-
-builder.Services.AddScoped<ICurrentUser, DevelopmentCurrentUser>();
 
 builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 builder.Services.AddScoped<ITeamMemberRepository, TeamMemberRepository>();
@@ -129,7 +177,18 @@ builder.Services.AddSingleton<
     LlmAnalysisJsonParser>();
 
 builder.Services.AddSingleton<IRetryDelay, RetryDelay>();
+builder.Services.AddScoped<IGitHubBackgroundSyncRunner, GitHubBackgroundSyncRunner>();
+builder.Services.AddScoped<IJiraBackgroundSyncRunner, JiraBackgroundSyncRunner>();
+builder.Services.AddSingleton<IBackgroundJobDelay, BackgroundJobDelay>();
 
+if (!builder.Environment.IsEnvironment("Test"))
+{
+    builder.Services.AddHostedService<
+        GitHubSyncBackgroundService>();
+
+    builder.Services.AddHostedService<
+        JiraSyncBackgroundService>();
+}
 builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(
     client =>
     {
@@ -145,6 +204,9 @@ builder.Services.AddHttpClient<IJiraClient, JiraClient>();
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {

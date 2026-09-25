@@ -212,6 +212,253 @@ public class JiraSyncServiceTests
         workItem.AssigneeExternalId.Should()
             .Be("jira-user-456");
     }
+    
+    [Fact]
+    public async Task SyncAsync_WhenJiraClientFails_ShouldNotPersistChanges()
+    {
+        // Arrange
+        var team = await CreateTeamAsync();
+
+        await CreateJiraConnectionAsync(team.Id);
+
+        var fakeJiraClient = _factory.Services
+            .GetRequiredService<FakeJiraClient>();
+
+        fakeJiraClient.Reset();
+
+        fakeJiraClient.ExceptionToThrow =
+            new HttpRequestException(
+                "Jira unavailable");
+
+        using var scope =
+            _factory.Services.CreateScope();
+
+        var syncService = scope.ServiceProvider
+            .GetRequiredService<IJiraSyncService>();
+
+        // Act
+        var act = async () =>
+            await syncService.SyncAsync(
+                team.Id,
+                CancellationToken.None);
+
+        // Assert
+        await act.Should()
+            .ThrowAsync<HttpRequestException>();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<AppDbContext>();
+
+        var workItems = await dbContext.JiraWorkItems
+            .Where(x => x.TeamId == team.Id)
+            .ToListAsync();
+
+        workItems.Should().BeEmpty();
+
+        var connection = await dbContext.JiraConnections
+            .SingleAsync(x => x.TeamId == team.Id);
+
+        connection.LastSyncAt.Should().BeNull();
+    }
+    
+    [Fact]
+    public async Task SyncAsync_WhenRunTwice_ShouldNotCreateDuplicates()
+    {
+        // Arrange
+        var team = await CreateTeamAsync();
+
+        await CreateJiraConnectionAsync(team.Id);
+
+        var fakeJiraClient = _factory.Services
+            .GetRequiredService<FakeJiraClient>();
+
+        fakeJiraClient.Reset();
+
+        fakeJiraClient.Issues =
+        [
+            new JiraIssue(
+                "10001",
+                "REC-123",
+                "Improve recommendation ranking",
+                "In Progress",
+                "jira-user-123",
+                DateTimeOffset.Parse(
+                    "2026-09-10T10:00:00Z"),
+                null,
+                false)
+        ];
+
+        using var scope =
+            _factory.Services.CreateScope();
+
+        var syncService = scope.ServiceProvider
+            .GetRequiredService<IJiraSyncService>();
+
+        // Act
+        var firstResult = await syncService.SyncAsync(
+            team.Id,
+            CancellationToken.None);
+
+        var secondResult = await syncService.SyncAsync(
+            team.Id,
+            CancellationToken.None);
+
+        // Assert
+        firstResult.Created.Should().Be(1);
+        firstResult.Updated.Should().Be(0);
+
+        secondResult.Created.Should().Be(0);
+        secondResult.Updated.Should().Be(1);
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<AppDbContext>();
+
+        var workItems = await dbContext.JiraWorkItems
+            .Where(x => x.TeamId == team.Id)
+            .ToListAsync();
+
+        workItems.Should().ContainSingle();
+
+        workItems.Single().ExternalId.Should()
+            .Be("10001");
+    }
+    
+    [Fact]
+    public async Task SyncAsync_WhenIssueStateChanges_ShouldUpdateStateFields()
+    {
+        // Arrange
+        var team = await CreateTeamAsync();
+
+        await CreateJiraConnectionAsync(team.Id);
+
+        var fakeJiraClient = _factory.Services
+            .GetRequiredService<FakeJiraClient>();
+
+        fakeJiraClient.Reset();
+
+        fakeJiraClient.Issues =
+        [
+            new JiraIssue(
+                "10001",
+                "REC-123",
+                "Improve recommendation ranking",
+                "In Progress",
+                "jira-user-123",
+                DateTimeOffset.Parse(
+                    "2026-09-10T10:00:00Z"),
+                null,
+                false)
+        ];
+
+        using var scope =
+            _factory.Services.CreateScope();
+
+        var syncService = scope.ServiceProvider
+            .GetRequiredService<IJiraSyncService>();
+
+        await syncService.SyncAsync(
+            team.Id,
+            CancellationToken.None);
+
+        var doneAt =
+            DateTimeOffset.Parse(
+                "2026-09-20T15:30:00Z");
+
+        fakeJiraClient.Issues =
+        [
+            new JiraIssue(
+                "10001",
+                "REC-123",
+                "Improve recommendation ranking",
+                "Done",
+                "jira-user-123",
+                DateTimeOffset.Parse(
+                    "2026-09-10T10:00:00Z"),
+                doneAt,
+                true)
+        ];
+
+        // Act
+        var result = await syncService.SyncAsync(
+            team.Id,
+            CancellationToken.None);
+
+        // Assert
+        result.Created.Should().Be(0);
+        result.Updated.Should().Be(1);
+        result.Total.Should().Be(1);
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<AppDbContext>();
+
+        var workItem = await dbContext.JiraWorkItems
+            .SingleAsync(x =>
+                x.TeamId == team.Id &&
+                x.ExternalId == "10001");
+
+        workItem.Status.Should().Be("Done");
+
+        workItem.DoneAt.Should().Be(doneAt);
+
+        workItem.IsBlocked.Should().BeTrue();
+    }
+    
+    [Fact]
+    public async Task SyncAsync_WhenSuccessful_ShouldPersistWorkItemsAndLastSyncAt()
+    {
+        // Arrange
+        var team = await CreateTeamAsync();
+
+        await CreateJiraConnectionAsync(team.Id);
+
+        var fakeJiraClient = _factory.Services
+            .GetRequiredService<FakeJiraClient>();
+
+        fakeJiraClient.Reset();
+
+        fakeJiraClient.Issues =
+        [
+            new JiraIssue(
+                "10001",
+                "REC-123",
+                "Improve recommendation ranking",
+                "In Progress",
+                "jira-user-123",
+                DateTimeOffset.Parse(
+                    "2026-09-10T10:00:00Z"),
+                null,
+                false)
+        ];
+
+        using var scope =
+            _factory.Services.CreateScope();
+
+        var syncService = scope.ServiceProvider
+            .GetRequiredService<IJiraSyncService>();
+
+        // Act
+        var result = await syncService.SyncAsync(
+            team.Id,
+            CancellationToken.None);
+
+        // Assert
+        result.Created.Should().Be(1);
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<AppDbContext>();
+
+        var workItem = await dbContext.JiraWorkItems
+            .SingleAsync(x =>
+                x.TeamId == team.Id &&
+                x.ExternalId == "10001");
+
+        workItem.Key.Should().Be("REC-123");
+
+        var connection = await dbContext.JiraConnections
+            .SingleAsync(x => x.TeamId == team.Id);
+
+        connection.LastSyncAt.Should().NotBeNull();
+    }
 
     private async Task<TeamResponse> CreateTeamAsync()
     {

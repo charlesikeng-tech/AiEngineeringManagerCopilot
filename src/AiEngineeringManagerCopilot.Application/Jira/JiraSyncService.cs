@@ -86,9 +86,6 @@ public sealed class JiraSyncService(
             updated++;
         }
 
-        await jiraWorkItemRepository.SaveChangesAsync(
-            cancellationToken);
-
         connection.LastSyncAt =
             DateTimeOffset.UtcNow;
 

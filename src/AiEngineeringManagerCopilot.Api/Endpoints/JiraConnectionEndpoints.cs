@@ -1,3 +1,4 @@
+using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.Common;
 using AiEngineeringManagerCopilot.Application.Jira;
 
@@ -94,9 +95,21 @@ public static class JiraConnectionEndpoints
             "/sync",
             async (
                 Guid teamId,
+                ICurrentUser currentUser,
+                ITeamRepository teamRepository,
                 IJiraSyncService jiraSyncService,
                 CancellationToken cancellationToken) =>
             {
+                var team = await teamRepository.GetByIdAsync(
+                    teamId,
+                    currentUser.UserId,
+                    cancellationToken);
+
+                if (team is null)
+                {
+                    return Results.NotFound();
+                }
+
                 var result = await jiraSyncService.SyncAsync(
                     teamId,
                     cancellationToken);

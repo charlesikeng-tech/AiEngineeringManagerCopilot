@@ -15,6 +15,8 @@ public sealed class FakeJiraClient : IJiraClient
     public IReadOnlyList<JiraIssue> Issues { get; set; } = [];
 
     public string? ReceivedProjectKey { get; private set; }
+    
+    public Exception? ExceptionToThrow { get; set; }
 
     public Task<JiraCurrentUser?> GetCurrentUserAsync(
         string baseUrl,
@@ -36,6 +38,12 @@ public sealed class FakeJiraClient : IJiraClient
         string projectKey,
         CancellationToken cancellationToken)
     {
+        
+        if (ExceptionToThrow is not null)
+        {
+            throw ExceptionToThrow;
+        }
+        
         ReceivedBaseUrl = baseUrl;
         ReceivedEmail = email;
         ReceivedApiToken = apiToken;
@@ -53,5 +61,7 @@ public sealed class FakeJiraClient : IJiraClient
         ReceivedEmail = null;
         ReceivedApiToken = null;
         ReceivedProjectKey = null;
+        
+        ExceptionToThrow = null;
     }
 }

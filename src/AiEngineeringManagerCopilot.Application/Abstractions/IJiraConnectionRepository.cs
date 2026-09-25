@@ -18,4 +18,7 @@ public interface IJiraConnectionRepository
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken);
+    
+    Task<IReadOnlyList<JiraConnection>> GetAllAsync(
+        CancellationToken cancellationToken);
 }

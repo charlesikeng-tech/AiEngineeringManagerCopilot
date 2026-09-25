@@ -1,3 +1,4 @@
+using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.GitHub;
 using AiEngineeringManagerCopilot.Application.Common;
 using FluentValidation;
@@ -90,19 +91,28 @@ public static class GitHubEndpoints
             "/sync",
             async (
                 Guid teamId,
-                IGitHubSyncService service,
+                ICurrentUser currentUser,
+                ITeamRepository teamRepository,
+                IGitHubSyncService gitHubSyncService,
                 CancellationToken cancellationToken) =>
             {
-                var result = await service.SyncAsync(
+                var team = await teamRepository.GetByIdAsync(
                     teamId,
+                    currentUser.UserId,
                     cancellationToken);
 
-                if (result is null)
+                if (team is null)
                 {
                     return Results.NotFound();
                 }
 
-                return Results.Ok(result);
+                var result = await gitHubSyncService.SyncAsync(
+                    teamId,
+                    cancellationToken);
+
+                return result is null
+                    ? Results.NotFound()
+                    : Results.Ok(result);
             });
         
         return app;

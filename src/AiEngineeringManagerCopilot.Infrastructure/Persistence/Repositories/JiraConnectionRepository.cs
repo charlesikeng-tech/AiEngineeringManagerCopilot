@@ -41,4 +41,12 @@ public sealed class JiraConnectionRepository(
     {
         await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<JiraConnection>> GetAllAsync(
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.JiraConnections
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
 }

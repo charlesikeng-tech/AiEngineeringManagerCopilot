@@ -1,6 +1,7 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text;
-using AiEngineeringManagerCopilot.Infrastructure.Jira;
+using AiEngineeringManagerCopilot.Application.Jira;
 using FluentAssertions;
 
 namespace AiEngineeringManagerCopilot.UnitTests.Jira;
@@ -398,7 +399,496 @@ public sealed class JiraClientTests
         issue.Status.Should().Be("Blocked");
         issue.IsBlocked.Should().BeTrue();
     }
+    
+    [Fact]
+    public async Task GetIssuesAsync_WhenServerError_ShouldRetry()
+    {
+        // Arrange
+        var firstResponse = new HttpResponseMessage(
+            HttpStatusCode.InternalServerError);
 
+        var secondResponse = new HttpResponseMessage(
+            HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                issues = Array.Empty<object>(),
+                nextPageToken = (string?)null,
+                isLast = true
+            })
+        };
+
+        var handler = new FakeHttpMessageHandler(
+            firstResponse,
+            secondResponse);
+
+        using var httpClient = new HttpClient(handler);
+
+        var client = new JiraClient(httpClient);
+
+        // Act
+        var act = async () =>
+            await client.GetIssuesAsync(
+                "https://example.atlassian.net",
+                "charles@example.com",
+                "token",
+                "TEST",
+                CancellationToken.None);
+
+        // Assert
+        await act.Should().NotThrowAsync();
+
+        handler.Requests.Should().HaveCount(2);
+    }
+    
+    [Fact]
+    public async Task GetCurrentUserAsync_WhenServerError_ShouldRetry()
+    {
+        // Arrange
+        var firstResponse = new HttpResponseMessage(
+            HttpStatusCode.InternalServerError);
+
+        var secondResponse = new HttpResponseMessage(
+            HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                accountId = "jira-account-123",
+                displayName = "Charles Ikeng",
+                emailAddress = "charles@example.com"
+            })
+        };
+
+        var handler = new FakeHttpMessageHandler(
+            firstResponse,
+            secondResponse);
+
+        using var httpClient = new HttpClient(handler);
+
+        var client = new JiraClient(httpClient);
+
+        // Act
+        var act = async () =>
+            await client.GetCurrentUserAsync(
+                "https://example.atlassian.net",
+                "charles@example.com",
+                "token",
+                CancellationToken.None);
+
+        // Assert
+        await act.Should().NotThrowAsync();
+
+        handler.Requests.Should().HaveCount(2);
+    }
+    
+    [Fact]
+    public async Task GetIssuesAsync_WhenTooManyRequests_ShouldRetry()
+    {
+        // Arrange
+        var firstResponse = new HttpResponseMessage(
+            HttpStatusCode.TooManyRequests);
+
+        var secondResponse = new HttpResponseMessage(
+            HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                issues = Array.Empty<object>(),
+                nextPageToken = (string?)null,
+                isLast = true
+            })
+        };
+
+        var handler = new FakeHttpMessageHandler(
+            firstResponse,
+            secondResponse);
+
+        using var httpClient = new HttpClient(handler);
+
+        var client = new JiraClient(httpClient);
+
+        // Act
+        var act = async () =>
+            await client.GetIssuesAsync(
+                "https://example.atlassian.net",
+                "charles@example.com",
+                "token",
+                "TEST",
+                CancellationToken.None);
+
+        // Assert
+        await act.Should().NotThrowAsync();
+
+        handler.Requests.Should().HaveCount(2);
+    }
+    
+    [Fact]
+    public async Task GetIssuesAsync_WhenTooManyRequests_ShouldRespectRetryAfter()
+    {
+        // Arrange
+        var firstResponse = new HttpResponseMessage(
+            HttpStatusCode.TooManyRequests);
+
+        firstResponse.Headers.RetryAfter =
+            new System.Net.Http.Headers.RetryConditionHeaderValue(
+                TimeSpan.FromSeconds(3));
+
+        var secondResponse = new HttpResponseMessage(
+            HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                issues = Array.Empty<object>(),
+                nextPageToken = (string?)null,
+                isLast = true
+            })
+        };
+
+        var handler = new FakeHttpMessageHandler(
+            firstResponse,
+            secondResponse);
+
+        using var httpClient = new HttpClient(handler);
+
+        var retryDelay = new FakeJiraRetryDelay();
+
+        var client = new JiraClient(
+            httpClient,
+            retryDelay);
+
+        // Act
+        await client.GetIssuesAsync(
+            "https://example.atlassian.net",
+            "charles@example.com",
+            "token",
+            "TEST",
+            CancellationToken.None);
+
+        // Assert
+        handler.Requests.Should().HaveCount(2);
+
+        retryDelay.Delays.Should().ContainSingle();
+
+        retryDelay.Delays.Single()
+            .Should()
+            .Be(TimeSpan.FromSeconds(3));
+    }
+    
+    [Fact]
+    public async Task GetIssuesAsync_WhenRetryAfterIsDate_ShouldRespectDelay()
+    {
+        // Arrange
+        var retryAfterDate =
+            DateTimeOffset.UtcNow.AddSeconds(5);
+
+        var firstResponse = new HttpResponseMessage(
+            HttpStatusCode.TooManyRequests);
+
+        firstResponse.Headers.RetryAfter =
+            new System.Net.Http.Headers.RetryConditionHeaderValue(
+                retryAfterDate);
+
+        var secondResponse = new HttpResponseMessage(
+            HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                issues = Array.Empty<object>(),
+                nextPageToken = (string?)null,
+                isLast = true
+            })
+        };
+
+        var handler = new FakeHttpMessageHandler(
+            firstResponse,
+            secondResponse);
+
+        using var httpClient = new HttpClient(handler);
+
+        var retryDelay = new FakeJiraRetryDelay();
+
+        var client = new JiraClient(
+            httpClient,
+            retryDelay);
+
+        // Act
+        await client.GetIssuesAsync(
+            "https://example.atlassian.net",
+            "charles@example.com",
+            "token",
+            "TEST",
+            CancellationToken.None);
+
+        // Assert
+        handler.Requests.Should().HaveCount(2);
+
+        retryDelay.Delays.Should().ContainSingle();
+
+        retryDelay.Delays.Single()
+            .Should()
+            .BeGreaterThan(TimeSpan.Zero);
+
+        retryDelay.Delays.Single()
+            .Should()
+            .BeLessThanOrEqualTo(TimeSpan.FromSeconds(5));
+    }
+    
+    [Fact]
+    public async Task GetIssuesAsync_WhenTooManyRequestsWithoutRetryAfter_ShouldUseFallbackDelay()
+    {
+        // Arrange
+        var firstResponse = new HttpResponseMessage(
+            HttpStatusCode.TooManyRequests);
+
+        var secondResponse = new HttpResponseMessage(
+            HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                issues = Array.Empty<object>(),
+                nextPageToken = (string?)null,
+                isLast = true
+            })
+        };
+
+        var handler = new FakeHttpMessageHandler(
+            firstResponse,
+            secondResponse);
+
+        using var httpClient = new HttpClient(handler);
+
+        var retryDelay = new FakeJiraRetryDelay();
+
+        var client = new JiraClient(
+            httpClient,
+            retryDelay);
+
+        // Act
+        await client.GetIssuesAsync(
+            "https://example.atlassian.net",
+            "charles@example.com",
+            "token",
+            "TEST",
+            CancellationToken.None);
+
+        // Assert
+        handler.Requests.Should().HaveCount(2);
+
+        retryDelay.Delays.Should().ContainSingle();
+
+        retryDelay.Delays.Single()
+            .Should()
+            .Be(TimeSpan.FromSeconds(1));
+    }
+    
+    [Fact]
+    public async Task GetIssuesAsync_WhenServerKeepsFailing_ShouldStopAfterTwoAttempts()
+    {
+        // Arrange
+        var firstResponse = new HttpResponseMessage(
+            HttpStatusCode.InternalServerError);
+
+        var secondResponse = new HttpResponseMessage(
+            HttpStatusCode.InternalServerError);
+
+        var handler = new FakeHttpMessageHandler(
+            firstResponse,
+            secondResponse);
+
+        using var httpClient = new HttpClient(handler);
+
+        var retryDelay = new FakeJiraRetryDelay();
+
+        var client = new JiraClient(
+            httpClient,
+            retryDelay);
+
+        // Act
+        var act = async () =>
+            await client.GetIssuesAsync(
+                "https://example.atlassian.net",
+                "charles@example.com",
+                "token",
+                "TEST",
+                CancellationToken.None);
+
+        // Assert
+        await act.Should()
+            .ThrowAsync<HttpRequestException>();
+
+        handler.Requests.Should().HaveCount(2);
+
+        retryDelay.Delays.Should().ContainSingle();
+
+        retryDelay.Delays.Single()
+            .Should()
+            .Be(TimeSpan.FromSeconds(1));
+    }
+    
+    [Fact]
+    public async Task GetCurrentUserAsync_WhenForbidden_ShouldNotRetry()
+    {
+        // Arrange
+        var firstResponse = new HttpResponseMessage(
+            HttpStatusCode.Forbidden);
+
+        var secondResponse = new HttpResponseMessage(
+            HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new
+            {
+                accountId = "jira-account-123",
+                displayName = "Charles Ikeng",
+                emailAddress = "charles@example.com"
+            })
+        };
+
+        var handler = new FakeHttpMessageHandler(
+            firstResponse,
+            secondResponse);
+
+        using var httpClient = new HttpClient(handler);
+
+        var retryDelay = new FakeJiraRetryDelay();
+
+        var client = new JiraClient(
+            httpClient,
+            retryDelay);
+
+        // Act
+        var result = await client.GetCurrentUserAsync(
+            "https://example.atlassian.net",
+            "charles@example.com",
+            "token",
+            CancellationToken.None);
+
+        // Assert
+        result.Should().BeNull();
+
+        handler.Requests.Should().ContainSingle();
+
+        retryDelay.Delays.Should().BeEmpty();
+    }
+    
+    [Fact]
+    public async Task GetIssuesAsync_WhenNetworkFailure_ShouldRetry()
+    {
+        // Arrange
+        var handler =
+            new NetworkFailureThenSuccessHandler();
+
+        using var httpClient = new HttpClient(handler);
+
+        var retryDelay = new FakeJiraRetryDelay();
+
+        var client = new JiraClient(
+            httpClient,
+            retryDelay);
+
+        // Act
+        var act = async () =>
+            await client.GetIssuesAsync(
+                "https://example.atlassian.net",
+                "charles@example.com",
+                "token",
+                "TEST",
+                CancellationToken.None);
+
+        // Assert
+        await act.Should().NotThrowAsync();
+
+        handler.RequestCount.Should().Be(2);
+
+        retryDelay.Delays.Should().ContainSingle();
+
+        retryDelay.Delays.Single()
+            .Should()
+            .Be(TimeSpan.FromSeconds(1));
+    }
+    
+    [Fact]
+    public async Task GetIssuesAsync_WhenNetworkKeepsFailing_ShouldStopAfterTwoAttempts()
+    {
+        // Arrange
+        var handler = new AlwaysNetworkFailureHandler();
+
+        using var httpClient = new HttpClient(handler);
+
+        var retryDelay = new FakeJiraRetryDelay();
+
+        var client = new JiraClient(
+            httpClient,
+            retryDelay);
+
+        // Act
+        var act = async () =>
+            await client.GetIssuesAsync(
+                "https://example.atlassian.net",
+                "charles@example.com",
+                "token",
+                "TEST",
+                CancellationToken.None);
+
+        // Assert
+        await act.Should()
+            .ThrowAsync<HttpRequestException>();
+
+        handler.RequestCount.Should().Be(2);
+
+        retryDelay.Delays.Should().ContainSingle();
+
+        retryDelay.Delays.Single()
+            .Should()
+            .Be(TimeSpan.FromSeconds(1));
+    }
+    
+    
+    private sealed class AlwaysNetworkFailureHandler
+        : HttpMessageHandler
+    {
+        public int RequestCount { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            RequestCount++;
+
+            throw new HttpRequestException(
+                "Temporary network failure");
+        }
+    }
+
+    private sealed class NetworkFailureThenSuccessHandler
+        : HttpMessageHandler
+    {
+        public int RequestCount { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            RequestCount++;
+
+            if (RequestCount == 1)
+            {
+                throw new HttpRequestException(
+                    "Temporary network failure");
+            }
+
+            return Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(new
+                    {
+                        issues = Array.Empty<object>(),
+                        nextPageToken = (string?)null,
+                        isLast = true
+                    })
+                });
+        }
+    }
+    
     private sealed class FakeHttpMessageHandler
         : HttpMessageHandler
     {
@@ -444,6 +934,21 @@ public sealed class JiraClientTests
 
             return Task.FromResult(
                 _responses.Dequeue());
+        }
+    }
+    
+    private sealed class FakeJiraRetryDelay
+        : IJiraRetryDelay
+    {
+        public List<TimeSpan> Delays { get; } = [];
+
+        public Task DelayAsync(
+            TimeSpan delay,
+            CancellationToken cancellationToken)
+        {
+            Delays.Add(delay);
+
+            return Task.CompletedTask;
         }
     }
 }

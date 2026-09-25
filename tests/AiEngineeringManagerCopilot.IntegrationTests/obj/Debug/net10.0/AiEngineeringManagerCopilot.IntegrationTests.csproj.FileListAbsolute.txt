@@ -439,3 +439,12 @@
 /Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.IntegrationTests/bin/Debug/net10.0/System.ClientModel.dll
 /Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.IntegrationTests/bin/Debug/net10.0/System.Memory.Data.dll
 /Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.IntegrationTests/obj/Debug/net10.0/AiEngineeringManagerCopilot.IntegrationTests.sourcelink.json
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.IntegrationTests/bin/Debug/net10.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.IntegrationTests/bin/Debug/net10.0/Microsoft.Bcl.Cryptography.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.IntegrationTests/bin/Debug/net10.0/Microsoft.IdentityModel.Abstractions.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.IntegrationTests/bin/Debug/net10.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.IntegrationTests/bin/Debug/net10.0/Microsoft.IdentityModel.Logging.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.IntegrationTests/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.IntegrationTests/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.IntegrationTests/bin/Debug/net10.0/Microsoft.IdentityModel.Tokens.dll
+/Users/charles.ikeng.ext/Desktop/Projects/AiEngineeringManagerCopilot/tests/AiEngineeringManagerCopilot.IntegrationTests/bin/Debug/net10.0/System.IdentityModel.Tokens.Jwt.dll

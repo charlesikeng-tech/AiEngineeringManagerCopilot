@@ -41,4 +41,12 @@ public sealed class GitHubConnectionRepository(
     {
         await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<GitHubConnection>> GetAllAsync(
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.GitHubConnections
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -18,4 +18,7 @@ public interface IGitHubConnectionRepository
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken);
+    
+    Task<IReadOnlyList<GitHubConnection>> GetAllAsync(
+        CancellationToken cancellationToken);
 }

@@ -739,7 +739,8 @@
       "AiEngineeringManagerCopilot.Application/1.0.0": {
         "dependencies": {
           "AiEngineeringManagerCopilot.Domain": "1.0.0",
-          "FluentValidation": "12.1.1"
+          "FluentValidation": "12.1.1",
+          "Microsoft.Extensions.Hosting.Abstractions": "10.0.12"
         },
         "runtime": {
           "AiEngineeringManagerCopilot.Application.dll": {

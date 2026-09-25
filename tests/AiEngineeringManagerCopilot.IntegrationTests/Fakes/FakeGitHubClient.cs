@@ -17,8 +17,15 @@ public sealed class FakeGitHubClient : IGitHubClient
         PullRequestsByRepository { get; set; } =
         new(StringComparer.OrdinalIgnoreCase);
     
+    public Dictionary<string, Exception>
+        PullRequestExceptionsByRepository { get; set; } =
+        new(StringComparer.OrdinalIgnoreCase);
+    
     public Dictionary<int, List<GitHubPullRequestReview>>
         ReviewsByPullRequestNumber { get; set; } = [];
+    
+    public Dictionary<int, Exception>
+        ReviewExceptionsByPullRequestNumber { get; set; } = [];
     
     public Dictionary<string, List<GitHubDeployment>>
         DeploymentsByRepository { get; set; } =
@@ -26,6 +33,13 @@ public sealed class FakeGitHubClient : IGitHubClient
 
     public Dictionary<long, List<GitHubDeploymentStatus>>
         DeploymentStatusesByDeploymentId { get; set; } = [];
+    
+    public Dictionary<string, Exception>
+        DeploymentExceptionsByRepository { get; set; } =
+        new(StringComparer.OrdinalIgnoreCase);
+    
+    public Dictionary<long, Exception>
+        DeploymentStatusExceptionsByDeploymentId { get; set; } = [];
 
     public Task<GitHubOrganization?> GetOrganizationAsync(
         string organization,
@@ -68,6 +82,16 @@ public sealed class FakeGitHubClient : IGitHubClient
     {
         ReceivedOrganization = owner;
         ReceivedAccessToken = accessToken;
+        
+        if (PullRequestExceptionsByRepository.TryGetValue(
+                repository,
+                out var exception))
+        {
+            return Task.FromException<
+                IReadOnlyList<GitHubPullRequest>>(
+                exception);
+        }
+        
 
         if (!PullRequestsByRepository.TryGetValue(
                 repository,
@@ -91,6 +115,15 @@ public sealed class FakeGitHubClient : IGitHubClient
     {
         ReceivedOrganization = owner;
         ReceivedAccessToken = accessToken;
+        
+        if (ReviewExceptionsByPullRequestNumber.TryGetValue(
+                pullRequestNumber,
+                out var exception))
+        {
+            return Task.FromException<
+                IReadOnlyList<GitHubPullRequestReview>>(
+                exception);
+        }
 
         if (!ReviewsByPullRequestNumber.TryGetValue(
                 pullRequestNumber,
@@ -113,7 +146,16 @@ public sealed class FakeGitHubClient : IGitHubClient
     {
         ReceivedOrganization = owner;
         ReceivedAccessToken = accessToken;
-
+        
+        if (DeploymentExceptionsByRepository.TryGetValue(
+                repository,
+                out var exception))
+        {
+            return Task.FromException<
+                IReadOnlyList<GitHubDeployment>>(
+                exception);
+        }
+        
         if (!DeploymentsByRepository.TryGetValue(
                 repository,
                 out var deployments))
@@ -137,6 +179,14 @@ public sealed class FakeGitHubClient : IGitHubClient
         ReceivedOrganization = owner;
         ReceivedAccessToken = accessToken;
 
+        if (DeploymentStatusExceptionsByDeploymentId.TryGetValue(
+                deploymentId,
+                out var exception))
+        {
+            return Task.FromException<
+                IReadOnlyList<GitHubDeploymentStatus>>(exception);
+        }
+        
         if (!DeploymentStatusesByDeploymentId.TryGetValue(
                 deploymentId,
                 out var statuses))
@@ -151,13 +201,21 @@ public sealed class FakeGitHubClient : IGitHubClient
     
     public void Reset()
     {
+        ShouldReturnOrganization = true;
+
         Repositories = [];
 
         PullRequestsByRepository.Clear();
+        PullRequestExceptionsByRepository.Clear();
+
         ReviewsByPullRequestNumber.Clear();
+        ReviewExceptionsByPullRequestNumber.Clear();
 
         DeploymentsByRepository.Clear();
+        DeploymentExceptionsByRepository.Clear();
+
         DeploymentStatusesByDeploymentId.Clear();
+        DeploymentStatusExceptionsByDeploymentId.Clear();
 
         ReceivedOrganization = null;
         ReceivedAccessToken = null;

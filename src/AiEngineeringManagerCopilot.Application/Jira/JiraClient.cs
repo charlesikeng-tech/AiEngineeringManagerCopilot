@@ -3,14 +3,17 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json.Serialization;
-using AiEngineeringManagerCopilot.Application.Jira;
 
-namespace AiEngineeringManagerCopilot.Infrastructure.Jira;
+namespace AiEngineeringManagerCopilot.Application.Jira;
 
 public sealed class JiraClient(
-    HttpClient httpClient)
+    HttpClient httpClient,
+    IJiraRetryDelay? retryDelay = null)
     : IJiraClient
 {
+    private readonly IJiraRetryDelay _retryDelay =
+        retryDelay ?? new JiraRetryDelay();
+    
     public async Task<JiraCurrentUser?> GetCurrentUserAsync(
         string baseUrl,
         string email,
@@ -20,17 +23,20 @@ public sealed class JiraClient(
         var url =
             $"{baseUrl.TrimEnd('/')}/rest/api/3/myself";
 
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            url);
+        using var response = await SendWithRetryAsync(
+            () =>
+            {
+                var request = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    url);
 
-        SetAuthentication(
-            request,
-            email,
-            apiToken);
+                SetAuthentication(
+                    request,
+                    email,
+                    apiToken);
 
-        using var response = await httpClient.SendAsync(
-            request,
+                return request;
+            },
             cancellationToken);
 
         if (response.StatusCode is
@@ -87,17 +93,20 @@ public sealed class JiraClient(
             var url =
                 $"{baseUrl.TrimEnd('/')}/rest/api/3/search/jql?{query}";
 
-            using var request = new HttpRequestMessage(
-                HttpMethod.Get,
-                url);
+            using var response = await SendWithRetryAsync(
+                () =>
+                {
+                    var request = new HttpRequestMessage(
+                        HttpMethod.Get,
+                        url);
 
-            SetAuthentication(
-                request,
-                email,
-                apiToken);
+                    SetAuthentication(
+                        request,
+                        email,
+                        apiToken);
 
-            using var response = await httpClient.SendAsync(
-                request,
+                    return request;
+                },
                 cancellationToken);
 
             response.EnsureSuccessStatusCode();
@@ -134,6 +143,79 @@ public sealed class JiraClient(
         return issues;
     }
 
+    private async Task<HttpResponseMessage> SendWithRetryAsync(
+        Func<HttpRequestMessage> requestFactory,
+        CancellationToken cancellationToken)
+    {
+        const int maxAttempts = 2;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            var request = requestFactory();
+
+            try
+            {
+                var response = await httpClient.SendAsync(
+                    request,
+                    cancellationToken);
+
+                var shouldRetry =
+                    response.StatusCode == HttpStatusCode.TooManyRequests ||
+                    (int)response.StatusCode >= 500;
+
+                if (!shouldRetry ||
+                    attempt == maxAttempts)
+                {
+                    request.Dispose();
+                    return response;
+                }
+
+                var delay = GetRetryDelay(response);
+
+                response.Dispose();
+                request.Dispose();
+
+                await _retryDelay.DelayAsync(
+                    delay,
+                    cancellationToken);
+            }
+            catch (HttpRequestException)
+                when (attempt < maxAttempts)
+            {
+                request.Dispose();
+
+                await _retryDelay.DelayAsync(
+                    TimeSpan.FromSeconds(1),
+                    cancellationToken);
+            }
+        }
+
+        throw new InvalidOperationException(
+            "Unexpected retry state.");
+    }
+    
+    private static TimeSpan GetRetryDelay(
+        HttpResponseMessage response)
+    {
+        var retryAfter = response.Headers.RetryAfter;
+
+        if (retryAfter?.Delta is { } delta)
+        {
+            return delta;
+        }
+
+        if (retryAfter?.Date is { } date)
+        {
+            var delay = date - DateTimeOffset.UtcNow;
+
+            return delay > TimeSpan.Zero
+                ? delay
+                : TimeSpan.Zero;
+        }
+
+        return TimeSpan.FromSeconds(1);
+    }
+    
     private sealed record JiraCurrentUserDto(
         [property: JsonPropertyName("accountId")]
         string AccountId,

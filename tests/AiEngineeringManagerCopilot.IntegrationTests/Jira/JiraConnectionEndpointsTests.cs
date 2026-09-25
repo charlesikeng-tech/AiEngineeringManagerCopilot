@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using AiEngineeringManagerCopilot.Application.Jira;
 using AiEngineeringManagerCopilot.Application.Metrics;
 using AiEngineeringManagerCopilot.Application.Teams;
+using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.IntegrationTests.Fakes;
@@ -11,7 +12,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AiEngineeringManagerCopilot.IntegrationTests.Teams;
+namespace AiEngineeringManagerCopilot.IntegrationTests.Jira;
 
 public class JiraConnectionEndpointsTests
     : IClassFixture<CustomWebApplicationFactory>
@@ -434,6 +435,60 @@ public class JiraConnectionEndpointsTests
 
         metric.Value.Should()
             .Be(36);
+    }
+    
+    [Fact]
+    public async Task SyncJiraConnection_ShouldReturn404_WhenTeamBelongsToAnotherUser()
+    {
+        // Arrange
+        var otherUserId = Guid.NewGuid();
+        var teamId = Guid.NewGuid();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider
+                .GetRequiredService<AppDbContext>();
+
+            dbContext.Users.Add(
+                new User
+                {
+                    Id = otherUserId,
+                    Email = $"other-{Guid.NewGuid():N}@example.com",
+                    Name = "Other User",
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+
+            dbContext.Teams.Add(
+                new Team
+                {
+                    Id = teamId,
+                    OwnerUserId = otherUserId,
+                    Name = "Other user's Jira team",
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+
+            await dbContext.SaveChangesAsync();
+        }
+
+        var fakeJiraClient = _factory.Services
+            .GetRequiredService<FakeJiraClient>();
+
+        fakeJiraClient.Reset();
+
+        // Act
+        var response = await _client.PostAsync(
+            $"/teams/{teamId}/jira/sync",
+            null);
+
+        // Assert
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.NotFound);
+
+        fakeJiraClient.ReceivedBaseUrl.Should()
+            .BeNull();
+
+        fakeJiraClient.ReceivedApiToken.Should()
+            .BeNull();
     }
 
     private async Task<TeamResponse> CreateTeamAsync()

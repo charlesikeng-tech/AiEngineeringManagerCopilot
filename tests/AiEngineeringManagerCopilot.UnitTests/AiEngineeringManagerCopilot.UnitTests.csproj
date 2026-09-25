@@ -25,6 +25,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\AiEngineeringManagerCopilot.Infrastructure\AiEngineeringManagerCopilot.Infrastructure.csproj" />
+      <ProjectReference Include="..\AiEngineeringManagerCopilot.IntegrationTests\AiEngineeringManagerCopilot.IntegrationTests.csproj" />
     </ItemGroup>
 
 </Project>
