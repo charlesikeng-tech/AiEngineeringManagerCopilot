@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.0](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.3.0...v1.4.0) (2026-09-25)
+
+
+### Features
+
+* add pagination to GitHub API client ([4075c5c](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/4075c5c43345d2bbfeeaab8c578c6adcd2260a6e))
+* add retry handling for GitHub API failures ([061816a](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/061816aa7f5774de6ee5053766398cf4776720b7))
+* **auth:** add JWT authentication and test auth handler ([5e30f76](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/5e30f76b23f72577eb44ad7cbd48e2b0c4a30d98))
+* improve GitHub API retry and rate limit handling ([3ced157](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/3ced157fd542f3dfd8382948b81fa17aace5e799))
+
 ## [1.3.0](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.2.5...v1.3.0) (2026-09-22)
 
 
