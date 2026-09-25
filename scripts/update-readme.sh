@@ -28,23 +28,9 @@ if [[ $TEST_EXIT_CODE -ne 0 ]]; then
     echo "❌ Tests failed with exit code $TEST_EXIT_CODE"
     exit $TEST_EXIT_CODE
 fi
-echo ""
 
 # ------------------------------------------------------------
 # Extract and aggregate test results
-# ------------------------------------------------------------
-#
-# Supports French output:
-#
-# Réussi! - échec : 0, réussite : 153,
-#           ignorée(s) : 0, total : 153
-#
-# And English output:
-#
-# Passed! - Failed: 0, Passed: 153,
-#           Skipped: 0, Total: 153
-#
-# Multiple test projects are automatically aggregated.
 # ------------------------------------------------------------
 
 TOTAL=0
@@ -116,6 +102,34 @@ $START
 - ✅ OpenAI
 - 🧪 Fake LLM provider
 
+### Engineering intelligence
+
+- ✅ 8 engineering metrics
+- ✅ Engineering health
+- ✅ Engineering reports
+- ✅ Risk detection
+- ✅ Recommended actions
+- ✅ AI analysis
+- ✅ Metric Trends v1
+- ✅ Early Warning v1
+
+### Synchronization resilience
+
+- ✅ GitHub pagination
+- ✅ GitHub retry / rate-limit handling
+- ✅ Jira retry / rate-limit handling
+- ✅ GitHub background synchronization
+- ✅ Jira background synchronization
+
+### Authentication & Team Isolation
+
+- ✅ Current-user abstraction
+- ✅ HTTP current-user resolution
+- ✅ Owner-based Team isolation
+- ✅ GitHub / Jira isolation
+- ✅ JWT authentication infrastructure
+- 🚧 Endpoint-level authorization rollout
+
 ### Engineering Metrics
 
 | Metric | Source |
@@ -147,6 +161,7 @@ EOF
 # ------------------------------------------------------------
 
 python3 - "$README" "$CONTENT" <<'PY'
+import re
 import sys
 from pathlib import Path
 
@@ -159,17 +174,38 @@ end = "<!-- AUTO-GENERATED:END -->"
 if not readme_path.exists():
     raise SystemExit("README.md not found")
 
-text = readme_path.read_text()
+text = readme_path.read_text(encoding="utf-8")
 
-if start in text and end in text:
-    before = text.split(start, 1)[0]
-    after = text.split(end, 1)[1]
+pattern = re.compile(
+    re.escape(start) + r".*?" + re.escape(end),
+    re.DOTALL
+)
+
+matches = list(pattern.finditer(text))
+
+if matches:
+    # Replace the first generated block.
+    text = pattern.sub(content, text, count=1)
+
+    # Remove any stale duplicate generated blocks.
+    text = pattern.sub("", text)
+    
+    # Reinsert our canonical block at the position of the first one.
+    first_start = matches[0].start()
+
+    # Because the previous substitutions changed the string,
+    # reconstruct cleanly from the README without generated blocks.
+    original = readme_path.read_text(encoding="utf-8")
+    clean = pattern.sub("", original)
+
+    insertion_point = min(first_start, len(clean))
 
     text = (
-        before.rstrip()
+        clean[:insertion_point].rstrip()
         + "\n\n"
         + content
-        + after
+        + "\n\n"
+        + clean[insertion_point:].lstrip()
     )
 else:
     text = (
@@ -179,7 +215,12 @@ else:
         + "\n"
     )
 
-readme_path.write_text(text)
+readme_path.write_text(
+    text,
+    encoding="utf-8"
+)
 PY
 
+echo ""
 echo "✅ README.md updated"
+echo "📊 $PASSED/$TOTAL tests passed"

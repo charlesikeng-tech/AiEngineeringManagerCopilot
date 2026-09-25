@@ -1,38 +1,46 @@
 # AI Engineering Manager Copilot
 
-AI Engineering Manager Copilot is an engineering intelligence platform designed to help Engineering Managers understand team health, identify delivery and engineering risks, and turn engineering data into concrete actions.
+AI Engineering Manager Copilot is an engineering intelligence platform
+designed to help Engineering Managers understand team health, identify
+delivery and engineering risks, and turn engineering data into concrete
+actions.
 
 The goal is not to replace engineering leadership.
 
-The product acts as an evidence-based copilot that helps Engineering Managers:
+The product acts as an evidence-based copilot that helps Engineering
+Managers:
 
-- understand engineering health;
-- detect delivery and quality risks;
-- identify bottlenecks;
-- monitor engineering metrics;
-- connect GitHub and Jira engineering data;
-- generate actionable recommendations;
-- support engineering decisions;
-- reduce the time spent collecting and interpreting engineering information.
+-   understand engineering health;
+-   detect delivery and quality risks;
+-   identify bottlenecks;
+-   monitor engineering metrics;
+-   connect GitHub and Jira engineering data;
+-   generate actionable recommendations;
+-   support engineering decisions;
+-   reduce the time spent collecting and interpreting engineering
+    information.
 
----
+------------------------------------------------------------------------
 
 ## 🎯 Vision
 
-Engineering Managers have access to large amounts of engineering data across tools such as GitHub, Jira and CI/CD platforms.
+Engineering Managers have access to large amounts of engineering data
+across tools such as GitHub, Jira and CI/CD platforms.
 
 The difficult part is not collecting data.
 
-The difficult part is turning that data into a coherent understanding of:
+The difficult part is turning that data into a coherent understanding
+of:
 
-- what is happening;
-- why it matters;
-- what is becoming risky;
-- what should be done next.
+-   what is happening;
+-   why it matters;
+-   what is becoming risky;
+-   what should be done next.
 
-AI Engineering Manager Copilot aims to create the following continuous loop:
+AI Engineering Manager Copilot aims to create the following continuous
+loop:
 
-```text
+``` text
 GitHub / Jira
       ↓
 Engineering Data
@@ -56,39 +64,50 @@ Verification
 
 The long-term objective is to answer a simple question:
 
-> What are the three most important things an Engineering Manager should do this week?
+> What are the three most important things an Engineering Manager should
+> do this week?
 
-The answer should be data-driven, contextual, explainable, actionable and verifiable.
+The answer should be data-driven, contextual, explainable, actionable
+and verifiable.
 
----
+------------------------------------------------------------------------
 
 # 🚀 Current capabilities
 
 The current backend MVP already supports:
 
-- team management;
-- team members;
-- GitHub connection management;
-- GitHub repository synchronization;
-- GitHub pull request synchronization;
-- GitHub pull request review synchronization;
-- GitHub deployment synchronization;
-- Jira connection management;
-- Jira connection validation;
-- Jira issue synchronization;
-- engineering metric calculation;
-- engineering health scoring;
-- engineering reports;
-- engineering insights;
-- engineering risk detection;
-- recommended engineering actions;
-- AI-based report analysis;
-- OpenAI integration;
-- deterministic fake LLM execution;
-- PostgreSQL persistence;
-- automated unit and integration testing.
+-   team management;
+-   team members;
+-   GitHub connection management;
+-   GitHub repository synchronization;
+-   GitHub pull request synchronization;
+-   GitHub pull request review synchronization;
+-   GitHub deployment synchronization;
+-   Jira connection management;
+-   Jira connection validation;
+-   Jira issue synchronization;
+-   engineering metric calculation;
+-   engineering health scoring;
+-   engineering reports;
+-   engineering insights;
+-   engineering risk detection;
+-   recommended engineering actions;
+-   AI-based report analysis;
+-   OpenAI integration;
+-   deterministic fake LLM execution;
+-   PostgreSQL persistence;
+-   metric trends and cross-period engineering signal analysis;
+-   Early Warning v1 with recommended actions and AI-assisted analysis;
+-   resilient GitHub synchronization with pagination, retry and
+    rate-limit handling;
+-   resilient Jira synchronization with retry and rate-limit handling;
+-   background synchronization jobs for GitHub and Jira;
+-   current-user abstraction and owner-based team isolation;
+-   JWT authentication infrastructure;
+-   deterministic test authentication for integration tests;
+-   automated unit and integration testing.
 
----
+------------------------------------------------------------------------
 
 # 🔌 Engineering data integrations
 
@@ -98,7 +117,7 @@ GitHub is currently used as an engineering data source.
 
 The application can synchronize:
 
-```text
+``` text
 GitHub
  │
  ├── Repositories
@@ -109,7 +128,7 @@ GitHub
 
 The synchronization flow is:
 
-```text
+``` text
 GitHub API
     ↓
 IGitHubClient
@@ -126,22 +145,23 @@ PostgreSQL
 Engineering Metrics
 ```
 
-GitHub credentials are stored through the connection abstraction and the access token is protected before persistence.
+GitHub credentials are stored through the connection abstraction and the
+access token is protected before persistence.
 
 ### GitHub metrics
 
 GitHub currently provides the source data for:
 
-| Metric               | GitHub data             |
-| -------------------- | ----------------------- |
-| Cycle Time           | Pull Requests           |
-| PR Review Time       | Pull Requests + Reviews |
-| Deployment Frequency | Deployments             |
-| Change Failure Rate  | Deployments             |
-| Open PRs             | Pull Requests           |
-| Merged PRs           | Pull Requests           |
+Metric                 GitHub data
+  ---------------------- -------------------------
+Cycle Time             Pull Requests
+PR Review Time         Pull Requests + Reviews
+Deployment Frequency   Deployments
+Change Failure Rate    Deployments
+Open PRs               Pull Requests
+Merged PRs             Pull Requests
 
----
+------------------------------------------------------------------------
 
 ## Jira
 
@@ -149,16 +169,16 @@ Jira is also implemented as an engineering data source.
 
 A team can configure a Jira connection using:
 
-- Jira base URL;
-- account email;
-- API token;
-- project key.
+-   Jira base URL;
+-   account email;
+-   API token;
+-   project key.
 
 The application can validate the connection before synchronization.
 
 The synchronization flow is:
 
-```text
+``` text
 Jira Cloud
     ↓
 IJiraClient
@@ -176,7 +196,7 @@ Engineering Metrics
 
 Jira issue synchronization currently stores:
 
-```text
+``` text
 ExternalId
 Key
 Summary
@@ -187,11 +207,12 @@ DoneAt
 IsBlocked
 ```
 
-Issue synchronization supports pagination through Jira's enhanced JQL search API.
+Issue synchronization supports pagination through Jira's enhanced JQL
+search API.
 
 For the current MVP:
 
-```text
+``` text
 Jira resolutiondate
         ↓
 JiraIssue.DoneAt
@@ -199,39 +220,51 @@ JiraIssue.DoneAt
 JiraWorkItem.DoneAt
 ```
 
-`resolutiondate` is therefore currently used as the completion timestamp.
+`resolutiondate` is therefore currently used as the completion
+timestamp.
 
-A future improvement can use Jira changelog information to determine the exact workflow transition into a completed state.
+A future improvement can use Jira changelog information to determine the
+exact workflow transition into a completed state.
 
 ### Jira metrics
 
 Jira currently provides the source data for:
 
-| Metric        | Jira data                         |
-| ------------- | --------------------------------- |
-| Lead Time     | Work item CreatedAt → DoneAt      |
-| Blocked Items | Jira work items marked as blocked |
+Metric          Jira data
+  --------------- -----------------------------------
+Lead Time       Work item CreatedAt → DoneAt
+Blocked Items   Jira work items marked as blocked
 
----
+------------------------------------------------------------------------
 
 # 📊 Engineering metrics
 
 The platform currently supports eight engineering metrics.
 
-| Metric               | Source | Current meaning                           |
-| -------------------- | ------ | ----------------------------------------- |
-| Cycle Time           | GitHub | Average duration of merged pull requests  |
-| PR Review Time       | GitHub | Time between PR creation and first review |
-| Deployment Frequency | GitHub | Successful deployments during the period  |
-| Change Failure Rate  | GitHub | Failed deployments / total deployments    |
-| Lead Time            | Jira   | Work item creation → completion           |
-| Open PRs             | GitHub | Open pull requests                        |
-| Merged PRs           | GitHub | Merged pull requests                      |
-| Blocked Items        | Jira   | Blocked Jira work items                   |
+  --------------------------------------------------------------------------
+Metric                Source   Current meaning
+  --------------------- -------- -------------------------------------------
+Cycle Time            GitHub   Average duration of merged pull requests
 
-Metrics are persisted as `EngineeringMetric` records and associated with:
+PR Review Time        GitHub   Time between PR creation and first review
 
-```text
+Deployment Frequency  GitHub   Successful deployments during the period
+
+Change Failure Rate   GitHub   Failed deployments / total deployments
+
+Lead Time             Jira     Work item creation → completion
+
+Open PRs              GitHub   Open pull requests
+
+Merged PRs            GitHub   Merged pull requests
+
+Blocked Items         Jira     Blocked Jira work items
+--------------------------------------------------------------------------
+
+Metrics are persisted as `EngineeringMetric` records and associated
+with:
+
+``` text
 Team
 MetricType
 Value
@@ -240,15 +273,16 @@ PeriodEnd
 CreatedAt
 ```
 
-The metric architecture is intentionally extensible so additional signals can be introduced later.
+The metric architecture is intentionally extensible so additional
+signals can be introduced later.
 
----
+------------------------------------------------------------------------
 
 # ❤️ Engineering health
 
 Metrics feed an engineering health scoring layer.
 
-```text
+``` text
 Engineering Metrics
         ↓
 Health Score
@@ -258,7 +292,7 @@ Health Level
 
 The current health levels are:
 
-```text
+``` text
 Excellent
 Healthy
 Needs Attention
@@ -266,27 +300,29 @@ At Risk
 Critical
 ```
 
-The health score provides a summarized view of engineering conditions for a selected reporting period.
+The health score provides a summarized view of engineering conditions
+for a selected reporting period.
 
----
+------------------------------------------------------------------------
 
 # 📄 Engineering reports
 
-The application can generate engineering reports for a team and a selected period.
+The application can generate engineering reports for a team and a
+selected period.
 
 A report contains:
 
-- reporting period;
-- overall engineering health score;
-- health level;
-- executive summary;
-- engineering insights;
-- detected risks;
-- recommended actions.
+-   reporting period;
+-   overall engineering health score;
+-   health level;
+-   executive summary;
+-   engineering insights;
+-   detected risks;
+-   recommended actions.
 
 Example:
 
-```text
+``` text
 Engineering Health
 ────────────────────────────
 
@@ -316,7 +352,7 @@ Actions
 
 Reports are persisted and can later be retrieved for the owning team.
 
----
+------------------------------------------------------------------------
 
 # ⚠️ Risk detection
 
@@ -324,7 +360,7 @@ The application contains a rule-based engineering risk engine.
 
 It can detect signals such as:
 
-```text
+``` text
 High change failure rate
 Low deployment frequency
 High cycle time
@@ -335,7 +371,7 @@ High number of blocked items
 
 An `EngineeringRisk` contains information such as:
 
-```text
+``` text
 Category
 Title
 Description
@@ -344,7 +380,7 @@ Severity
 
 Supported severity levels include:
 
-```text
+``` text
 Critical
 High
 Medium
@@ -353,17 +389,19 @@ Low
 
 The rules are intentionally deterministic and explainable.
 
-AI analysis is an additional layer and does not replace deterministic engineering rules.
+AI analysis is an additional layer and does not replace deterministic
+engineering rules.
 
----
+------------------------------------------------------------------------
 
 # 🎯 Engineering actions
 
-Engineering reports can generate concrete actions from detected engineering conditions.
+Engineering reports can generate concrete actions from detected
+engineering conditions.
 
 An `EngineeringAction` contains information such as:
 
-```text
+``` text
 Title
 Description
 Priority
@@ -371,21 +409,24 @@ Status
 Report association
 ```
 
-The report generation process intentionally limits the number of recommended actions.
+The report generation process intentionally limits the number of
+recommended actions.
 
 The objective is:
 
 > Fewer, better actions.
 
-The product should help an Engineering Manager identify the most important interventions rather than generate another large backlog.
+The product should help an Engineering Manager identify the most
+important interventions rather than generate another large backlog.
 
----
+------------------------------------------------------------------------
 
 # 🤖 AI Engineering Analysis
 
-The application contains an AI analysis layer built behind an abstraction.
+The application contains an AI analysis layer built behind an
+abstraction.
 
-```csharp
+``` csharp
 public interface ILlmProvider
 {
     Task<LlmAnalysisResult> AnalyzeAsync(
@@ -394,27 +435,29 @@ public interface ILlmProvider
 }
 ```
 
-The application therefore does not directly depend on a specific LLM implementation.
+The application therefore does not directly depend on a specific LLM
+implementation.
 
 The AI receives structured engineering context including:
 
-- reporting period;
-- overall score;
-- executive summary;
-- engineering metrics;
-- existing insights;
-- detected risks.
+-   reporting period;
+-   overall score;
+-   executive summary;
+-   engineering metrics;
+-   existing insights;
+-   detected risks.
 
 It can produce:
 
-- executive analysis;
-- additional insights;
-- recommended actions;
-- action priorities.
+-   executive analysis;
+-   additional insights;
+-   recommended actions;
+-   action priorities.
 
-The AI layer uses structured output parsing so application behavior remains controlled by the application rather than by free-form LLM text.
+The AI layer uses structured output parsing so application behavior
+remains controlled by the application rather than by free-form LLM text.
 
----
+------------------------------------------------------------------------
 
 # 🧪 Fake LLM provider
 
@@ -422,14 +465,14 @@ A deterministic `FakeLlmProvider` is available.
 
 It allows the complete AI workflow to be tested without:
 
-- an OpenAI API key;
-- network access;
-- API costs;
-- non-deterministic model responses.
+-   an OpenAI API key;
+-   network access;
+-   API costs;
+-   non-deterministic model responses.
 
 This provider is used extensively by automated tests.
 
-```text
+``` text
 Application
      ↓
  ILlmProvider
@@ -437,7 +480,7 @@ Application
 Fake    OpenAI
 ```
 
----
+------------------------------------------------------------------------
 
 # 🔐 OpenAI integration
 
@@ -445,26 +488,29 @@ A real OpenAI implementation is available behind `ILlmProvider`.
 
 The implementation uses the official OpenAI .NET package.
 
-The OpenAI integration handles configuration and validates conditions such as:
+The OpenAI integration handles configuration and validates conditions
+such as:
 
-- missing API key;
-- missing/invalid model configuration;
-- empty model responses;
-- invalid structured responses.
+-   missing API key;
+-   missing/invalid model configuration;
+-   empty model responses;
+-   invalid structured responses.
 
 OpenAI is optional.
 
-The application can run locally and execute its automated tests using the fake provider.
+The application can run locally and execute its automated tests using
+the fake provider.
 
 Never commit an OpenAI API key to Git.
 
----
+------------------------------------------------------------------------
 
 # 🏗️ Architecture
 
-The backend is implemented as a pragmatic modular monolith using Clean Architecture principles.
+The backend is implemented as a pragmatic modular monolith using Clean
+Architecture principles.
 
-```text
+``` text
 ┌─────────────────────────────────────┐
 │                 API                 │
 │                                     │
@@ -510,13 +556,13 @@ The backend is implemented as a pragmatic modular monolith using Clean Architect
 └─────────────────────────────────────┘
 ```
 
----
+------------------------------------------------------------------------
 
 ## Dependency direction
 
 The project dependencies follow:
 
-```text
+``` text
 API
  ├── Application
  └── Infrastructure
@@ -534,22 +580,22 @@ Domain
 
 The Domain layer does not depend on:
 
-- Entity Framework Core;
-- PostgreSQL;
-- GitHub;
-- Jira;
-- OpenAI;
-- ASP.NET Core.
+-   Entity Framework Core;
+-   PostgreSQL;
+-   GitHub;
+-   Jira;
+-   OpenAI;
+-   ASP.NET Core.
 
 External systems are accessed through abstractions.
 
----
+------------------------------------------------------------------------
 
 # 🧩 Main application areas
 
 The current application is organized around several capabilities.
 
-```text
+``` text
 Application
 │
 ├── Teams
@@ -561,18 +607,21 @@ Application
 ├── Reports
 ├── Risks
 ├── Actions
+├── Metric Trends
+├── Early Warning
 └── AI
 ```
 
-Infrastructure provides the implementations required by those application capabilities.
+Infrastructure provides the implementations required by those
+application capabilities.
 
----
+------------------------------------------------------------------------
 
 # 🗃️ Domain model
 
 The current backend contains domain entities including:
 
-```text
+``` text
 User
 
 Team
@@ -600,15 +649,16 @@ AIAnalysis
 └── AIAnalysisAction
 ```
 
-This separates external engineering data from the intelligence generated from that data.
+This separates external engineering data from the intelligence generated
+from that data.
 
----
+------------------------------------------------------------------------
 
 # 🗄️ Persistence
 
 The application uses:
 
-```text
+``` text
 Entity Framework Core
         ↓
 PostgreSQL
@@ -620,7 +670,7 @@ Database schema changes are managed using EF Core migrations.
 
 Examples of persisted engineering data include:
 
-```text
+``` text
 teams
 team_members
 
@@ -641,11 +691,13 @@ engineering_actions
 AI analyses
 ```
 
-Uniqueness constraints are used for external synchronized data to prevent duplicate records during repeated synchronization.
+Uniqueness constraints are used for external synchronized data to
+prevent duplicate records during repeated synchronization.
 
-Examples include repository/external identifiers and Jira team/external issue identifiers.
+Examples include repository/external identifiers and Jira team/external
+issue identifiers.
 
----
+------------------------------------------------------------------------
 
 # 🔄 Synchronization strategy
 
@@ -653,7 +705,7 @@ GitHub and Jira synchronization are designed to be repeatable.
 
 The general model is:
 
-```text
+``` text
 External API
      ↓
 Fetch
@@ -669,9 +721,10 @@ Persistence
 LastSyncAt
 ```
 
-This allows synchronization to update existing data instead of blindly creating duplicates.
+This allows synchronization to update existing data instead of blindly
+creating duplicates.
 
----
+------------------------------------------------------------------------
 
 # 🌐 API
 
@@ -679,7 +732,7 @@ The application exposes ASP.NET Core Minimal APIs.
 
 The main API areas currently include:
 
-```text
+``` text
 Teams
 Team Members
 GitHub
@@ -693,13 +746,13 @@ AI Analysis
 
 Metric calculation endpoints are exposed under:
 
-```http
+``` http
 /teams/{teamId}/metrics
 ```
 
 Available metric operations include:
 
-```http
+``` http
 POST /teams/{teamId}/metrics/cycle-time
 POST /teams/{teamId}/metrics/pr-review-time
 POST /teams/{teamId}/metrics/deployment-frequency
@@ -712,46 +765,46 @@ POST /teams/{teamId}/metrics/blocked-items
 
 Metric endpoints accept a reporting period using:
 
-```text
+``` text
 periodStart
 periodEnd
 ```
 
----
+------------------------------------------------------------------------
 
 ## Engineering reports
 
-```http
+``` http
 POST /teams/{teamId}/reports
 ```
 
 Generate an engineering report.
 
-```http
+``` http
 GET /teams/{teamId}/reports
 ```
 
 Retrieve reports belonging to the team.
 
-```http
+``` http
 GET /teams/{teamId}/reports/{reportId}
 ```
 
 Retrieve a specific report.
 
-```http
+``` http
 POST /teams/{teamId}/reports/{reportId}/analyze
 ```
 
 Generate or retrieve an AI analysis for a report.
 
----
+------------------------------------------------------------------------
 
 ## GitHub integration
 
 GitHub endpoints allow a team to:
 
-```text
+``` text
 Configure connection
 Retrieve connection
 Delete connection
@@ -761,26 +814,26 @@ Synchronize engineering data
 
 The GitHub synchronization pipeline covers:
 
-```text
+``` text
 Repositories
 Pull Requests
 Pull Request Reviews
 Deployments
 ```
 
----
+------------------------------------------------------------------------
 
 ## Jira integration
 
 Jira endpoints are grouped under:
 
-```http
+``` http
 /teams/{teamId}/jira
 ```
 
 Current operations include:
 
-```http
+``` http
 POST /teams/{teamId}/jira
 GET /teams/{teamId}/jira
 DELETE /teams/{teamId}/jira
@@ -788,118 +841,128 @@ POST /teams/{teamId}/jira/test
 POST /teams/{teamId}/jira/sync
 ```
 
-The Jira synchronization endpoint imports Jira issues into `JiraWorkItem`.
+The Jira synchronization endpoint imports Jira issues into
+`JiraWorkItem`.
 
----
+------------------------------------------------------------------------
 
 # 🛠️ Technology stack
 
 ## Backend
 
-- .NET 10
-- C#
-- ASP.NET Core Minimal APIs
-- Entity Framework Core
-- PostgreSQL
+-   .NET 10
+-   C#
+-   ASP.NET Core Minimal APIs
+-   Entity Framework Core
+-   PostgreSQL
 
 ## External integrations
 
-- GitHub REST API
-- Jira Cloud REST API
-- OpenAI
+-   GitHub REST API
+-   Jira Cloud REST API
+-   OpenAI
 
 ## Testing
 
-- xUnit
-- FluentAssertions
-- `WebApplicationFactory`
-- PostgreSQL integration tests
-- Fake GitHub client
-- Fake Jira client
-- Fake LLM provider
+-   xUnit
+-   FluentAssertions
+-   `WebApplicationFactory`
+-   PostgreSQL integration tests
+-   Fake GitHub client
+-   Fake Jira client
+-   Fake LLM provider
 
 ## API
 
-- Minimal APIs
-- OpenAPI / Swagger
+-   Minimal APIs
+-   OpenAPI / Swagger
 
 ## Development
 
-- .NET CLI
-- Git
-- Docker / Docker Compose
-- Visual Studio Code / Rider
-- macOS / Linux-compatible CI
+-   .NET CLI
+-   Git
+-   Docker / Docker Compose
+-   Visual Studio Code / Rider
+-   macOS / Linux-compatible CI
 
 ## CI/CD
 
-- GitHub Actions
+-   GitHub Actions
 
----
+------------------------------------------------------------------------
 
 # 🧪 Testing
 
 The solution contains two main automated test projects:
 
-```text
+``` text
 AiEngineeringManagerCopilot.UnitTests
 AiEngineeringManagerCopilot.IntegrationTests
 ```
 
 The current local baseline is:
 
-```text
-153 unit tests
-129 integration tests
-
-282 total
-282 passed
+``` text
+412 total
+412 passed
 0 failed
 0 skipped
 ```
 
-The final total is also maintained automatically in the generated README status section.
+The suite includes both unit and integration tests. The exact split can
+evolve as new scenarios are added, while the project target remains a
+fully green regression suite.
+
+The final total is also maintained automatically in the generated README
+status section.
 
 Run all tests:
 
-```bash
+``` bash
 dotnet test
 ```
 
 The automated suite covers areas including:
 
-- team management;
-- team members;
-- repository persistence;
-- GitHub connection management;
-- GitHub synchronization;
-- pull request synchronization;
-- review synchronization;
-- deployment synchronization;
-- Jira connection management;
-- Jira connection validation;
-- Jira issue synchronization;
-- metric calculators;
-- metric endpoints;
-- engineering health;
-- engineering reports;
-- risk generation;
-- action generation;
-- AI analysis;
-- structured LLM parsing;
-- duplicate AI analysis prevention;
-- fake and real-provider configuration behavior.
+-   team management;
+-   team members;
+-   repository persistence;
+-   GitHub connection management;
+-   GitHub synchronization;
+-   pull request synchronization;
+-   review synchronization;
+-   deployment synchronization;
+-   Jira connection management;
+-   Jira connection validation;
+-   Jira issue synchronization;
+-   metric calculators;
+-   metric endpoints;
+-   engineering health;
+-   engineering reports;
+-   risk generation;
+-   action generation;
+-   AI analysis;
+-   structured LLM parsing;
+-   duplicate AI analysis prevention;
+-   fake and real-provider configuration behavior;
+-   metric trends;
+-   Early Warning detection and actions;
+-   GitHub pagination, retry and rate-limit resilience;
+-   Jira retry and rate-limit resilience;
+-   GitHub and Jira background synchronization;
+-   current-user behavior and team ownership isolation;
+-   JWT/test-authentication infrastructure.
 
 Integration tests use PostgreSQL.
 
 The test environment currently uses:
 
-```text
+``` text
 Database: ai_engineering_manager_test
 Port:     5433
 ```
 
----
+------------------------------------------------------------------------
 
 # 💻 Local development
 
@@ -907,49 +970,50 @@ Port:     5433
 
 Install:
 
-- .NET 10 SDK;
-- PostgreSQL or Docker;
-- Git.
+-   .NET 10 SDK;
+-   PostgreSQL or Docker;
+-   Git.
 
 Verify .NET:
 
-```bash
+``` bash
 dotnet --version
 ```
 
 Restore:
 
-```bash
+``` bash
 dotnet restore
 ```
 
 Build:
 
-```bash
+``` bash
 dotnet build
 ```
 
 Run tests:
 
-```bash
+``` bash
 dotnet test
 ```
 
 Run the API:
 
-```bash
+``` bash
 dotnet run --project src/AiEngineeringManagerCopilot.Api
 ```
 
----
+------------------------------------------------------------------------
 
 # ⚙️ Configuration
 
-The application supports selecting the LLM provider through configuration.
+The application supports selecting the LLM provider through
+configuration.
 
 Example:
 
-```json
+``` json
 {
   "Llm": {
     "Provider": "Fake",
@@ -961,7 +1025,7 @@ Example:
 
 For local development:
 
-```text
+``` text
 Provider = Fake
 ```
 
@@ -969,13 +1033,36 @@ This allows AI workflows to execute without an external API.
 
 For OpenAI:
 
-```text
+``` text
 Provider = OpenAI
 ApiKey   = <secret>
 Model    = <model>
 ```
 
----
+## JWT authentication
+
+JWT bearer authentication infrastructure is configured in the API.
+
+Example configuration:
+
+``` json
+{
+  "Jwt": {
+    "Issuer": "AiEngineeringManagerCopilot",
+    "Audience": "AiEngineeringManagerCopilot",
+    "Key": ""
+  }
+}
+```
+
+The signing key must be supplied through User Secrets or environment
+configuration and must never be committed to Git.
+
+The current authentication work is intentionally incremental: JWT
+validation and current-user resolution are implemented, while
+endpoint-level authorization is being rolled out progressively.
+
+------------------------------------------------------------------------
 
 # 🔒 Secrets
 
@@ -983,27 +1070,29 @@ Secrets must never be committed to Git.
 
 Sensitive integration values include:
 
-```text
+``` text
 OpenAI API key
 GitHub access token
 Jira API token
+JWT signing key
 ```
 
-For local .NET configuration, User Secrets or environment variables should be used.
+For local .NET configuration, User Secrets or environment variables
+should be used.
 
 Example:
 
-```bash
+``` bash
 dotnet user-secrets set "Llm:ApiKey" "YOUR_API_KEY"
 ```
 
 Local secret/configuration files should remain outside source control.
 
----
+------------------------------------------------------------------------
 
 # 📁 Project structure
 
-```text
+``` text
 AiEngineeringManagerCopilot/
 │
 ├── src/
@@ -1046,7 +1135,7 @@ AiEngineeringManagerCopilot/
 └── AiEngineeringManagerCopilot.sln
 ```
 
----
+------------------------------------------------------------------------
 
 # 🔑 Key design decisions
 
@@ -1056,17 +1145,19 @@ The MVP remains a modular monolith.
 
 No microservices are currently required.
 
-This keeps deployment and development simple while preserving clear boundaries between application capabilities.
+This keeps deployment and development simple while preserving clear
+boundaries between application capabilities.
 
----
+------------------------------------------------------------------------
 
 ## External systems behind abstractions
 
-The application does not expose external provider implementation details to the domain.
+The application does not expose external provider implementation details
+to the domain.
 
 Examples include:
 
-```text
+``` text
 IGitHubClient
 IJiraClient
 ILlmProvider
@@ -1074,20 +1165,21 @@ ILlmProvider
 
 This allows:
 
-- fake implementations in tests;
-- provider replacement;
-- lower coupling;
-- deterministic local execution.
+-   fake implementations in tests;
+-   provider replacement;
+-   lower coupling;
+-   deterministic local execution.
 
----
+------------------------------------------------------------------------
 
 ## Repository abstractions
 
-Application services access persistence through repository abstractions rather than directly using `AppDbContext`.
+Application services access persistence through repository abstractions
+rather than directly using `AppDbContext`.
 
 Examples include:
 
-```text
+``` text
 ITeamRepository
 IPullRequestRepository
 IPullRequestReviewRepository
@@ -1100,15 +1192,16 @@ IEngineeringReportRepository
 
 EF Core implementations live in Infrastructure.
 
----
+------------------------------------------------------------------------
 
 ## AI analysis idempotency
 
 An AI analysis is associated with an engineering report.
 
-Before generating another analysis, the application checks whether one already exists.
+Before generating another analysis, the application checks whether one
+already exists.
 
-```text
+``` text
 EngineeringReport
        │
        └── AIAnalysis
@@ -1116,15 +1209,16 @@ EngineeringReport
 
 This prevents unnecessary duplicate analyses and LLM calls.
 
----
+------------------------------------------------------------------------
 
 ## Synchronization idempotency
 
-GitHub and Jira synchronization use external identifiers to distinguish existing records from new records.
+GitHub and Jira synchronization use external identifiers to distinguish
+existing records from new records.
 
 Repeated synchronization therefore follows:
 
-```text
+``` text
 External item
      ↓
 Exists?
@@ -1134,7 +1228,7 @@ Yes       No
 Update   Create
 ```
 
----
+------------------------------------------------------------------------
 
 # 🤖 README automation
 
@@ -1142,20 +1236,20 @@ Part of this README is automatically maintained.
 
 The script is located at:
 
-```text
+``` text
 scripts/update-readme.sh
 ```
 
 It:
 
-1. executes the automated test suite;
-2. aggregates results from all test projects;
-3. updates the generated implementation status section;
-4. fails if the test suite fails.
+1.  executes the automated test suite;
+2.  aggregates results from all test projects;
+3.  updates the generated implementation status section;
+4.  fails if the test suite fails.
 
 The generated section is delimited by:
 
-```html
+``` html
 
 <!-- AUTO-GENERATED:START -->
 
@@ -1167,6 +1261,34 @@ The generated section is delimited by:
 - ✅ Jira
 - ✅ OpenAI
 - 🧪 Fake LLM provider
+
+### Engineering intelligence
+
+- ✅ 8 engineering metrics
+- ✅ Engineering health
+- ✅ Engineering reports
+- ✅ Risk detection
+- ✅ Recommended actions
+- ✅ AI analysis
+- ✅ Metric Trends v1
+- ✅ Early Warning v1
+
+### Synchronization resilience
+
+- ✅ GitHub pagination
+- ✅ GitHub retry / rate-limit handling
+- ✅ Jira retry / rate-limit handling
+- ✅ GitHub background synchronization
+- ✅ Jira background synchronization
+
+### Authentication & Team Isolation
+
+- ✅ Current-user abstraction
+- ✅ HTTP current-user resolution
+- ✅ Owner-based Team isolation
+- ✅ GitHub / Jira isolation
+- ✅ JWT authentication infrastructure
+- 🚧 Endpoint-level authorization rollout
 
 ### Engineering Metrics
 
@@ -1191,252 +1313,280 @@ The generated section is delimited by:
 ```
 
 <!-- AUTO-GENERATED:END -->
+
 ```
 
-A GitHub Actions workflow can execute this script after changes on `main` and commit the README when generated information changes.
-
----
-
-# 🧭 Roadmap
-
-## Phase 1 — Engineering intelligence foundation
-
-- [x] Team management
-- [x] Team members
-- [x] Engineering metrics
-- [x] Engineering health score
-- [x] Engineering insights
-- [x] Risk detection
-- [x] Recommended actions
-- [x] Engineering reports
-- [x] Report persistence
-- [x] API endpoints
-- [x] Unit tests
-- [x] Integration tests
-
----
-
-## Phase 2 — AI Engineering Manager
-
-- [x] `ILlmProvider`
-- [x] Fake LLM provider
-- [x] OpenAI provider
-- [x] AI report analysis
-- [x] AI insights
-- [x] AI actions
-- [x] Duplicate analysis prevention
-- [x] Structured LLM output parsing
-- [ ] Prompt versioning / improved prompt management
-- [ ] AI confidence and evidence
-- [ ] Analysis history
-- [ ] AI cost tracking
-
----
-
-## Phase 3 — GitHub engineering data
-
-- [x] GitHub connection
-- [x] Connection validation
-- [x] Repository synchronization
-- [x] Pull request synchronization
-- [x] Pull request review synchronization
-- [x] Deployment synchronization
-- [x] Cycle Time from GitHub
-- [x] PR Review Time from GitHub
-- [x] Deployment Frequency from GitHub
-- [x] Change Failure Rate from GitHub
-- [x] Open PRs from GitHub
-- [x] Merged PRs from GitHub
-- [ ] GitHub pagination beyond current synchronization limits where applicable
-- [ ] Additional GitHub engineering signals
+    A GitHub Actions workflow can execute this script after changes on `main` and commit the README when generated information changes.
+
+    ---
+
+    # 🧭 Roadmap
+
+    ## Phase 1 — Engineering intelligence foundation
+
+    - [x] Team management
+    - [x] Team members
+    - [x] Engineering metrics
+    - [x] Engineering health score
+    - [x] Engineering insights
+    - [x] Risk detection
+    - [x] Recommended actions
+    - [x] Engineering reports
+    - [x] Report persistence
+    - [x] API endpoints
+    - [x] Unit tests
+    - [x] Integration tests
+
+    ---
+
+    ## Phase 2 — AI Engineering Manager
+
+    - [x] `ILlmProvider`
+    - [x] Fake LLM provider
+    - [x] OpenAI provider
+    - [x] AI report analysis
+    - [x] AI insights
+    - [x] AI actions
+    - [x] Duplicate analysis prevention
+    - [x] Structured LLM output parsing
+    - [ ] Prompt versioning / improved prompt management
+    - [ ] AI confidence and evidence
+    - [ ] Analysis history
+    - [ ] AI cost tracking
+
+    ---
+
+    ## Phase 3 — GitHub engineering data
+
+    - [x] GitHub connection
+    - [x] Connection validation
+    - [x] Repository synchronization
+    - [x] Pull request synchronization
+    - [x] Pull request review synchronization
+    - [x] Deployment synchronization
+    - [x] Cycle Time from GitHub
+    - [x] PR Review Time from GitHub
+    - [x] Deployment Frequency from GitHub
+    - [x] Change Failure Rate from GitHub
+    - [x] Open PRs from GitHub
+    - [x] Merged PRs from GitHub
+    - [x] GitHub pagination
+    - [x] Retry and rate-limit resilience
+    - [x] Background synchronization
+    - [ ] Additional GitHub engineering signals
+
+    ---
+
+    ## Phase 4 — Jira engineering data
+
+    - [x] Jira connection
+    - [x] Project key configuration
+    - [x] Connection validation
+    - [x] Jira issue search
+    - [x] Jira pagination
+    - [x] Jira work item persistence
+    - [x] Jira synchronization
+    - [x] Blocked Items from Jira
+    - [x] Lead Time from Jira
+    - [x] Retry and rate-limit resilience
+    - [x] Background synchronization
+    - [ ] Exact Done transition using Jira changelog
+    - [ ] Sprint synchronization
+    - [ ] Additional workflow/status analytics
+
+    ---
 
----
+    ## Engineering intelligence extensions
 
-## Phase 4 — Jira engineering data
+    - [x] Metric Trends v1
+    - [x] Early Warning v1
+    - [x] Early Warning recommended actions
+    - [x] AI-assisted Early Warning analysis
 
-- [x] Jira connection
-- [x] Project key configuration
-- [x] Connection validation
-- [x] Jira issue search
-- [x] Jira pagination
-- [x] Jira work item persistence
-- [x] Jira synchronization
-- [x] Blocked Items from Jira
-- [x] Lead Time from Jira
-- [ ] Exact Done transition using Jira changelog
-- [ ] Sprint synchronization
-- [ ] Additional workflow/status analytics
+    ---
 
----
+    ## Authentication & Team Isolation v1
 
-## Phase 5 — Engineering Management cockpit
+    - [x] `ICurrentUser` abstraction
+    - [x] HTTP current-user resolution
+    - [x] Owner-based Team isolation
+    - [x] GitHub connection and sync isolation
+    - [x] Jira connection and sync isolation
+    - [x] JWT bearer authentication infrastructure
+    - [x] Integration-test authentication handler
+    - [ ] Endpoint-level `RequireAuthorization`
+    - [ ] Explicit `401 Unauthorized` integration coverage
+    - [ ] Complete authorization rollout across API areas
 
-- [ ] Web dashboard
-- [ ] Team health overview
-- [ ] Metric trends
-- [ ] Risk dashboard
-- [ ] Action tracking
-- [ ] Historical comparisons
-- [ ] Team-level filtering
-- [ ] Engineering health evolution
-- [ ] Weekly engineering brief
+    ---
 
----
+    ## Phase 5 — Engineering Management cockpit
 
-## Phase 6 — Additional integrations
+    - [ ] Web dashboard
+    - [ ] Team health overview
+    - [x] Metric trends
+    - [ ] Risk dashboard
+    - [ ] Action tracking
+    - [ ] Historical comparisons
+    - [ ] Team-level filtering
+    - [ ] Engineering health evolution
+    - [ ] Weekly engineering brief
 
-Future integrations may include:
+    ---
 
-- [ ] GitLab
-- [ ] Linear
-- [ ] Azure DevOps
-- [ ] Datadog
-- [ ] additional CI/CD providers
-- [ ] Slack signals where they provide meaningful engineering context
+    ## Phase 6 — Additional integrations
 
----
+    Future integrations may include:
 
-## Phase 7 — Advanced Engineering Manager Copilot
+    - [ ] GitLab
+    - [ ] Linear
+    - [ ] Azure DevOps
+    - [ ] Datadog
+    - [ ] additional CI/CD providers
+    - [ ] Slack signals where they provide meaningful engineering context
 
-Longer-term capabilities include:
+    ---
 
-- contextual team analysis;
-- recurring engineering reviews;
-- automatic detection of delivery anomalies;
-- engineering risk forecasting;
-- action follow-up;
-- post-mortem assistance;
-- engineering decision support;
-- team health trends;
-- 1:1 support;
-- team development insights;
-- goal tracking;
-- incident intelligence;
-- technical debt intelligence;
-- CTO-level views;
-- engineering benchmarks.
+    ## Phase 7 — Advanced Engineering Manager Copilot
 
----
+    Longer-term capabilities include:
 
-# 🚧 Current limitations / technical debt
+    - contextual team analysis;
+    - recurring engineering reviews;
+    - automatic detection of delivery anomalies;
+    - engineering risk forecasting;
+    - action follow-up;
+    - post-mortem assistance;
+    - engineering decision support;
+    - team health trends;
+    - 1:1 support;
+    - team development insights;
+    - goal tracking;
+    - incident intelligence;
+    - technical debt intelligence;
+    - CTO-level views;
+    - engineering benchmarks.
 
-The project is still an MVP.
+    ---
 
-Known limitations currently include:
+    # 🚧 Current limitations / technical debt
 
-### Lead Time
+    The project is still an MVP.
 
-Jira `resolutiondate` is currently used as `DoneAt`.
+    Known limitations currently include:
 
-This is a pragmatic MVP approximation.
+    ### Lead Time
 
-Using Jira changelog data would provide the exact transition time into a completed workflow state.
+    Jira `resolutiondate` is currently used as `DoneAt`.
 
-### Lead Time reporting period
+    This is a pragmatic MVP approximation.
 
-The current Lead Time implementation still selects work items based on the current repository period semantics.
+    Using Jira changelog data would provide the exact transition time into a completed workflow state.
 
-A future improvement should evaluate whether Lead Time reporting should select items completed during the reporting period using `DoneAt`.
+    ### Lead Time reporting period
 
-### Change Failure Rate
+    The current Lead Time implementation still selects work items based on the current repository period semantics.
 
-The current implementation is based on deployment status and is an approximation of full DORA Change Failure Rate.
+    A future improvement should evaluate whether Lead Time reporting should select items completed during the reporting period using `DoneAt`.
 
-A more mature implementation could correlate deployments with incidents, rollbacks or production failures.
+    ### Change Failure Rate
 
-### GitHub pagination
+    The current implementation is based on deployment status and is an approximation of full DORA Change Failure Rate.
 
-Some GitHub synchronization paths currently have bounded API retrieval and should eventually support complete pagination for larger repositories.
+    A more mature implementation could correlate deployments with incidents, rollbacks or production failures.
 
-### Authentication
+    ### GitHub synchronization resilience
 
-The current MVP test/application flow uses a current-user abstraction and a fixed test user in integration testing.
+    GitHub pagination, retry and rate-limit handling are implemented. Further hardening can still be added as synchronization volume and provider behavior evolve.
 
-Production-grade authentication and authorization remain future work.
+    ### Authentication and authorization
 
-### Dashboard
+    The API now includes JWT bearer authentication infrastructure, `HttpCurrentUser`, owner-based team isolation, and deterministic authentication support for integration tests.
 
-There is currently no production web dashboard.
+    Endpoint-level authorization is still being rolled out. `RequireAuthorization` and explicit `401 Unauthorized` coverage are the next steps before the authentication work is considered complete.
 
-The product is backend/API-first at this stage.
+    ### Dashboard
 
-### Historical intelligence
+    There is currently no production web dashboard.
 
-Historical trends and cross-period comparisons remain limited.
+    The product is backend/API-first at this stage.
 
-### CI integration-test initialization
+    ### Historical intelligence
 
-Integration tests use a shared PostgreSQL test database. CI initialization is being hardened to avoid concurrent migration/seed operations when multiple test fixtures initialize the same database.
+    Metric Trends v1 provides an initial cross-period view. Broader historical intelligence, longer-term comparisons and richer forecasting remain future work.
 
----
+    ### CI integration-test initialization
 
-# 🧠 Product principles
+    Integration tests use a shared PostgreSQL test database. CI initialization is being hardened to avoid concurrent migration/seed operations when multiple test fixtures initialize the same database.
 
-## Evidence before opinion
+    ---
 
-Recommendations should be grounded in observable engineering data.
+    # 🧠 Product principles
 
----
+    ## Evidence before opinion
 
-## Fewer, better actions
+    Recommendations should be grounded in observable engineering data.
 
-The goal is not to generate hundreds of recommendations.
+    ---
 
-The system should identify the few actions that matter most.
+    ## Fewer, better actions
 
----
+    The goal is not to generate hundreds of recommendations.
 
-## AI as a copilot
+    The system should identify the few actions that matter most.
 
-AI supports Engineering Manager decision-making.
+    ---
 
-It does not replace engineering leadership.
+    ## AI as a copilot
 
----
+    AI supports Engineering Manager decision-making.
 
-## Explainability
+    It does not replace engineering leadership.
 
-Insights, risks and AI recommendations should be traceable back to engineering signals.
+    ---
 
----
+    ## Explainability
 
-## Human ownership
+    Insights, risks and AI recommendations should be traceable back to engineering signals.
 
-Engineering decisions remain under human ownership.
+    ---
 
----
+    ## Human ownership
 
-## Provider independence
+    Engineering decisions remain under human ownership.
 
-The core application should not become dependent on GitHub, Jira or a specific AI provider.
+    ---
 
----
+    ## Provider independence
 
-## Incremental delivery
+    The core application should not become dependent on GitHub, Jira or a specific AI provider.
 
-The project favors:
+    ---
 
-```text
-Working software
-      >
-Architecture perfection
-```
+    ## Incremental delivery
+
+    The project favors:
+
+    ```text
+    Working software
+          >
+    Architecture perfection
 
 while maintaining:
 
-```text
+``` text
 Coherent architecture
       >
 Quick hacks that become impossible to maintain
 ```
 
----
+------------------------------------------------------------------------
 
 # 📈 Quality goals
 
 The project aims to maintain:
 
-```text
+``` text
 Build         → 0 errors
 Tests         → 100% green
 Architecture  → Clear boundaries
@@ -1447,43 +1597,8 @@ Secrets       → Never committed
 Delivery      → Small incremental changes
 ```
 
----
+------------------------------------------------------------------------
 
 # 📄 License
 
 License to be defined.
-
-<!-- AUTO-GENERATED:START -->
-
-## 🚀 Current implementation status
-
-### Integrations
-
-- ✅ GitHub
-- ✅ Jira
-- ✅ OpenAI
-- 🧪 Fake LLM provider
-
-### Engineering Metrics
-
-| Metric | Source |
-|---|---|
-| Cycle Time | GitHub |
-| PR Review Time | GitHub |
-| Deployment Frequency | GitHub |
-| Change Failure Rate | GitHub |
-| Lead Time | Jira |
-| Open PRs | GitHub |
-| Merged PRs | GitHub |
-| Blocked Items | Jira |
-
-### Automated tests
-
-```text
-282 tests
-282 passed
-0 failed
-0 skipped
-```
-
-<!-- AUTO-GENERATED:END -->
