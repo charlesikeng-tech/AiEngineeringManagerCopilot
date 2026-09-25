@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AiEngineeringManagerCopilot.Application.Jira;
 using AiEngineeringManagerCopilot.Application.Teams;
 using AiEngineeringManagerCopilot.Domain.Entities;
@@ -5,6 +6,7 @@ using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.IntegrationTests.Fakes;
 using AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -465,14 +467,24 @@ public class JiraSyncServiceTests
         using var scope =
             _factory.Services.CreateScope();
 
-        var teamService = scope.ServiceProvider
-            .GetRequiredService<ITeamService>();
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<AppDbContext>();
 
-        return await teamService.CreateAsync(
-            new CreateTeamRequest(
-                $"Jira Sync Team {Guid.NewGuid()}",
-                null),
-            CancellationToken.None);
+        var team = new Team
+        {
+            Id = Guid.NewGuid(),
+            OwnerUserId = Guid.Parse(
+                "11111111-1111-1111-1111-111111111111"),
+            Name = $"Jira Sync Team {Guid.NewGuid()}",
+            Description = null,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        dbContext.Teams.Add(team);
+
+        await dbContext.SaveChangesAsync();
+
+        return TeamResponse.FromEntity(team);
     }
 
     private async Task CreateJiraConnectionAsync(
@@ -481,6 +493,8 @@ public class JiraSyncServiceTests
         using var scope =
             _factory.Services.CreateScope();
 
+        AuthenticateTestUser(scope.ServiceProvider);
+        
         var jiraConnectionService =
             scope.ServiceProvider
                 .GetRequiredService<IJiraConnectionService>();
@@ -496,5 +510,29 @@ public class JiraSyncServiceTests
                 CancellationToken.None);
 
         result.Should().NotBeNull();
+    }
+    
+    private static void AuthenticateTestUser(
+        IServiceProvider serviceProvider)
+    {
+        var httpContextAccessor = serviceProvider
+            .GetRequiredService<IHttpContextAccessor>();
+
+        var claims = new[]
+        {
+            new Claim(
+                ClaimTypes.NameIdentifier,
+                "11111111-1111-1111-1111-111111111111")
+        };
+
+        var identity = new ClaimsIdentity(
+            claims,
+            "Test");
+
+        httpContextAccessor.HttpContext =
+            new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(identity)
+            };
     }
 }
