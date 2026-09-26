@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.4.0...v1.5.0) (2026-09-26)
+
+
+### Features
+
+* add engineering dashboard API and initialize Angular frontend ([9b35f16](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/9b35f16c4363ef8f2fcca9b915a4f29192018d35))
+
 ## [1.4.0](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.3.0...v1.4.0) (2026-09-25)
 
 
