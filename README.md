@@ -1292,11 +1292,7 @@ The generated section is delimited by:
 - ✅ Owner-based Team isolation
 - ✅ GitHub / Jira isolation
 - ✅ JWT authentication infrastructure
-- ✅ Endpoint-level authorization across protected API areas
-- ✅ Explicit `401 Unauthorized` integration coverage
-- ✅ Swagger Bearer authentication
-- ✅ Development-only JWT token generation
-- ✅ End-to-end JWT → current user → team isolation validation
+- 🚧 Endpoint-level authorization rollout
 
 ### Engineering Metrics
 
@@ -1314,8 +1310,8 @@ The generated section is delimited by:
 ### Automated tests
 
 ```text
-420 tests
-420 passed
+452 tests
+452 passed
 0 failed
 0 skipped
 ```
