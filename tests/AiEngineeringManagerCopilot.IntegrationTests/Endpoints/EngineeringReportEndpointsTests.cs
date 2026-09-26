@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using AiEngineeringManagerCopilot.Application.AI;
+using AiEngineeringManagerCopilot.Application.Dashboard;
 using AiEngineeringManagerCopilot.Application.Reports;
 using AiEngineeringManagerCopilot.Application.Teams;
 using AiEngineeringManagerCopilot.Domain.Entities;
@@ -590,6 +591,26 @@ public sealed class EngineeringReportEndpointsTests
             .Should()
             .Contain("Improving");
     }
+    
+    [Fact]
+    public async Task AnalyzeReport_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
+    {
+        var client = _factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            "X-Test-Unauthenticated",
+            "true");
+
+        var teamId = Guid.NewGuid();
+        var reportId = Guid.NewGuid();
+
+        var response = await client.PostAsync(
+            $"/teams/{teamId}/reports/{reportId}/analyze",
+            content: null);
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.Unauthorized);
+    }
 
     private async Task<Guid> CreateTeamAsync()
     {
@@ -1109,6 +1130,16 @@ public sealed class EngineeringReportEndpointsTests
         analysis.Actions.Should().ContainSingle();
 
         analysis.Actions[0].Priority.Should().Be(ActionPriority.High);
+        
+        analysis.Evidence.Should().ContainSingle();
+
+        var evidence = analysis.Evidence!.Single();
+
+        evidence.MetricType.Should().Be("CycleTime");
+        evidence.Value.Should().Be(49m);
+        evidence.Reason.Should().Be(
+            "Cycle time indicates a potential delivery slowdown.");
+        evidence.Confidence.Should().Be(0.92m);
     }
     
     [Fact]
@@ -1298,6 +1329,65 @@ public sealed class EngineeringReportEndpointsTests
     }
     
     [Fact]
+    public async Task AnalyzeReport_ShouldPersistAIEvidence()
+    {
+        // Arrange
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var generateResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01" +
+            "&periodEnd=2026-09-30",
+            null);
+
+        generateResponse.StatusCode
+            .Should()
+            .Be(HttpStatusCode.Created);
+
+        var report = await generateResponse.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        // Act
+        var response = await _client.PostAsync(
+            $"/teams/{teamId}/reports/{report!.Id}/analyze",
+            null);
+
+        // Assert
+        response.StatusCode
+            .Should()
+            .Be(HttpStatusCode.OK);
+
+        await using var scope =
+            _factory.Services.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<AppDbContext>();
+
+        var analysis = await dbContext.AIAnalyses
+            .SingleAsync(x => x.ReportId == report.Id);
+
+        var evidence = await dbContext.AIAnalysisEvidence
+            .Where(x => x.AIAnalysisId == analysis.Id)
+            .ToListAsync();
+
+        evidence.Should().ContainSingle();
+
+        var item = evidence.Single();
+
+        item.AIAnalysisId.Should().Be(analysis.Id);
+        item.MetricType.Should().Be("CycleTime");
+        item.Value.Should().Be(49m);
+        item.Reason.Should().Be(
+            "Cycle time indicates a potential delivery slowdown.");
+        item.Confidence.Should().Be(0.92m);
+        item.CreatedAt.Should().NotBe(default);
+    }
+    
+    [Fact]
     public async Task AnalyzeReport_ShouldReturnPersistedInsightsAndActionsOnSecondCall()
     {
         var teamId = await CreateTeamAsync();
@@ -1355,6 +1445,16 @@ public sealed class EngineeringReportEndpointsTests
         secondAnalysis.Actions[0].Priority
             .Should()
             .Be(ActionPriority.High);
+        
+        secondAnalysis.Evidence.Should().ContainSingle();
+
+        var evidence = secondAnalysis.Evidence!.Single();
+
+        evidence.MetricType.Should().Be("CycleTime");
+        evidence.Value.Should().Be(49m);
+        evidence.Reason.Should().Be(
+            "Cycle time indicates a potential delivery slowdown.");
+        evidence.Confidence.Should().Be(0.92m);
     }
     
     [Fact]
@@ -1545,5 +1645,700 @@ public sealed class EngineeringReportEndpointsTests
         fakeLlmProvider.LastPrompt
             .Should()
             .Contain("Early warning: CycleTime is degrading");
+    }
+    
+    [Fact]
+    public async Task GetReports_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
+    {
+        var client = _factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            "X-Test-Unauthenticated",
+            "true");
+
+        var teamId = Guid.NewGuid();
+
+        var response = await client.GetAsync(
+            $"/teams/{teamId}/reports");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.Unauthorized);
+    }
+    
+    [Fact]
+    public async Task AnalyzeReport_ShouldNotPersistAnalysisWhenEvidenceIsInvalid()
+    {
+        await using var factory =
+            new InvalidEvidenceWebApplicationFactory();
+
+        using var client = factory.CreateClient();
+
+        // Arrange - create the team using the SAME factory/client
+        var createTeamResponse = await client.PostAsJsonAsync(
+            "/teams",
+            new
+            {
+                Name = $"Invalid Evidence Team {Guid.NewGuid():N}",
+                Description = "Invalid evidence integration test"
+            });
+
+        createTeamResponse.StatusCode.Should()
+            .Be(HttpStatusCode.Created);
+
+        var team = await createTeamResponse.Content
+            .ReadFromJsonAsync<TeamResponse>();
+
+        team.Should().NotBeNull();
+
+        var teamId = team!.Id;
+
+        // Seed metrics directly in the SAME database context
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var dbContext = scope.ServiceProvider
+                .GetRequiredService<AppDbContext>();
+
+            var periodStart = new DateOnly(2026, 9, 1);
+            var periodEnd = new DateOnly(2026, 9, 30);
+            var createdAt = DateTimeOffset.UtcNow;
+
+            dbContext.EngineeringMetrics.AddRange(
+                new EngineeringMetric
+                {
+                    Id = Guid.NewGuid(),
+                    TeamId = teamId,
+                    MetricType = MetricType.CycleTime,
+                    Value = 49m,
+                    PeriodStart = periodStart,
+                    PeriodEnd = periodEnd,
+                    CreatedAt = createdAt
+                },
+                new EngineeringMetric
+                {
+                    Id = Guid.NewGuid(),
+                    TeamId = teamId,
+                    MetricType = MetricType.PRReviewTime,
+                    Value = 25m,
+                    PeriodStart = periodStart,
+                    PeriodEnd = periodEnd,
+                    CreatedAt = createdAt
+                },
+                new EngineeringMetric
+                {
+                    Id = Guid.NewGuid(),
+                    TeamId = teamId,
+                    MetricType = MetricType.DeploymentFrequency,
+                    Value = 2m,
+                    PeriodStart = periodStart,
+                    PeriodEnd = periodEnd,
+                    CreatedAt = createdAt
+                },
+                new EngineeringMetric
+                {
+                    Id = Guid.NewGuid(),
+                    TeamId = teamId,
+                    MetricType = MetricType.ChangeFailureRate,
+                    Value = 25m,
+                    PeriodStart = periodStart,
+                    PeriodEnd = periodEnd,
+                    CreatedAt = createdAt
+                },
+                new EngineeringMetric
+                {
+                    Id = Guid.NewGuid(),
+                    TeamId = teamId,
+                    MetricType = MetricType.LeadTime,
+                    Value = 73m,
+                    PeriodStart = periodStart,
+                    PeriodEnd = periodEnd,
+                    CreatedAt = createdAt
+                },
+                new EngineeringMetric
+                {
+                    Id = Guid.NewGuid(),
+                    TeamId = teamId,
+                    MetricType = MetricType.OpenPRs,
+                    Value = 11m,
+                    PeriodStart = periodStart,
+                    PeriodEnd = periodEnd,
+                    CreatedAt = createdAt
+                },
+                new EngineeringMetric
+                {
+                    Id = Guid.NewGuid(),
+                    TeamId = teamId,
+                    MetricType = MetricType.MergedPRs,
+                    Value = 2m,
+                    PeriodStart = periodStart,
+                    PeriodEnd = periodEnd,
+                    CreatedAt = createdAt
+                },
+                new EngineeringMetric
+                {
+                    Id = Guid.NewGuid(),
+                    TeamId = teamId,
+                    MetricType = MetricType.BlockedItems,
+                    Value = 6m,
+                    PeriodStart = periodStart,
+                    PeriodEnd = periodEnd,
+                    CreatedAt = createdAt
+                });
+
+            await dbContext.SaveChangesAsync();
+        }
+
+        // Generate the report
+        var reportResponse = await client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            null);
+
+        var reportBody = await reportResponse.Content.ReadAsStringAsync();
+
+        reportResponse.StatusCode.Should()
+            .Be(
+                HttpStatusCode.Created,
+                $"report creation failed with body: {reportBody}");
+
+        var report = await reportResponse.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        // Act
+        // InvalidEvidenceLlmProvider returns CycleTime = 999
+        // while the real metric is CycleTime = 49.
+        var response = await client.PostAsync(
+            $"/teams/{teamId}/reports/{report!.Id}/analyze",
+            null);
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.InternalServerError);
+
+        // Assert - absolutely nothing should have been persisted
+        await using var verificationScope =
+            factory.Services.CreateAsyncScope();
+
+        var verificationDbContext =
+            verificationScope.ServiceProvider
+                .GetRequiredService<AppDbContext>();
+
+        var analyses = await verificationDbContext.AIAnalyses
+            .Where(x => x.ReportId == report.Id)
+            .ToListAsync();
+
+        analyses.Should().BeEmpty();
+
+        var evidence = await verificationDbContext.AIAnalysisEvidence
+            .Where(x => analyses.Select(a => a.Id)
+                .Contains(x.AIAnalysisId))
+            .ToListAsync();
+
+        evidence.Should().BeEmpty();
+    }
+    
+    [Fact]
+    public async Task GetAnalysis_ShouldReturnPersistedAnalysis()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var generateResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            null);
+
+        generateResponse.StatusCode.Should()
+            .Be(HttpStatusCode.Created);
+
+        var report = await generateResponse.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        // Generate and persist the AI analysis
+        var analyzeResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports/{report!.Id}/analyze",
+            null);
+
+        analyzeResponse.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        // Retrieve the persisted analysis
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/reports/{report.Id}/analysis");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var analysis = await response.Content
+            .ReadFromJsonAsync<AIAnalysisResult>();
+
+        analysis.Should().NotBeNull();
+
+        analysis!.Summary.Should()
+            .NotBeNullOrWhiteSpace();
+
+        analysis.Insights.Should()
+            .ContainSingle();
+
+        analysis.Actions.Should()
+            .ContainSingle();
+
+        analysis.Evidence.Should()
+            .ContainSingle();
+
+        var evidence = analysis.Evidence!.Single();
+
+        evidence.MetricType.Should().Be("CycleTime");
+        evidence.Value.Should().Be(49m);
+        evidence.Confidence.Should().Be(0.92m);
+    }
+    
+    [Fact]
+    public async Task GetAnalysis_ShouldReturnNotFound_WhenAnalysisDoesNotExist()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var generateResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            null);
+
+        generateResponse.StatusCode.Should()
+            .Be(HttpStatusCode.Created);
+
+        var report = await generateResponse.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        // No POST /analyze here
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/reports/{report!.Id}/analysis");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.NotFound);
+    }
+    
+    [Fact]
+    public async Task GetAnalysis_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
+    {
+        var client = _factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            "X-Test-Unauthenticated",
+            "true");
+
+        var teamId = Guid.NewGuid();
+        var reportId = Guid.NewGuid();
+
+        var response = await client.GetAsync(
+            $"/teams/{teamId}/reports/{reportId}/analysis");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.Unauthorized);
+    }
+    
+    [Fact]
+    public async Task GetAnalysis_ShouldReturnNotFound_WhenReportBelongsToAnotherTeam()
+    {
+        var teamAId = await CreateTeamAsync();
+        var teamBId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamAId);
+
+        var generateResponse = await _client.PostAsync(
+            $"/teams/{teamAId}/reports" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            null);
+
+        generateResponse.StatusCode.Should()
+            .Be(HttpStatusCode.Created);
+
+        var report = await generateResponse.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        var analyzeResponse = await _client.PostAsync(
+            $"/teams/{teamAId}/reports/{report!.Id}/analyze",
+            null);
+
+        analyzeResponse.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        // Team B tries to access Team A's analysis
+        var response = await _client.GetAsync(
+            $"/teams/{teamBId}/reports/{report.Id}/analysis");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.NotFound);
+    }
+    
+        [Fact]
+    public async Task GetDashboard_ShouldReturnTeamMetrics()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/dashboard");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var dashboard = await response.Content
+            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+
+        dashboard.Should().NotBeNull();
+
+        dashboard!.TeamId.Should().Be(teamId);
+
+        dashboard.Metrics.Should().HaveCount(8);
+
+        dashboard.Metrics.Should().Contain(
+            x =>
+                x.MetricType == MetricType.CycleTime &&
+                x.Value == 49m);
+
+        dashboard.Metrics.Should().Contain(
+            x =>
+                x.MetricType == MetricType.DeploymentFrequency &&
+                x.Value == 2m);
+
+        dashboard.Metrics.Should().Contain(
+            x =>
+                x.MetricType == MetricType.ChangeFailureRate &&
+                x.Value == 25m);
+    }
+    
+    [Fact]
+    public async Task GetDashboard_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
+    {
+        var client = _factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            "X-Test-Unauthenticated",
+            "true");
+
+        var teamId = Guid.NewGuid();
+
+        var response = await client.GetAsync(
+            $"/teams/{teamId}/dashboard");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.Unauthorized);
+    }
+    
+    [Fact]
+    public async Task GetDashboard_ShouldReturnNotFound_WhenTeamIsNotAccessible()
+    {
+        var unknownTeamId = Guid.NewGuid();
+
+        var response = await _client.GetAsync(
+            $"/teams/{unknownTeamId}/dashboard");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.NotFound);
+    }
+    
+    [Fact]
+    public async Task GetDashboard_ShouldReturnHealthScore()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/dashboard");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var dashboard = await response.Content
+            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+
+        dashboard.Should().NotBeNull();
+
+        dashboard!.HealthScore.Should().NotBeNull();
+
+        dashboard.HealthScore.OverallScore
+            .Should()
+            .BeGreaterThan(0);
+
+        dashboard.HealthScore.DataCoverage
+            .Should()
+            .Be(100m);
+
+        dashboard.HealthScore.HealthLevel
+            .Should()
+            .NotBeNullOrWhiteSpace();
+    }
+    
+    [Fact]
+    public async Task GetDashboard_ShouldReturnMetricTrends()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.CycleTime,
+            40m,
+            new DateOnly(2026, 8, 2),
+            new DateOnly(2026, 8, 31));
+
+        await SeedMetricAsync(
+            teamId,
+            MetricType.DeploymentFrequency,
+            4m,
+            new DateOnly(2026, 8, 2),
+            new DateOnly(2026, 8, 31));
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/dashboard");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var dashboard = await response.Content
+            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+
+        dashboard.Should().NotBeNull();
+
+        dashboard!.Trends.Should().Contain(
+            x =>
+                x.MetricType == MetricType.CycleTime &&
+                x.CurrentValue == 49m &&
+                x.PreviousValue == 40m);
+
+        dashboard.Trends.Should().Contain(
+            x =>
+                x.MetricType == MetricType.DeploymentFrequency &&
+                x.CurrentValue == 2m &&
+                x.PreviousValue == 4m);
+    }
+    
+    [Fact]
+    public async Task GetDashboard_ShouldReturnLatestReportRisks()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var reportResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            null);
+
+        reportResponse.StatusCode.Should()
+            .Be(HttpStatusCode.Created);
+
+        var report = await reportResponse.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/dashboard");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var dashboard = await response.Content
+            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+
+        dashboard.Should().NotBeNull();
+
+        dashboard!.Risks.Should().NotBeEmpty();
+
+        dashboard.Risks.Should().OnlyContain(
+            x => x.ReportId == report!.Id);
+    }
+    
+    [Fact]
+    public async Task GetDashboard_ShouldReturnEmptyRisks_WhenNoReportExists()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/dashboard");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var dashboard = await response.Content
+            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+
+        dashboard.Should().NotBeNull();
+
+        dashboard!.Risks.Should().NotBeNull();
+        dashboard.Risks.Should().BeEmpty();
+    }
+    
+    [Fact]
+    public async Task GetDashboard_ShouldReturnLatestReport()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var reportResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            null);
+
+        reportResponse.StatusCode.Should()
+            .Be(HttpStatusCode.Created);
+
+        var createdReport = await reportResponse.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        createdReport.Should().NotBeNull();
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/dashboard");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var dashboard = await response.Content
+            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+
+        dashboard.Should().NotBeNull();
+        dashboard!.LatestReport.Should().NotBeNull();
+
+        dashboard.LatestReport!.Id
+            .Should()
+            .Be(createdReport!.Id);
+
+        dashboard.LatestReport.TeamId
+            .Should()
+            .Be(teamId);
+
+        dashboard.LatestReport.PeriodStart
+            .Should()
+            .Be(new DateOnly(2026, 9, 1));
+
+        dashboard.LatestReport.PeriodEnd
+            .Should()
+            .Be(new DateOnly(2026, 9, 30));
+    }
+    
+    [Fact]
+    public async Task GetDashboard_ShouldReturnNullLatestReport_WhenNoReportExists()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/dashboard");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var dashboard = await response.Content
+            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+
+        dashboard.Should().NotBeNull();
+
+        dashboard!.LatestReport.Should().BeNull();
+    }
+    
+    [Fact]
+    public async Task GetDashboard_ShouldReturnLatestReportAIAnalysis()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var reportResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            null);
+
+        reportResponse.StatusCode.Should()
+            .Be(HttpStatusCode.Created);
+
+        var report = await reportResponse.Content
+            .ReadFromJsonAsync<EngineeringReportResponse>();
+
+        report.Should().NotBeNull();
+
+        var analysisResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports/{report!.Id}/analyze",
+            null);
+
+        analysisResponse.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var createdAnalysis = await analysisResponse.Content
+            .ReadFromJsonAsync<AIAnalysisResult>();
+
+        createdAnalysis.Should().NotBeNull();
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/dashboard");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var dashboard = await response.Content
+            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+
+        dashboard.Should().NotBeNull();
+
+        dashboard!.AIAnalysis.Should().NotBeNull();
+
+        dashboard.AIAnalysis!.Summary
+            .Should()
+            .Be(createdAnalysis!.Summary);
+
+        dashboard.AIAnalysis.Insights
+            .Should()
+            .HaveCount(createdAnalysis.Insights.Count);
+
+        dashboard.AIAnalysis.Actions
+            .Should()
+            .HaveCount(createdAnalysis.Actions.Count);
+    }
+    
+    [Fact]
+    public async Task GetDashboard_ShouldReturnNullAIAnalysis_WhenReportHasNotBeenAnalyzed()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var reportResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            null);
+
+        reportResponse.StatusCode.Should()
+            .Be(HttpStatusCode.Created);
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/dashboard");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var dashboard = await response.Content
+            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+
+        dashboard.Should().NotBeNull();
+
+        dashboard!.LatestReport.Should().NotBeNull();
+        dashboard.AIAnalysis.Should().BeNull();
     }
 }

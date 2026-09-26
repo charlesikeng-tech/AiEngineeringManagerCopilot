@@ -1,5 +1,7 @@
+using AiEngineeringManagerCopilot.Application.AI;
 using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Infrastructure.AI;
+using FluentAssertions;
 
 namespace AiEngineeringManagerCopilot.UnitTests.AI;
 
@@ -98,5 +100,68 @@ public sealed class LlmAnalysisJsonParserTests
         Assert.Equal(
             "The LLM returned an invalid JSON analysis response.",
             exception.Message);
+    }
+    
+    [Fact]
+    public void Parse_ShouldParseEvidence()
+    {
+        const string json = """
+                            {
+                              "summary": "Engineering delivery is slowing down.",
+                              "insights": [],
+                              "actions": [],
+                              "evidence": [
+                                {
+                                  "metricType": "CycleTime",
+                                  "value": 4.8,
+                                  "reason": "Cycle time increased compared with the previous period.",
+                                  "confidence": 0.92
+                                }
+                              ]
+                            }
+                            """;
+
+        var parser = new LlmAnalysisJsonParser();
+
+        var result = parser.Parse(json);
+
+        result.Evidence.Should().ContainSingle();
+
+        var evidence = result.Evidence.Single();
+
+        evidence.MetricType.Should().Be("CycleTime");
+        evidence.Value.Should().Be(4.8m);
+        evidence.Reason.Should().Be(
+            "Cycle time increased compared with the previous period.");
+        evidence.Confidence.Should().Be(0.92m);
+    }
+    
+    [Fact]
+    public void Parse_ShouldRejectEvidenceWithInvalidConfidence()
+    {
+        const string json = """
+                            {
+                              "summary": "Engineering delivery is slowing down.",
+                              "insights": [],
+                              "actions": [],
+                              "evidence": [
+                                {
+                                  "metricType": "CycleTime",
+                                  "value": 4.8,
+                                  "reason": "Cycle time increased.",
+                                  "confidence": 1.5
+                                }
+                              ]
+                            }
+                            """;
+
+        var parser = new LlmAnalysisJsonParser();
+
+        var act = () => parser.Parse(json);
+
+        act.Should()
+            .Throw<InvalidOperationException>()
+            .WithMessage(
+                "LLM evidence confidence must be between 0 and 1.");
     }
 }

@@ -11,7 +11,9 @@ public static class GitHubEndpoints
         this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup(
-            "/teams/{teamId:guid}/github").WithTags("GitHub");;
+                "/teams/{teamId:guid}/github")
+            .WithTags("GitHub")
+            .RequireAuthorization();
 
         group.MapPost(
             "/",

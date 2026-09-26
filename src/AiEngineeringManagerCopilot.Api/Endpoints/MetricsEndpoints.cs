@@ -9,7 +9,9 @@ public static class MetricsEndpoints
         this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup(
-            "/teams/{teamId:guid}/metrics").WithTags("Metrics");
+                "/teams/{teamId:guid}/metrics")
+            .WithTags("Metrics")
+            .RequireAuthorization();
 
         group.MapPost(
             "/cycle-time",

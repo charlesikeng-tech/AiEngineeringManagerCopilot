@@ -36,6 +36,40 @@ public sealed class EngineeringMetricRepository(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<EngineeringMetric>> GetLatestByTeamAsync(
+        Guid teamId,
+        CancellationToken cancellationToken)
+    {
+        var metrics = await dbContext.EngineeringMetrics
+            .AsNoTracking()
+            .Where(x => x.TeamId == teamId)
+            .ToListAsync(cancellationToken);
+
+        return metrics
+            .GroupBy(x => x.MetricType)
+            .Select(group => group
+                .OrderByDescending(x => x.PeriodEnd)
+                .ThenByDescending(x => x.CreatedAt)
+                .First())
+            .OrderBy(x => x.MetricType)
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<EngineeringMetric>> GetByTeamAndPeriodAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.EngineeringMetrics
+            .AsNoTracking()
+            .Where(x =>
+                x.TeamId == teamId &&
+                x.PeriodStart == periodStart &&
+                x.PeriodEnd == periodEnd)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task SaveChangesAsync(
         CancellationToken cancellationToken)
     {

@@ -103,7 +103,9 @@ The current backend MVP already supports:
 -   resilient Jira synchronization with retry and rate-limit handling;
 -   background synchronization jobs for GitHub and Jira;
 -   current-user abstraction and owner-based team isolation;
--   JWT authentication infrastructure;
+-   JWT authentication and endpoint-level authorization;
+-   Swagger/OpenAPI Bearer authentication for local development;
+-   development-only JWT token generation and deterministic development seeding;
 -   deterministic test authentication for integration tests;
 -   automated unit and integration testing.
 
@@ -903,8 +905,8 @@ AiEngineeringManagerCopilot.IntegrationTests
 The current local baseline is:
 
 ``` text
-412 total
-412 passed
+420 total
+420 passed
 0 failed
 0 skipped
 ```
@@ -1058,9 +1060,11 @@ Example configuration:
 The signing key must be supplied through User Secrets or environment
 configuration and must never be committed to Git.
 
-The current authentication work is intentionally incremental: JWT
-validation and current-user resolution are implemented, while
-endpoint-level authorization is being rolled out progressively.
+JWT validation, HTTP current-user resolution, owner-based team isolation and
+endpoint-level authorization are implemented across the protected team API
+areas. In Development, Swagger supports Bearer authentication and a
+development-only token endpoint can be used to exercise the authenticated API
+end to end.
 
 ------------------------------------------------------------------------
 
@@ -1288,7 +1292,11 @@ The generated section is delimited by:
 - ✅ Owner-based Team isolation
 - ✅ GitHub / Jira isolation
 - ✅ JWT authentication infrastructure
-- 🚧 Endpoint-level authorization rollout
+- ✅ Endpoint-level authorization across protected API areas
+- ✅ Explicit `401 Unauthorized` integration coverage
+- ✅ Swagger Bearer authentication
+- ✅ Development-only JWT token generation
+- ✅ End-to-end JWT → current user → team isolation validation
 
 ### Engineering Metrics
 
@@ -1306,8 +1314,8 @@ The generated section is delimited by:
 ### Automated tests
 
 ```text
-412 tests
-412 passed
+420 tests
+420 passed
 0 failed
 0 skipped
 ```
@@ -1414,9 +1422,12 @@ The generated section is delimited by:
     - [x] Jira connection and sync isolation
     - [x] JWT bearer authentication infrastructure
     - [x] Integration-test authentication handler
-    - [ ] Endpoint-level `RequireAuthorization`
-    - [ ] Explicit `401 Unauthorized` integration coverage
-    - [ ] Complete authorization rollout across API areas
+    - [x] Endpoint-level `RequireAuthorization`
+    - [x] Explicit `401 Unauthorized` integration coverage
+    - [x] Complete authorization rollout across protected API areas
+    - [x] Swagger/OpenAPI Bearer authentication
+    - [x] Development-only JWT token generation
+    - [x] End-to-end JWT authentication and team-isolation validation
 
     ---
 
@@ -1501,9 +1512,9 @@ The generated section is delimited by:
 
     ### Authentication and authorization
 
-    The API now includes JWT bearer authentication infrastructure, `HttpCurrentUser`, owner-based team isolation, and deterministic authentication support for integration tests.
+    Authentication & Team Isolation v1 is complete. The API includes JWT bearer authentication, `HttpCurrentUser`, owner-based team isolation, endpoint-level `RequireAuthorization`, and explicit `401 Unauthorized` integration coverage across the protected API areas.
 
-    Endpoint-level authorization is still being rolled out. `RequireAuthorization` and explicit `401 Unauthorized` coverage are the next steps before the authentication work is considered complete.
+    Local Development also supports Swagger Bearer authentication, a development-only JWT token generator, and deterministic development seed data. The technical `/health` endpoint remains anonymous for liveness checks.
 
     ### Dashboard
 

@@ -12,10 +12,12 @@ public sealed class TeamMemberEndpointsTests
     : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly CustomWebApplicationFactory _factory;
 
     public TeamMemberEndpointsTests(
         CustomWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
     }
 
@@ -560,6 +562,24 @@ public sealed class TeamMemberEndpointsTests
 
         response.StatusCode.Should()
             .Be(HttpStatusCode.BadRequest);
+    }
+    
+    [Fact]
+    public async Task GetTeamMembers_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
+    {
+        var client = _factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            "X-Test-Unauthenticated",
+            "true");
+
+        var teamId = Guid.NewGuid();
+
+        var response = await client.GetAsync(
+            $"/teams/{teamId}/members");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.Unauthorized);
     }
     
 }

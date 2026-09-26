@@ -14,7 +14,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 
-public sealed class CustomWebApplicationFactory
+public class CustomWebApplicationFactory
     : WebApplicationFactory<Program>
 {
     private static readonly object DatabaseInitializationLock = new();
@@ -63,13 +63,13 @@ public sealed class CustomWebApplicationFactory
                 .AddAuthentication(options =>
                 {
                     options.DefaultAuthenticateScheme =
-                        TestAuthHandler.Scheme;
+                        TestAuthHandler.SchemeName;
 
                     options.DefaultChallengeScheme =
-                        TestAuthHandler.Scheme;
+                        TestAuthHandler.SchemeName;
                 })
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                    TestAuthHandler.Scheme,
+                    TestAuthHandler.SchemeName,
                     _ => { });
 
             services.RemoveAll<ICurrentUser>();

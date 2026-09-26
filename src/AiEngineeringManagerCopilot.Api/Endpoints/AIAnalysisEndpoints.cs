@@ -28,6 +28,26 @@ public static class AIAnalysisEndpoints
                 {
                     return Results.NotFound();
                 }
-            });
+            })
+            .RequireAuthorization();
+        
+        app.MapGet(
+                "/teams/{teamId:guid}/reports/{reportId:guid}/analysis",
+                async (
+                    Guid teamId,
+                    Guid reportId,
+                    IAIAnalysisService service,
+                    CancellationToken cancellationToken) =>
+                {
+                    var result = await service.GetAsync(
+                        teamId,
+                        reportId,
+                        cancellationToken);
+
+                    return result is null
+                        ? Results.NotFound()
+                        : Results.Ok(result);
+                })
+            .RequireAuthorization();
     }
 }

@@ -129,6 +129,42 @@ public sealed class EngineeringHealthScoreServiceTests
             return Task.FromResult(result);
         }
 
+        public Task<IReadOnlyList<EngineeringMetric>> GetLatestByTeamAsync(
+            Guid teamId, 
+            CancellationToken cancellationToken)
+        {
+            IReadOnlyList<EngineeringMetric> result =
+                _metrics
+                    .Where(x =>
+                        x.TeamId == teamId)
+                    .GroupBy(x => x.MetricType)
+                    .Select(group => group
+                        .OrderByDescending(x => x.PeriodEnd)
+                        .ThenByDescending(x => x.CreatedAt)
+                        .First())
+                    .OrderBy(x => x.MetricType)
+                    .ToList();
+            
+            return Task.FromResult(result);
+        }
+
+        public Task<IReadOnlyList<EngineeringMetric>> GetByTeamAndPeriodAsync(
+            Guid teamId, 
+            DateOnly periodStart, 
+            DateOnly periodEnd,
+            CancellationToken cancellationToken)
+        {
+            IReadOnlyList<EngineeringMetric> result = 
+                _metrics
+                    .Where(x =>
+                        x.TeamId == teamId &&
+                        x.PeriodStart == periodStart &&
+                        x.PeriodEnd == periodEnd)
+                    .ToList();
+            
+            return Task.FromResult(result);
+        }
+
         public Task SaveChangesAsync(
             CancellationToken cancellationToken)
         {

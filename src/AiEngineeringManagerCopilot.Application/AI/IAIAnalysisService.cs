@@ -6,4 +6,9 @@ public interface IAIAnalysisService
         Guid teamId,
         Guid reportId,
         CancellationToken cancellationToken);
+    
+    Task<AIAnalysisResult?> GetAsync(
+        Guid teamId,
+        Guid reportId,
+        CancellationToken cancellationToken);
 }

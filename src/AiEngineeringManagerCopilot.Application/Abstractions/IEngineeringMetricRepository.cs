@@ -16,6 +16,16 @@ public interface IEngineeringMetricRepository
         DateOnly periodEnd,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<EngineeringMetric>> GetLatestByTeamAsync(
+        Guid teamId,
+        CancellationToken cancellationToken);
+    
+    Task<IReadOnlyList<EngineeringMetric>> GetByTeamAndPeriodAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        CancellationToken cancellationToken);
+
     Task SaveChangesAsync(
         CancellationToken cancellationToken);
 }

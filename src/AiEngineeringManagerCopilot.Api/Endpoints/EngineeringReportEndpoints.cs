@@ -9,7 +9,8 @@ public static class EngineeringReportEndpoints
     {
         var group = app.MapGroup(
                 "/teams/{teamId:guid}/reports")
-            .WithTags("Engineering Reports");
+            .WithTags("Engineering Reports")
+            .RequireAuthorization();
 
         group.MapPost(
             "/",

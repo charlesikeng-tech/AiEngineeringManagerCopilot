@@ -6,6 +6,7 @@ using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.AI;
 using AiEngineeringManagerCopilot.Application.BackgroundJobs;
+using AiEngineeringManagerCopilot.Application.Dashboard;
 using AiEngineeringManagerCopilot.Application.GitHub;
 using AiEngineeringManagerCopilot.Application.GitHub.Validation;
 using AiEngineeringManagerCopilot.Application.Health;
@@ -26,6 +27,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +41,31 @@ builder.Services.AddProblemDetails();
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    const string schemeName = "Bearer";
+
+    options.AddSecurityDefinition(
+        schemeName,
+        new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            Description = "Enter your JWT token."
+        });
+
+    options.AddSecurityRequirement(document =>
+        new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecuritySchemeReference(
+                    schemeName,
+                    document),
+                []
+            }
+        });
+});
 
 builder.Services.AddHttpContextAccessor();
 var jwtOptions = builder.Configuration
@@ -77,14 +103,19 @@ builder.Services
 builder.Services.AddAuthorization();
 
 
-if (builder.Environment.IsDevelopment() ||
-    builder.Environment.IsEnvironment("Test"))
+if (builder.Environment.IsEnvironment("Test"))
 {
     builder.Services.AddScoped<ICurrentUser, DevelopmentCurrentUser>();
 }
 else
 {
     builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+}
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSingleton(jwtOptions);
+    builder.Services.AddSingleton<DevelopmentJwtTokenGenerator>();
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -132,6 +163,7 @@ builder.Services.AddScoped<IJiraSyncService, JiraSyncService>();
 builder.Services.AddScoped<IEngineeringMetricsService, EngineeringMetricsService>();
 builder.Services.AddScoped<IEngineeringHealthScoreService, EngineeringHealthScoreService>();
 builder.Services.AddScoped<IEngineeringReportService, EngineeringReportService>();
+builder.Services.AddScoped<IEngineeringDashboardService, EngineeringDashboardService>();
 
 builder.Services.AddScoped<ICycleTimeCalculator, CycleTimeCalculator>();
 builder.Services.AddScoped<IPRReviewTimeCalculator, PRReviewTimeCalculator>();
@@ -168,7 +200,10 @@ else
     builder.Services.AddSingleton<ILlmProvider, FakeLlmProvider>();
 }
 builder.Services.AddScoped< IAIAnalysisService, AIAnalysisService>();
-
+builder.Services.AddScoped<AIAnalysisPromptBuilder>();
+builder.Services.AddScoped<AIEvidenceValidator>();
+builder.Services.AddScoped<IAIAnalysisActionRepository, AIAnalysisActionRepository>();
+builder.Services.AddScoped<IAIAnalysisEvidenceRepository, AIAnalysisEvidenceRepository>();
 builder.Services
     .AddOptions<LlmOptions>()
     .Bind(builder.Configuration.GetSection("Llm"));
@@ -226,6 +261,29 @@ app.MapMetricsEndpoints();
 app.MapHealthEndpoints();
 app.MapEngineeringReportEndpoints();
 app.MapAIAnalysisEndpoints();
+app.MapEngineeringDashboardEndpoints();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapPost(
+            "/dev/token",
+            (
+                DevelopmentJwtTokenGenerator tokenGenerator) =>
+            {
+                var userId = Guid.Parse(
+                    "11111111-1111-1111-1111-111111111111");
+
+                var token = tokenGenerator.Generate(userId);
+
+                return Results.Ok(new
+                {
+                    accessToken = token,
+                    userId
+                });
+            })
+        .WithTags("Development")
+        .AllowAnonymous();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

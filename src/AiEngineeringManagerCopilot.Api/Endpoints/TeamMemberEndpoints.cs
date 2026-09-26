@@ -8,7 +8,9 @@ public static class TeamMemberEndpoints
         this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/teams/{teamId:guid}/members")
-            .WithTags("Team Members");
+            .WithTags("Team Members")
+            .RequireAuthorization();
+            
 
         group.MapPost(
                 "/",

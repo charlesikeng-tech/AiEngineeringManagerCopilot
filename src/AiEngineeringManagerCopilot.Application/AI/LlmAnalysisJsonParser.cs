@@ -1,8 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using AiEngineeringManagerCopilot.Application.AI;
 
-namespace AiEngineeringManagerCopilot.Infrastructure.AI;
+namespace AiEngineeringManagerCopilot.Application.AI;
 
 public sealed class LlmAnalysisJsonParser : ILlmAnalysisParser
 {
@@ -29,9 +28,25 @@ public sealed class LlmAnalysisJsonParser : ILlmAnalysisParser
                 content,
                 SerializerOptions);
 
-            return result
-                   ?? throw new InvalidOperationException(
-                       "The LLM returned an invalid analysis response.");
+            if (result is null)
+            {
+                throw new InvalidOperationException(
+                    "The LLM returned an invalid analysis response.");
+            }
+
+            if (result.Evidence is not null)
+            {
+                foreach (var evidence in result.SafeEvidence)
+                {
+                    if (evidence.Confidence is < 0 or > 1)
+                    {
+                        throw new InvalidOperationException(
+                            "LLM evidence confidence must be between 0 and 1.");
+                    }
+                }
+            }
+
+            return result;
         }
         catch (JsonException exception)
         {

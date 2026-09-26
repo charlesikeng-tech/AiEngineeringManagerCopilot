@@ -16,9 +16,12 @@ public sealed class AIAnalysisService(
     IAIAnalysisRepository analysisRepository,
     IAIAnalysisInsightRepository analysisInsightRepository,
     IAIAnalysisActionRepository analysisActionRepository,
+    IAIAnalysisEvidenceRepository analysisEvidenceRepository,
     ILlmProvider llmProvider,
     PreviousPeriodCalculator previousPeriodCalculator,
-    MetricTrendBuilder metricTrendBuilder)
+    MetricTrendBuilder metricTrendBuilder,
+    AIEvidenceValidator evidenceValidator,
+    AIAnalysisPromptBuilder promptBuilder)
     : IAIAnalysisService
 {
     public async Task<AIAnalysisResult> AnalyzeAsync(
@@ -53,6 +56,11 @@ public sealed class AIAnalysisService(
                     existingAnalysis.Id,
                     cancellationToken);
 
+            var existingEvidence =
+                await analysisEvidenceRepository.GetByAnalysisIdAsync(
+                    existingAnalysis.Id,
+                    cancellationToken);
+            
             return new AIAnalysisResult(
                 existingAnalysis.Summary,
                 existingInsights
@@ -68,7 +76,14 @@ public sealed class AIAnalysisService(
                         x.Title,
                         x.Description,
                         x.Priority))
-                    .ToList());
+                    .ToList(),
+                existingEvidence
+                    .Select(x => new LlmEvidenceResult(
+                        x.MetricType,
+                        x.Value,
+                        x.Reason,
+                        x.Confidence))
+                .ToList());
         }
 
         var metrics = await GetMetricsAsync(
@@ -119,11 +134,15 @@ public sealed class AIAnalysisService(
             risks,
             trends);
 
-        var prompt = BuildPrompt(context);
+        var prompt = promptBuilder.Build(context);
 
         var result = await llmProvider.AnalyzeAsync(
             prompt,
             cancellationToken);
+        
+        evidenceValidator.Validate(
+            result.SafeEvidence,
+            metrics);
 
         var analysis = new AIAnalysis
         {
@@ -160,6 +179,32 @@ public sealed class AIAnalysisService(
                 Priority = x.Priority
             })
             .ToList();
+        
+        if (persistedActions.Count > 0)
+        {
+            await analysisActionRepository.AddRangeAsync(
+                persistedActions,
+                cancellationToken);
+        }
+        
+        var persistedEvidence = result.SafeEvidence
+            .Select(x =>
+            {
+                var evidence = new AIAnalysisEvidence
+                {
+                    Id = Guid.NewGuid(),
+                    AIAnalysisId = analysis.Id,
+                    MetricType = x.MetricType,
+                    Value = x.Value,
+                    Reason = x.Reason,
+                    CreatedAt = DateTimeOffset.UtcNow
+                };
+
+                evidence.SetConfidence(x.Confidence);
+
+                return evidence;
+            })
+            .ToList();
 
         if (persistedInsights.Count > 0)
         {
@@ -167,11 +212,18 @@ public sealed class AIAnalysisService(
                 persistedInsights,
                 cancellationToken);
         }
-
+        
         if (persistedActions.Count > 0)
         {
             await analysisActionRepository.AddRangeAsync(
                 persistedActions,
+                cancellationToken);
+        }
+        
+        if (persistedEvidence.Count > 0)
+        {
+            await analysisEvidenceRepository.AddRangeAsync(
+                persistedEvidence,
                 cancellationToken);
         }
 
@@ -181,7 +233,72 @@ public sealed class AIAnalysisService(
         return new AIAnalysisResult(
             result.Summary,
             result.Insights,
-            result.Actions);
+            result.Actions,
+            result.SafeEvidence);
+    }
+
+    public async Task<AIAnalysisResult?> GetAsync(
+        Guid teamId,
+        Guid reportId,
+        CancellationToken cancellationToken)
+    {
+        var report = await reportRepository.GetByIdAsync(
+            reportId,
+            teamId,
+            cancellationToken);
+
+        if (report is null)
+        {
+            return null;
+        }
+
+        var analysis = await analysisRepository.GetByReportIdAsync(
+            reportId,
+            cancellationToken);
+
+        if (analysis is null)
+        {
+            return null;
+        }
+
+        var insights =
+            await analysisInsightRepository.GetByAnalysisIdAsync(
+                analysis.Id,
+                cancellationToken);
+
+        var actions =
+            await analysisActionRepository.GetByAnalysisIdAsync(
+                analysis.Id,
+                cancellationToken);
+
+        var evidence =
+            await analysisEvidenceRepository.GetByAnalysisIdAsync(
+                analysis.Id,
+                cancellationToken);
+
+        return new AIAnalysisResult(
+            analysis.Summary,
+            insights
+                .Select(x => new LlmInsightResult(
+                    x.Category,
+                    x.Title,
+                    x.Description,
+                    x.Impact,
+                    x.Recommendation))
+                .ToList(),
+            actions
+                .Select(x => new LlmActionResult(
+                    x.Title,
+                    x.Description,
+                    x.Priority))
+                .ToList(),
+            evidence
+                .Select(x => new LlmEvidenceResult(
+                    x.MetricType,
+                    x.Value,
+                    x.Reason,
+                    x.Confidence))
+                .ToList());
     }
 
     private async Task<IReadOnlyDictionary<MetricType, decimal>> GetMetricsAsync(
@@ -210,99 +327,5 @@ public sealed class AIAnalysisService(
         }
 
         return metrics;
-    }
-
-    private static string BuildPrompt(
-        AIAnalysisContext context)
-    {
-        var metrics = string.Join(
-            Environment.NewLine,
-            context.Metrics.Select(x =>
-                $"- {x.Key}: {x.Value}"));
-
-        var insights = string.Join(
-            Environment.NewLine,
-            context.Insights.Select(x =>
-                $"- {x.Category}: {x.Title} — {x.Description}"));
-
-        var risks = string.Join(
-            Environment.NewLine,
-            context.Risks.Select(x =>
-                $"- {x.Severity} / {x.Category}: {x.Title} — {x.Description}"));
-        
-        var trends = string.Join(
-            Environment.NewLine,
-            context.Trends.Select(x =>
-            {
-                var previousValue = x.PreviousValue.ToString(
-                    "0.##",
-                    CultureInfo.InvariantCulture);
-
-                var currentValue = x.CurrentValue.ToString(
-                    "0.##",
-                    CultureInfo.InvariantCulture);
-
-                var change = x.ChangePercentage.HasValue
-                    ? x.ChangePercentage.Value.ToString(
-                        "+0.##;-0.##;0",
-                        CultureInfo.InvariantCulture) + "%"
-                    : "N/A";
-
-                return
-                    $"- {x.MetricType}: " +
-                    $"{previousValue} → {currentValue} " +
-                    $"({change}) — {x.Direction}";
-            }));
-
-        return $$"""
-            You are an Engineering Manager Copilot.
-
-            Analyze the engineering health of the team.
-
-            ## Period
-
-            {{context.PeriodStart}} to {{context.PeriodEnd}}
-
-            ## Overall score
-
-            {{context.OverallScore}}/100
-
-            ## Executive summary
-
-            {{context.ExecutiveSummary}}
-
-            ## Metrics
-
-            {{metrics}}
-            
-            ## Metric trends compared with previous period
-            
-            {{trends}}
-            
-            ## Existing insights
-
-            {{insights}}
-
-            ## Detected risks
-
-            {{risks}}
-
-            ## Objective
-
-            Identify the most important engineering problems,
-            their potential impact, and concrete actions an Engineering Manager
-            should take.
-
-            Focus on:
-            - delivery efficiency
-            - code review performance
-            - deployment practices
-            - quality and reliability
-            - bottlenecks
-            - engineering process
-            - technical risks
-
-            Provide practical and actionable recommendations.
-            """;
     }
 }

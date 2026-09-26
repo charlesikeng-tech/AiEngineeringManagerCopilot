@@ -71,12 +71,42 @@ public static class LlmAnalysisSchema
                     ],
                     "additionalProperties": false
                   }
+                },
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "metricType": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      },
+                      "reason": {
+                        "type": "string"
+                      },
+                      "confidence": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    },
+                    "required": [
+                      "metricType",
+                      "value",
+                      "reason",
+                      "confidence"
+                    ],
+                    "additionalProperties": false
+                  }
                 }
               },
               "required": [
                 "summary",
                 "insights",
-                "actions"
+                "actions",
+                "evidence"
               ],
               "additionalProperties": false
             }

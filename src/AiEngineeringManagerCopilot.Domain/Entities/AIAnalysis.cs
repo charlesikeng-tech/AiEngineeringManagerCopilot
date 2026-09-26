@@ -9,4 +9,7 @@ public sealed class AIAnalysis
     public string Summary { get; set; } = string.Empty;
 
     public DateTimeOffset CreatedAt { get; set; }
+    
+    public ICollection<AIAnalysisEvidence> Evidence { get; set; } =
+        new List<AIAnalysisEvidence>();
 }

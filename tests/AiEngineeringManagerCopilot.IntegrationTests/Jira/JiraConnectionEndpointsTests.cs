@@ -511,4 +511,22 @@ public class JiraConnectionEndpointsTests
 
         return team!;
     }
+    
+    [Fact]
+    public async Task GetJiraConnection_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
+    {
+        var client = _factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            "X-Test-Unauthenticated",
+            "true");
+
+        var teamId = Guid.NewGuid();
+
+        var response = await client.GetAsync(
+            $"/teams/{teamId}/jira");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.Unauthorized);
+    }
 }

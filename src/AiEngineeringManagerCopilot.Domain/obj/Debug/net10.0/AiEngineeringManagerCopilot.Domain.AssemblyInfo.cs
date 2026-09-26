@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AiEngineeringManagerCopilot.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1652dc78935268062c5eb6c212e2043b54c0102e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d3dc912e68edb33f3e41f74664bb1707447a43e7")]
 [assembly: System.Reflection.AssemblyProductAttribute("AiEngineeringManagerCopilot.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AiEngineeringManagerCopilot.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

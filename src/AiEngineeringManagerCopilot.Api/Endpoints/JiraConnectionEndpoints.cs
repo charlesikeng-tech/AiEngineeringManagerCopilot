@@ -11,7 +11,8 @@ public static class JiraConnectionEndpoints
     {
         var group = app.MapGroup(
                 "/teams/{teamId:guid}/jira")
-            .WithTags("Jira");
+            .WithTags("Jira")
+            .RequireAuthorization();
 
         group.MapPost(
             "",

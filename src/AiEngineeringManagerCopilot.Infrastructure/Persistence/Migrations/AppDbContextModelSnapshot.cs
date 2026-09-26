@@ -72,6 +72,43 @@ namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Migrations
                     b.ToTable("ai_analysis_actions", (string)null);
                 });
 
+            modelBuilder.Entity("AiEngineeringManagerCopilot.Domain.Entities.AIAnalysisEvidence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AIAnalysisId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Confidence")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MetricType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AIAnalysisId");
+
+                    b.ToTable("ai_analysis_evidences", (string)null);
+                });
+
             modelBuilder.Entity("AiEngineeringManagerCopilot.Domain.Entities.AIAnalysisInsight", b =>
                 {
                     b.Property<Guid>("Id")
@@ -711,6 +748,15 @@ namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Migrations
                     b.ToTable("users", (string)null);
                 });
 
+            modelBuilder.Entity("AiEngineeringManagerCopilot.Domain.Entities.AIAnalysisEvidence", b =>
+                {
+                    b.HasOne("AiEngineeringManagerCopilot.Domain.Entities.AIAnalysis", null)
+                        .WithMany("Evidence")
+                        .HasForeignKey("AIAnalysisId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AiEngineeringManagerCopilot.Domain.Entities.EngineeringAction", b =>
                 {
                     b.HasOne("AiEngineeringManagerCopilot.Domain.Entities.EngineeringReport", null)
@@ -796,6 +842,11 @@ namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Migrations
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("AiEngineeringManagerCopilot.Domain.Entities.AIAnalysis", b =>
+                {
+                    b.Navigation("Evidence");
                 });
 #pragma warning restore 612, 618
         }

@@ -41,6 +41,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<AIAnalysisInsight> AIAnalysisInsights => Set<AIAnalysisInsight>();
     
     public DbSet<AIAnalysisAction> AIAnalysisActions => Set<AIAnalysisAction>();
+    
+    public DbSet<AIAnalysisEvidence> AIAnalysisEvidence => Set<AIAnalysisEvidence>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

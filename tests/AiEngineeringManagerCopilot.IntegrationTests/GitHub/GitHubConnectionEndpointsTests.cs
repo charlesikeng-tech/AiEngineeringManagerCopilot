@@ -14,10 +14,12 @@ public sealed class GitHubConnectionEndpointsTests
 {
     private readonly HttpClient _client;
     private readonly FakeGitHubClient _fakeGitHubClient;
+    private readonly CustomWebApplicationFactory _factory;
 
     public GitHubConnectionEndpointsTests(
         CustomWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
         _fakeGitHubClient =
             factory.Services.GetRequiredService<FakeGitHubClient>();
@@ -468,6 +470,24 @@ public sealed class GitHubConnectionEndpointsTests
         _fakeGitHubClient.ReceivedAccessToken
             .Should()
             .Be(accessToken);
+    }
+    
+    [Fact]
+    public async Task GetGitHubConnection_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
+    {
+        var client = _factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            "X-Test-Unauthenticated",
+            "true");
+
+        var teamId = Guid.NewGuid();
+
+        var response = await client.GetAsync(
+            $"/teams/{teamId}/github");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.Unauthorized);
     }
     
 }

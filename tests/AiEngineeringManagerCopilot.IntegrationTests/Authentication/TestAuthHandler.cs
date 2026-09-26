@@ -15,7 +15,7 @@ public sealed class TestAuthHandler(
         logger,
         encoder)
 {
-    public const string Scheme = "Test";
+    public const string SchemeName = "Test";
 
     public static readonly Guid UserId =
         Guid.Parse(
@@ -24,6 +24,13 @@ public sealed class TestAuthHandler(
     protected override Task<AuthenticateResult>
         HandleAuthenticateAsync()
     {
+        if (Request.Headers.ContainsKey(
+                "X-Test-Unauthenticated"))
+        {
+            return Task.FromResult(
+                AuthenticateResult.NoResult());
+            
+        }
         var claims = new[]
         {
             new Claim(
@@ -33,13 +40,13 @@ public sealed class TestAuthHandler(
 
         var identity = new ClaimsIdentity(
             claims,
-            Scheme);
+            SchemeName);
 
         var principal = new ClaimsPrincipal(identity);
 
         var ticket = new AuthenticationTicket(
             principal,
-            Scheme);
+            SchemeName);
 
         return Task.FromResult(
             AuthenticateResult.Success(ticket));

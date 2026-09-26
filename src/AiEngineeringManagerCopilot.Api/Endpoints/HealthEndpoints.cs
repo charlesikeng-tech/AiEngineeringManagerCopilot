@@ -9,7 +9,8 @@ public static class HealthEndpoints
     {
         var group = app.MapGroup(
                 "/teams/{teamId:guid}/health")
-            .WithTags("Health");
+            .WithTags("Health")
+            .RequireAuthorization();
 
         group.MapGet(
             "/score",

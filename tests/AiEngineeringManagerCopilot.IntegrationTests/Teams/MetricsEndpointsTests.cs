@@ -1174,4 +1174,43 @@ public sealed class MetricsEndpointsTests
         result.DataCoverage.Should().Be(30m);
     }
     
+    [Fact]
+    public async Task CalculateCycleTime_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
+    {
+        var client = _factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            "X-Test-Unauthenticated",
+            "true");
+
+        var teamId = Guid.NewGuid();
+
+        var response = await client.PostAsync(
+            $"/teams/{teamId}/metrics/cycle-time" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            content: null);
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.Unauthorized);
+    }
+    
+    [Fact]
+    public async Task GetHealthScore_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
+    {
+        var client = _factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add(
+            "X-Test-Unauthenticated",
+            "true");
+
+        var teamId = Guid.NewGuid();
+
+        var response = await client.GetAsync(
+            $"/teams/{teamId}/health/score" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.Unauthorized);
+    }
+    
 }

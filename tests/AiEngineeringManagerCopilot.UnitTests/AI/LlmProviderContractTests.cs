@@ -25,5 +25,15 @@ public sealed class LlmProviderContractTests
         result.Actions[0].Priority
             .Should()
             .Be(ActionPriority.High);
+        
+        result.Evidence.Should().ContainSingle();
+
+        var evidence = result.Evidence.Single();
+
+        evidence.MetricType.Should().Be("CycleTime");
+        evidence.Value.Should().Be(4.8m);
+        evidence.Confidence.Should().Be(0.92m);
+        evidence.Reason.Should().Be(
+            "Cycle time indicates a potential delivery slowdown.");
     }
 }
