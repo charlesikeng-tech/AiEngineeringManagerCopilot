@@ -155,7 +155,7 @@ public static class DevelopmentDataSeeder
 
             CreateMetric(
                 MetricType.CycleTime,
-                26m,
+                56m,
                 septemberStart,
                 septemberEnd),
 
@@ -173,7 +173,7 @@ public static class DevelopmentDataSeeder
 
             CreateMetric(
                 MetricType.ChangeFailureRate,
-                9m,
+                24m,
                 septemberStart,
                 septemberEnd),
 
@@ -185,7 +185,7 @@ public static class DevelopmentDataSeeder
 
             CreateMetric(
                 MetricType.OpenPRs,
-                9m,
+                14m,
                 septemberStart,
                 septemberEnd),
 
@@ -197,7 +197,7 @@ public static class DevelopmentDataSeeder
 
             CreateMetric(
                 MetricType.BlockedItems,
-                2m,
+                7m,
                 septemberStart,
                 septemberEnd)
         };

@@ -1,0 +1,83 @@
+<div class="reports-page">
+  <header class="page-header">
+    <div>
+      <h1>Engineering Reports</h1>
+      <p>Engineering health reports and historical performance</p>
+    </div>
+  </header>
+
+  <nz-card class="history-card">
+    <div class="section-header">
+      <div>
+        <h2>Report History</h2>
+        <p>Review engineering health across reporting periods</p>
+      </div>
+
+      @if (!loading() && reports().length > 0) {
+        <span class="report-count">
+          {{ reports().length }} reports
+        </span>
+      }
+    </div>
+
+    @if (loading()) {
+      <nz-skeleton
+        [nzActive]="true"
+        [nzParagraph]="{ rows: 5 }"
+      />
+    } @else if (error(); as errorMessage) {
+      <div class="state-message state-message--error">
+        {{ errorMessage }}
+      </div>
+    } @else if (reports().length === 0) {
+      <div class="empty-state">
+        <nz-empty nzNotFoundContent="No engineering reports available" />
+      </div>
+    } @else {
+      <div class="report-list">
+        @for (report of reports(); track report.id) {
+          <article class="report-row">
+            <div class="report-period">
+              <span class="report-month">
+                {{ report.periodStart | date: 'MMMM y' }}
+              </span>
+
+              <span class="report-dates">
+                {{ report.periodStart | date: 'MMM d' }}
+                –
+                {{ report.periodEnd | date: 'MMM d, y' }}
+              </span>
+            </div>
+
+            <div class="report-score">
+              <strong>{{ report.overallScore }}</strong>
+              <span>/100</span>
+            </div>
+
+            <div
+              class="health-status"
+              [class.health-status--healthy]="report.healthLevel === 'Healthy'"
+              [class.health-status--attention]="report.healthLevel === 'Needs Attention'"
+              [class.health-status--critical]="report.healthLevel === 'Critical'"
+            >
+              <span class="health-status-dot"></span>
+              {{ report.healthLevel }}
+            </div>
+
+            <div class="coverage">
+              <strong>{{ report.dataCoverage | number: '1.0-0' }}%</strong>
+              <span>coverage</span>
+            </div>
+
+            <a
+              class="view-report"
+              [routerLink]="['/reports', report.id]"
+            >
+              View report →
+            </a>
+          </article>
+        }
+      </div>
+    }
+  </nz-card>
+</div>

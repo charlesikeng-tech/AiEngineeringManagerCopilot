@@ -1,0 +1,356 @@
+<div class="report-detail">
+  <a routerLink="/reports" class="back-link"> ← Back to reports </a>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 10 }" />
+    </div>
+  } @else if (error(); as errorMessage) {
+    <div class="error-state">
+      {{ errorMessage }}
+    </div>
+  } @else if (report(); as currentReport) {
+    <header class="report-header">
+      <div>
+        <span class="eyebrow">Engineering Report</span>
+
+        <h1>
+          {{ currentReport.periodStart | date: 'MMM d' }}
+          –
+          {{ currentReport.periodEnd | date: 'MMM d, y' }}
+        </h1>
+
+        <p>Generated {{ currentReport.createdAt | date: 'MMM d, y, HH:mm' }}</p>
+      </div>
+
+      <div
+        class="health-status"
+        [class.health-status--healthy]="currentReport.healthLevel === 'Healthy'"
+        [class.health-status--attention]="currentReport.healthLevel === 'Needs Attention'"
+        [class.health-status--critical]="currentReport.healthLevel === 'Critical'"
+      >
+        <span class="health-status-dot"></span>
+        {{ currentReport.healthLevel }}
+      </div>
+    </header>
+
+    <section class="summary-grid">
+      <div class="summary-card">
+        <span>Overall Score</span>
+
+        <div>
+          <strong>{{ currentReport.overallScore }}</strong>
+          <small>/100</small>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <span>Data Coverage</span>
+
+        <div>
+          <strong> {{ currentReport.dataCoverage | number: '1.0-0' }}% </strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="report-section">
+      <div class="section-header">
+        <div>
+          <h2>Executive Summary</h2>
+          <p>Overall engineering health for this reporting period</p>
+        </div>
+      </div>
+
+      <p class="executive-summary">
+        {{ currentReport.executiveSummary }}
+      </p>
+    </section>
+
+    <section class="report-section ai-section">
+      <div class="section-header">
+        <div>
+          <span class="ai-eyebrow">AI Analysis</span>
+          <h2>AI Engineering Analysis</h2>
+          <p>AI-assisted analysis grounded in engineering evidence</p>
+        </div>
+      </div>
+
+      @if (analysisLoading()) {
+        <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 4 }" />
+      } @else if (analysis(); as currentAnalysis) {
+        <div class="ai-summary">
+          <span class="ai-label">Summary</span>
+          <p>{{ currentAnalysis.summary }}</p>
+        </div>
+
+        @if (currentAnalysis.insights.length > 0) {
+          <div class="ai-block">
+            <div class="ai-block-header">
+              <h3>Key Insights</h3>
+
+              <span>
+                {{ currentAnalysis.insights.length }}
+              </span>
+            </div>
+
+            <div class="ai-list">
+              @for (insight of currentAnalysis.insights; track $index) {
+                <article class="ai-list-item">
+                  <span class="ai-item-index">
+                    {{ $index + 1 }}
+                  </span>
+
+                  <div>
+                    <h4>{{ insight.title }}</h4>
+                    <p>{{ insight.description }}</p>
+                  </div>
+                </article>
+              }
+            </div>
+          </div>
+        }
+
+        @if (currentAnalysis.actions.length > 0) {
+          <div class="ai-block">
+            <div class="ai-block-header">
+              <h3>Recommended Actions</h3>
+
+              <span>
+                {{ currentAnalysis.actions.length }}
+              </span>
+            </div>
+
+            <div class="ai-list">
+              @for (action of currentAnalysis.actions; track $index) {
+                <article class="ai-list-item">
+                  <span class="ai-item-index">
+                    {{ $index + 1 }}
+                  </span>
+
+                  <div>
+                    <h4>{{ action.title }}</h4>
+                    <p>{{ action.description }}</p>
+                  </div>
+                </article>
+              }
+            </div>
+          </div>
+        }
+
+        @if (currentAnalysis.evidence?.length) {
+          <div class="ai-block">
+            <div class="ai-block-header">
+              <h3>Evidence</h3>
+
+              <span>
+                {{ currentAnalysis.evidence?.length }}
+              </span>
+            </div>
+
+            <div class="evidence-grid">
+              @for (evidence of currentAnalysis.evidence ?? []; track evidence.metricType) {
+                <article class="evidence-card">
+                  <div class="evidence-header">
+                    <span class="evidence-metric">
+                      {{ evidence.metricType }}
+                    </span>
+
+                    <span class="confidence">
+                      {{ evidence.confidence | percent: '1.0-0' }}
+                      confidence
+                    </span>
+                  </div>
+
+                  <strong class="evidence-value">
+                    {{ evidence.value | number: '1.0-1' }}
+                  </strong>
+
+                  <p>
+                    {{ evidence.reason }}
+                  </p>
+                </article>
+              }
+            </div>
+          </div>
+        }
+      } @else if (analysisUnavailable()) {
+        <div class="analysis-empty">No AI analysis is available for this report.</div>
+      } @else if (analysisError()) {
+        <div class="analysis-error">Unable to load AI analysis.</div>
+      }
+    </section>
+
+    <section class="report-section">
+      <div class="section-header">
+        <div>
+          <h2>Engineering Metrics</h2>
+          <p>Performance indicators captured during this period</p>
+        </div>
+
+        <span class="section-count"> {{ currentReport.metrics.length }} metrics </span>
+      </div>
+
+      <div class="metrics-grid">
+        @for (metric of currentReport.metrics; track metric.metricType) {
+          <div class="metric-card">
+            <span class="metric-name">
+              {{ metric.metricType }}
+            </span>
+
+            <strong class="metric-value">
+              {{ metric.value | number: '1.0-1' }}
+            </strong>
+
+            <span class="metric-score"> Score {{ metric.score }}/100 </span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="report-section">
+      <div class="section-header">
+        <div>
+          <h2>Insights</h2>
+          <p>Key observations identified from engineering metrics</p>
+        </div>
+
+        <span class="section-count">
+          {{ currentReport.insights.length }}
+        </span>
+      </div>
+
+      @if (currentReport.insights.length === 0) {
+        <nz-empty nzNotFoundContent="No insights for this period" />
+      } @else {
+        <div class="item-list">
+          @for (insight of currentReport.insights; track insight.id) {
+            <article class="list-item">
+              <div class="item-heading">
+                <div>
+                  <span class="item-meta"> {{ insight.category }} · {{ insight.metricType }} </span>
+
+                  <h3>{{ insight.title }}</h3>
+                </div>
+              </div>
+
+              <p>{{ insight.description }}</p>
+
+              <div class="item-detail">
+                <strong>Impact</strong>
+                <span>{{ insight.impact }}</span>
+              </div>
+
+              <div class="item-detail">
+                <strong>Recommendation</strong>
+                <span>{{ insight.recommendation }}</span>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="report-section">
+      <div class="section-header">
+        <div>
+          <h2>Engineering Risks</h2>
+          <p>Risks detected during this reporting period</p>
+        </div>
+
+        <span class="section-count">
+          {{ currentReport.risks.length }}
+        </span>
+      </div>
+
+      @if (currentReport.risks.length === 0) {
+        <nz-empty nzNotFoundContent="No engineering risks detected" />
+      } @else {
+        <div class="item-list">
+          @for (risk of currentReport.risks; track risk.id) {
+            <article class="list-item">
+              <div class="item-heading">
+                <div>
+                  <span class="item-meta">
+                    {{ risk.category }}
+                  </span>
+
+                  <h3>{{ risk.title }}</h3>
+                </div>
+
+                <span
+                  class="severity"
+                  [class.severity--high]="risk.severity === 'High'"
+                  [class.severity--medium]="risk.severity === 'Medium'"
+                  [class.severity--low]="risk.severity === 'Low'"
+                >
+                  {{ risk.severity }}
+                </span>
+              </div>
+
+              <p>{{ risk.description }}</p>
+
+              <div class="item-detail">
+                <strong>Recommendation</strong>
+                <span>{{ risk.recommendation }}</span>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="report-section">
+      <div class="section-header">
+        <div>
+          <h2>Recommended Actions</h2>
+          <p>Actions generated from the engineering analysis</p>
+        </div>
+
+        <span class="section-count">
+          {{ currentReport.actions.length }}
+        </span>
+      </div>
+
+      @if (currentReport.actions.length === 0) {
+        <nz-empty nzNotFoundContent="No recommended actions" />
+      } @else {
+        <div class="item-list">
+          @for (action of currentReport.actions; track action.id) {
+            <article class="list-item action-item">
+              <div class="item-heading">
+                <div>
+                  <span class="item-meta">
+                    {{ action.priority }} priority
+                    @if (action.metricType) {
+                      · {{ action.metricType }}
+                    }
+                  </span>
+
+                  <h3>{{ action.title }}</h3>
+                </div>
+
+                <span class="action-status">
+                  {{ action.status }}
+                </span>
+              </div>
+
+              <p>{{ action.description }}</p>
+
+              @if (action.owner || action.dueDate) {
+                <div class="action-metadata">
+                  @if (action.owner) {
+                    <span>Owner: {{ action.owner }}</span>
+                  }
+
+                  @if (action.dueDate) {
+                    <span> Due {{ action.dueDate | date: 'MMM d, y' }} </span>
+                  }
+                </div>
+              }
+            </article>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

@@ -18,6 +18,23 @@ export const routes: Routes = [
             ({ Dashboard }) => Dashboard,
           ),
       },
+      {
+        path: 'reports',
+        loadComponent: () =>
+          import('./features/reports/pages/reports/reports').then(({ Reports }) => Reports),
+      },
+      {
+        path: 'reports/:reportId',
+        loadComponent: () =>
+          import('./features/reports/pages/report-detail/report-detail').then(
+            ({ ReportDetail }) => ReportDetail,
+          ),
+      },
+      {
+        path: 'risks',
+        loadComponent: () =>
+          import('./features/risks/pages/risks/risks').then(({ Risks }) => Risks),
+      },
     ],
   },
   {

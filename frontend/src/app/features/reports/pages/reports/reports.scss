@@ -1,0 +1,215 @@
+:host {
+  display: block;
+}
+
+.reports-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.page-header {
+  padding: 4px 0 8px;
+
+  h1 {
+    margin: 0;
+
+    color: var(--app-text-primary);
+    font-size: 24px;
+    font-weight: 650;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+  }
+
+  p {
+    margin: 6px 0 0;
+
+    color: var(--app-text-secondary);
+    font-size: 14px;
+  }
+}
+
+.history-card {
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-sm);
+
+  ::ng-deep .ant-card-body {
+    padding: 0;
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 22px 24px;
+
+  border-bottom: 1px solid var(--app-border);
+
+  h2 {
+    margin: 0;
+
+    color: var(--app-text-primary);
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 4px 0 0;
+
+    color: var(--app-text-secondary);
+    font-size: 13px;
+  }
+}
+
+.report-count {
+  color: var(--app-text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.report-row {
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 1.5fr) 100px minmax(140px, 1fr) 120px auto;
+  align-items: center;
+  gap: 24px;
+
+  min-height: 88px;
+  padding: 16px 24px;
+
+  border-bottom: 1px solid var(--app-border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &:hover {
+    background: var(--app-surface-secondary);
+  }
+}
+
+.report-period,
+.coverage {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.report-month {
+  color: var(--app-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.report-dates,
+.coverage span {
+  color: var(--app-text-tertiary);
+  font-size: 12px;
+}
+
+.report-score {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+
+  strong {
+    color: var(--app-text-primary);
+    font-size: 20px;
+    font-weight: 650;
+  }
+
+  span {
+    color: var(--app-text-tertiary);
+    font-size: 12px;
+  }
+}
+
+.health-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  color: var(--app-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.health-status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.health-status--healthy {
+  color: var(--app-success);
+}
+
+.health-status--attention {
+  color: var(--app-warning);
+}
+
+.health-status--critical {
+  color: var(--app-danger);
+}
+
+.coverage {
+  strong {
+    color: var(--app-text-primary);
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+.view-report {
+  color: var(--app-primary);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.state-message,
+.empty-state {
+  padding: 48px 24px;
+}
+
+.state-message--error {
+  color: var(--app-danger);
+}
+
+@media (max-width: 900px) {
+  .report-row {
+    grid-template-columns: 1fr auto;
+    gap: 12px 24px;
+  }
+
+  .report-score,
+  .health-status,
+  .coverage {
+    justify-self: start;
+  }
+
+  .view-report {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 575px) {
+  .report-row {
+    grid-template-columns: 1fr;
+  }
+
+  .view-report {
+    justify-self: start;
+  }
+}

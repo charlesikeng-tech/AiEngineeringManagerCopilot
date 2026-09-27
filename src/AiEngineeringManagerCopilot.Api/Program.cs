@@ -179,6 +179,7 @@ builder.Services.AddScoped<IEngineeringMetricsService, EngineeringMetricsService
 builder.Services.AddScoped<IEngineeringHealthScoreService, EngineeringHealthScoreService>();
 builder.Services.AddScoped<IEngineeringReportService, EngineeringReportService>();
 builder.Services.AddScoped<IEngineeringDashboardService, EngineeringDashboardService>();
+builder.Services.AddScoped<IEngineeringRiskService, EngineeringRiskService>();
 
 builder.Services.AddScoped<ICycleTimeCalculator, CycleTimeCalculator>();
 builder.Services.AddScoped<IPRReviewTimeCalculator, PRReviewTimeCalculator>();
@@ -291,6 +292,7 @@ app.MapHealthEndpoints();
 app.MapEngineeringReportEndpoints();
 app.MapAIAnalysisEndpoints();
 app.MapEngineeringDashboardEndpoints();
+app.MapEngineeringRiskEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

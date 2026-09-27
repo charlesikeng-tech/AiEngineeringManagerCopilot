@@ -1,0 +1,144 @@
+<div class="risks-page">
+  @if (loading()) {
+    <div class="state-container">
+      <nz-spin nzSimple nzSize="large"></nz-spin>
+      <span>Loading engineering risks...</span>
+    </div>
+  } @else if (error()) {
+    <nz-alert
+      nzType="error"
+      nzShowIcon
+      nzMessage="Unable to load engineering risks"
+      nzDescription="The current risk assessment could not be loaded."
+    ></nz-alert>
+  } @else if (data(); as riskData) {
+    <header class="page-header">
+      <div>
+        <span class="page-eyebrow">ENGINEERING HEALTH</span>
+
+        <h1>Engineering Risks</h1>
+
+        <p>Current engineering risks identified for the latest reporting period.</p>
+      </div>
+
+      <div class="reporting-period">
+        <span class="reporting-period__label">REPORTING PERIOD</span>
+
+        <strong>
+          {{ riskData.periodStart | date: 'MMM d, y' }}
+          –
+          {{ riskData.periodEnd | date: 'MMM d, y' }}
+        </strong>
+      </div>
+    </header>
+
+    @if (risks().length === 0) {
+      <nz-empty
+        nzNotFoundContent="No engineering risks detected for this reporting period."
+      ></nz-empty>
+    } @else {
+      <section class="risk-summary">
+        <article class="summary-card summary-card--critical">
+          <div class="summary-card__header">
+            <span class="severity-dot"></span>
+            <span>CRITICAL</span>
+          </div>
+
+          <strong>{{ criticalCount() }}</strong>
+          <span>risks</span>
+        </article>
+
+        <article class="summary-card summary-card--high">
+          <div class="summary-card__header">
+            <span class="severity-dot"></span>
+            <span>HIGH</span>
+          </div>
+
+          <strong>{{ highCount() }}</strong>
+          <span>risks</span>
+        </article>
+
+        <article class="summary-card summary-card--medium">
+          <div class="summary-card__header">
+            <span class="severity-dot"></span>
+            <span>MEDIUM</span>
+          </div>
+
+          <strong>{{ mediumCount() }}</strong>
+          <span>risks</span>
+        </article>
+
+        <article class="summary-card summary-card--low">
+          <div class="summary-card__header">
+            <span class="severity-dot"></span>
+            <span>LOW</span>
+          </div>
+
+          <strong>{{ lowCount() }}</strong>
+          <span>risks</span>
+        </article>
+      </section>
+
+      <div class="risk-count">
+        <strong>{{ totalCount() }}</strong>
+        active engineering
+        {{ totalCount() === 1 ? 'risk' : 'risks' }}
+      </div>
+
+      <section class="risks-list">
+        @for (risk of risks(); track risk.id) {
+          <article
+            class="risk-card"
+            [class.risk-card--critical]="risk.severity === 'Critical'"
+            [class.risk-card--high]="risk.severity === 'High'"
+            [class.risk-card--medium]="risk.severity === 'Medium'"
+            [class.risk-card--low]="risk.severity === 'Low'"
+          >
+            <div class="risk-card__header">
+              <div class="risk-card__metadata">
+                <span
+                  class="risk-severity"
+                  [class.risk-severity--critical]="risk.severity === 'Critical'"
+                  [class.risk-severity--high]="risk.severity === 'High'"
+                  [class.risk-severity--medium]="risk.severity === 'Medium'"
+                  [class.risk-severity--low]="risk.severity === 'Low'"
+                >
+                  <span class="severity-dot"></span>
+                  {{ risk.severity | uppercase }}
+                </span>
+
+                <span class="risk-category">
+                  {{ risk.category }}
+                </span>
+              </div>
+
+              @if (risk.metricType) {
+                <span class="risk-metric">
+                  {{ metricLabel(risk.metricType) }}
+                </span>
+              }
+            </div>
+
+            <div class="risk-card__content">
+              <h2>{{ risk.title }}</h2>
+
+              <p class="risk-description">
+                {{ risk.description }}
+              </p>
+            </div>
+
+            <div class="risk-recommendation">
+              <span class="risk-recommendation__label"> RECOMMENDATION </span>
+
+              <p>
+                {{ risk.recommendation }}
+              </p>
+            </div>
+          </article>
+        }
+      </section>
+    }
+  } @else {
+    <nz-empty nzNotFoundContent="No risk assessment is available for this team."></nz-empty>
+  }
+</div>
