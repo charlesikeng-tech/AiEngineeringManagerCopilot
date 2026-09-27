@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using AiEngineeringManagerCopilot.Application.Teams;
+using AiEngineeringManagerCopilot.IntegrationTests.Helpers;
 using AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 using FluentAssertions;
 
@@ -34,7 +35,7 @@ public sealed class TeamEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var team = await response.Content
-            .ReadFromJsonAsync<TeamResponse>();
+            .ReadApiJsonAsync<TeamResponse>();
 
         team.Should().NotBeNull();
         team!.Name.Should()
@@ -89,7 +90,7 @@ public sealed class TeamEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var createdTeam = await createResponse.Content
-            .ReadFromJsonAsync<TeamResponse>();
+            .ReadApiJsonAsync<TeamResponse>();
 
         createdTeam.Should().NotBeNull();
 
@@ -100,7 +101,7 @@ public sealed class TeamEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var team = await response.Content
-            .ReadFromJsonAsync<TeamResponse>();
+            .ReadApiJsonAsync<TeamResponse>();
 
         team.Should().NotBeNull();
         team!.Id.Should().Be(createdTeam.Id);
@@ -131,7 +132,7 @@ public sealed class TeamEndpointsTests
             createRequest);
 
         var createdTeam = await createResponse.Content
-            .ReadFromJsonAsync<TeamResponse>();
+            .ReadApiJsonAsync<TeamResponse>();
 
         createdTeam.Should().NotBeNull();
 
@@ -147,7 +148,7 @@ public sealed class TeamEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var updatedTeam = await response.Content
-            .ReadFromJsonAsync<TeamResponse>();
+            .ReadApiJsonAsync<TeamResponse>();
 
         updatedTeam.Should().NotBeNull();
         updatedTeam!.Name.Should().Be("New Name");
@@ -166,7 +167,7 @@ public sealed class TeamEndpointsTests
             createRequest);
 
         var createdTeam = await createResponse.Content
-            .ReadFromJsonAsync<TeamResponse>();
+            .ReadApiJsonAsync<TeamResponse>();
 
         createdTeam.Should().NotBeNull();
 
@@ -200,7 +201,7 @@ public sealed class TeamEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var teams = await response.Content
-            .ReadFromJsonAsync<List<TeamResponse>>();
+            .ReadApiJsonAsync<List<TeamResponse>>();
 
         teams.Should().NotBeNull();
         teams.Should().Contain(x => x.Name == "Team A");

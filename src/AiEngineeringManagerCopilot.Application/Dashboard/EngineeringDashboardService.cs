@@ -119,7 +119,9 @@ public sealed class EngineeringDashboardService(
             cancellationToken);
 
         var latestReport = reports
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.PeriodEnd)
+            .ThenByDescending(x => x.PeriodStart)
+            .ThenByDescending(x => x.CreatedAt)
             .FirstOrDefault();
 
         IReadOnlyList<EngineeringDashboardRiskResponse> risks = [];
@@ -157,12 +159,25 @@ public sealed class EngineeringDashboardService(
                 cancellationToken);
         }
         
+        var healthHistory = reports
+            .OrderBy(report => report.PeriodStart)
+            .Select(report => new EngineeringHealthHistoryPoint(
+                report.PeriodStart,
+                report.PeriodEnd,
+                report.OverallScore,
+                EngineeringHealthLevelResolver.Resolve(
+                    report.OverallScore,
+                    report.DataCoverage),
+                report.DataCoverage))
+            .ToArray();
+        
         return new EngineeringDashboardResponse(
             teamId,
             metricResponses,
             healthScore,
             trends,
             risks,
+            healthHistory,
             latestReportResponse,
             aiAnalysis);
     }

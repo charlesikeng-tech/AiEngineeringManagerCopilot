@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using AiEngineeringManagerCopilot.Application.GitHub;
 using AiEngineeringManagerCopilot.Application.Teams;
 using AiEngineeringManagerCopilot.IntegrationTests.Fakes;
+using AiEngineeringManagerCopilot.IntegrationTests.Helpers;
 using AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,7 +40,7 @@ public sealed class GitHubConnectionEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var team = await response.Content
-            .ReadFromJsonAsync<TeamResponse>();
+            .ReadApiJsonAsync<TeamResponse>();
 
         team.Should().NotBeNull();
 
@@ -80,7 +81,7 @@ public sealed class GitHubConnectionEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var connection = await response.Content
-            .ReadFromJsonAsync<GitHubConnectionResponse>();
+            .ReadApiJsonAsync<GitHubConnectionResponse>();
 
         connection.Should().NotBeNull();
         connection!.TeamId.Should().Be(team.Id);
@@ -202,7 +203,7 @@ public sealed class GitHubConnectionEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var connection = await response.Content
-            .ReadFromJsonAsync<GitHubConnectionResponse>();
+            .ReadApiJsonAsync<GitHubConnectionResponse>();
 
         connection.Should().NotBeNull();
         connection!.TeamId.Should().Be(team.Id);
@@ -359,7 +360,7 @@ public sealed class GitHubConnectionEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var result =
-            await response.Content.ReadFromJsonAsync<
+            await response.Content.ReadApiJsonAsync<
                 TestGitHubConnectionResponse>();
 
         result.Should().NotBeNull();
@@ -390,7 +391,7 @@ public sealed class GitHubConnectionEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var result =
-            await response.Content.ReadFromJsonAsync<
+            await response.Content.ReadApiJsonAsync<
                 TestGitHubConnectionResponse>();
 
         result.Should().NotBeNull();

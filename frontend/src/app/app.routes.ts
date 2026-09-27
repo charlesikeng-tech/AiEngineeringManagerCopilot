@@ -1,3 +1,27 @@
 import { Routes } from '@angular/router';
 
-export const routes: Routes = [];
+export const routes: Routes = [
+  {
+    path: '',
+    loadComponent: () =>
+      import('./core/layout/main-layout/main-layout').then(({ MainLayout }) => MainLayout),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'dashboard',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/pages/dashboard/dashboard').then(
+            ({ Dashboard }) => Dashboard,
+          ),
+      },
+    ],
+  },
+  {
+    path: '**',
+    redirectTo: 'dashboard',
+  },
+];

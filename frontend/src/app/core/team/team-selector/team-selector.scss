@@ -1,0 +1,34 @@
+:host {
+  display: block;
+}
+
+.team-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.team-label {
+  color: var(--app-text-tertiary);
+
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.team-select {
+  min-width: 200px;
+
+  ::ng-deep .ant-select-selector {
+    border-color: var(--app-border) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+  }
+
+  ::ng-deep .ant-select-selection-item {
+    color: var(--app-text-primary);
+    font-size: 13px;
+    font-weight: 500;
+  }
+}

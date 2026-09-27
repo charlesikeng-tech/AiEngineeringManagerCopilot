@@ -1,0 +1,107 @@
+<nz-card class="ai-card">
+  <div class="ai-header">
+    <div class="ai-heading">
+      <div class="ai-icon">✦</div>
+
+      <div>
+        <div class="ai-title">AI Engineering Analysis</div>
+
+        <div class="ai-subtitle">Insights generated from your engineering data</div>
+      </div>
+    </div>
+
+    <nz-tag nzColor="purple"> AI Copilot </nz-tag>
+  </div>
+
+  @if (analysis(); as analysis) {
+    <div class="ai-summary">
+      <div class="section-label">Executive summary</div>
+
+      <p>
+        {{ analysis.summary }}
+      </p>
+    </div>
+
+    @if (analysis.insights.length > 0) {
+      <div class="ai-section">
+        <div class="section-label">Key insights</div>
+
+        <div class="insight-list">
+          @for (insight of analysis.insights; track insight.title) {
+            <div class="insight">
+              <div class="insight-marker"></div>
+
+              <div>
+                <strong>
+                  {{ insight.title }}
+                </strong>
+
+                <p>
+                  {{ insight.description }}
+                </p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (analysis.actions.length > 0) {
+      <div class="ai-section">
+        <div class="section-label">Recommended actions</div>
+
+        <div class="action-list">
+          @for (action of analysis.actions; track action.title) {
+            <div class="action">
+              <div class="action-number">
+                {{ $index + 1 }}
+              </div>
+
+              <div>
+                <strong>
+                  {{ action.title }}
+                </strong>
+
+                <p>
+                  {{ action.description }}
+                </p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (analysis.evidence?.length) {
+      <div class="evidence-section">
+        <div class="section-label">Evidence</div>
+
+        <div class="evidence-list">
+          @for (evidence of analysis.evidence ?? []; track evidence.metricType) {
+            <div class="evidence">
+              <div>
+                <strong>
+                  {{ evidence.metricType }}
+                </strong>
+
+                <span>
+                  {{ evidence.value }}
+                </span>
+              </div>
+
+              <nz-progress
+                [nzPercent]="evidence.confidence * 100"
+                nzSize="small"
+                [nzShowInfo]="false"
+              />
+
+              <span class="confidence"> {{ confidencePercentage(evidence) }}% confidence </span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  } @else {
+    <nz-empty nzNotFoundContent="No AI analysis available" />
+  }
+</nz-card>

@@ -11,5 +11,6 @@ public sealed record EngineeringDashboardResponse(
     EngineeringHealthScoreResult HealthScore,
     IReadOnlyList<MetricTrendResult> Trends,
     IReadOnlyList<EngineeringDashboardRiskResponse> Risks,
+    IReadOnlyList<EngineeringHealthHistoryPoint> HealthHistory,
     EngineeringReportResponse? LatestReport,
     AIAnalysisResult? AIAnalysis);

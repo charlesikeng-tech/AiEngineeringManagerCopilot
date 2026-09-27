@@ -1,0 +1,110 @@
+<nz-card class="metrics-card">
+  <div class="section-header">
+    <div>
+      <h3>Engineering Performance</h3>
+      <p>Delivery, pull requests and quality metrics</p>
+    </div>
+  </div>
+
+  @if (items().length === 0) {
+    <nz-empty nzNotFoundContent="No engineering metrics available" />
+  } @else {
+    <nz-row [nzGutter]="[32, 24]">
+      <!-- Delivery -->
+
+      <nz-col [nzXs]="24" [nzLg]="8">
+        <div class="metric-group">
+          <div class="group-title">Delivery</div>
+
+          @for (item of items(); track item.type) {
+            @if (
+              item.type === 'CycleTime' ||
+              item.type === 'LeadTime' ||
+              item.type === 'DeploymentFrequency'
+            ) {
+              <div class="metric-row">
+                <span class="metric-name">
+                  {{ item.label }}
+                </span>
+
+                <div class="metric-result">
+                  <strong> {{ item.value }}{{ item.suffix }} </strong>
+
+                  @if (item.trend; as trend) {
+                    <span class="metric-trend" [class]="trendClass(trend.direction)">
+                      <nz-icon [nzType]="trendIcon(trend.direction)" />
+
+                      {{ trendLabel(trend) }}
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </nz-col>
+
+      <!-- Pull Requests -->
+
+      <nz-col [nzXs]="24" [nzLg]="8">
+        <div class="metric-group">
+          <div class="group-title">Pull Requests</div>
+
+          @for (item of items(); track item.type) {
+            @if (
+              item.type === 'PRReviewTime' || item.type === 'OpenPRs' || item.type === 'MergedPRs'
+            ) {
+              <div class="metric-row">
+                <span class="metric-name">
+                  {{ item.label }}
+                </span>
+
+                <div class="metric-result">
+                  <strong> {{ item.value }}{{ item.suffix }} </strong>
+
+                  @if (item.trend; as trend) {
+                    <span class="metric-trend" [class]="trendClass(trend.direction)">
+                      <nz-icon [nzType]="trendIcon(trend.direction)" />
+
+                      {{ trendLabel(trend) }}
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </nz-col>
+
+      <!-- Quality -->
+
+      <nz-col [nzXs]="24" [nzLg]="8">
+        <div class="metric-group">
+          <div class="group-title">Quality</div>
+
+          @for (item of items(); track item.type) {
+            @if (item.type === 'ChangeFailureRate' || item.type === 'BlockedItems') {
+              <div class="metric-row">
+                <span class="metric-name">
+                  {{ item.label }}
+                </span>
+
+                <div class="metric-result">
+                  <strong> {{ item.value }}{{ item.suffix }} </strong>
+
+                  @if (item.trend; as trend) {
+                    <span class="metric-trend" [class]="trendClass(trend.direction)">
+                      <nz-icon [nzType]="trendIcon(trend.direction)" />
+
+                      {{ trendLabel(trend) }}
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </nz-col>
+    </nz-row>
+  }
+</nz-card>

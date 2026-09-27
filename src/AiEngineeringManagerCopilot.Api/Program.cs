@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using AiEngineeringManagerCopilot.Api.Authentication;
 using AiEngineeringManagerCopilot.Api.Endpoints;
 using AiEngineeringManagerCopilot.Api.Middleware;
@@ -20,6 +21,7 @@ using AiEngineeringManagerCopilot.Application.Teams;
 using AiEngineeringManagerCopilot.Application.Teams.Validation;
 using AiEngineeringManagerCopilot.Infrastructure.AI;
 using AiEngineeringManagerCopilot.Infrastructure.Authentication;
+using AiEngineeringManagerCopilot.Infrastructure.Development;
 using AiEngineeringManagerCopilot.Infrastructure.GitHub;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence.Repositories;
 using AiEngineeringManagerCopilot.Infrastructure.Security;
@@ -30,6 +32,12 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(
+        new JsonStringEnumConverter());
+});
 
 builder.Services.AddValidatorsFromAssemblyContaining<
     CreateGitHubConnectionRequestValidator>();
@@ -102,6 +110,13 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<DevelopmentDataInitializer>();
+
+    builder.Services.AddSingleton(jwtOptions);
+    builder.Services.AddSingleton<DevelopmentJwtTokenGenerator>();
+}
 
 if (builder.Environment.IsEnvironment("Test"))
 {
@@ -236,22 +251,36 @@ builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(
 
 
 builder.Services.AddHttpClient<IJiraClient, JiraClient>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-app.UseAuthentication();
-app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
 
-    var dbContext = scope.ServiceProvider
-        .GetRequiredService<AppDbContext>();
+    var initializer = scope.ServiceProvider
+        .GetRequiredService<DevelopmentDataInitializer>();
 
-    await DevelopmentDataSeeder.SeedAsync(dbContext);
+    await initializer.InitializeAsync();
 }
+
+app.UseCors("Frontend");
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapTeamEndpoints();
 app.MapTeamMemberEndpoints();

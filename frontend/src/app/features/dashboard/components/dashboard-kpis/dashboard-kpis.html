@@ -1,0 +1,130 @@
+<nz-row [nzGutter]="[16, 16]">
+  <!-- Health Score -->
+  <nz-col [nzXs]="24" [nzSm]="12" [nzXl]="6">
+    <nz-card class="kpi-card">
+      <div class="kpi-content">
+        <div class="kpi-header">
+          <span class="kpi-label">Health Score</span>
+
+          <span class="status-dot status-healthy"></span>
+        </div>
+
+        <div class="kpi-value">
+          {{ healthScore().overallScore }}
+          <span class="kpi-unit">/ 100</span>
+        </div>
+
+        <div class="kpi-footer">
+          <span class="status-text status-success">
+            <span class="status-dot"></span>
+            {{ healthScore().healthLevel }}
+          </span>
+
+          <span class="kpi-context">
+            {{ healthScore().dataCoverage | number: '1.0-0' }}% coverage
+          </span>
+        </div>
+      </div>
+    </nz-card>
+  </nz-col>
+
+  <!-- Cycle Time -->
+  <nz-col [nzXs]="24" [nzSm]="12" [nzXl]="6">
+    <nz-card class="kpi-card">
+      <div class="kpi-content">
+        <div class="kpi-header">
+          <span class="kpi-label">Cycle Time</span>
+        </div>
+
+        <div class="kpi-value">
+          {{ cycleTime() }}
+          <span class="kpi-unit">h</span>
+        </div>
+
+        <div class="kpi-footer">
+          @if (cycleTimeTrend(); as trend) {
+            <span
+              class="trend"
+              [class.trend-improving]="trend.direction === 'Improving'"
+              [class.trend-degrading]="trend.direction === 'Degrading'"
+            >
+              <nz-icon [nzType]="trendIcon(trend)" />
+              {{ trendPercentage(trend) }}
+            </span>
+
+            <span class="kpi-context"> vs previous period </span>
+          } @else {
+            <span class="kpi-context">No previous period</span>
+          }
+        </div>
+      </div>
+    </nz-card>
+  </nz-col>
+
+  <!-- Deployments -->
+  <nz-col [nzXs]="24" [nzSm]="12" [nzXl]="6">
+    <nz-card class="kpi-card">
+      <div class="kpi-content">
+        <div class="kpi-header">
+          <span class="kpi-label">Deployments</span>
+        </div>
+
+        <div class="kpi-value">
+          {{ deployments() }}
+        </div>
+
+        <div class="kpi-footer">
+          @if (deploymentTrend(); as trend) {
+            <span
+              class="trend"
+              [class.trend-improving]="trend.direction === 'Improving'"
+              [class.trend-degrading]="trend.direction === 'Degrading'"
+            >
+              <nz-icon [nzType]="trendIcon(trend)" />
+              {{ trendPercentage(trend) }}
+            </span>
+
+            <span class="kpi-context"> vs previous period </span>
+          } @else {
+            <span class="kpi-context">No previous period</span>
+          }
+        </div>
+      </div>
+    </nz-card>
+  </nz-col>
+
+  <!-- Active Risks -->
+  <nz-col [nzXs]="24" [nzSm]="12" [nzXl]="6">
+    <nz-card class="kpi-card">
+      <div class="kpi-content">
+        <div class="kpi-header">
+          <span class="kpi-label">Active Risks</span>
+
+          @if (highRiskCount() > 0) {
+            <span class="status-dot status-danger"></span>
+          } @else {
+            <span class="status-dot status-healthy"></span>
+          }
+        </div>
+
+        <div class="kpi-value">
+          {{ risks().length }}
+        </div>
+
+        <div class="kpi-footer">
+          @if (highRiskCount() > 0) {
+            <span class="status-text status-danger-text">
+              <span class="status-dot"></span>
+              {{ highRiskCount() }} high priority
+            </span>
+          } @else {
+            <span class="status-text status-success">
+              <span class="status-dot"></span>
+              No high priority risks
+            </span>
+          }
+        </div>
+      </div>
+    </nz-card>
+  </nz-col>
+</nz-row>

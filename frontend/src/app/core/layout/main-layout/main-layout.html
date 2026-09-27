@@ -1,0 +1,84 @@
+<nz-layout class="app-shell">
+  <nz-sider
+    class="sidebar"
+    nzCollapsible
+    [nzCollapsed]="isCollapsed()"
+    [nzTrigger]="null"
+    [nzWidth]="220"
+    [nzCollapsedWidth]="72"
+  >
+    <div class="brand">
+      <div class="brand-logo">AI</div>
+
+      @if (!isCollapsed()) {
+        <div class="brand-content">
+          <strong>EM Copilot</strong>
+          <span>Engineering Intelligence</span>
+        </div>
+      }
+    </div>
+
+    <nav class="navigation">
+      <ul nz-menu nzTheme="dark" nzMode="inline" class="navigation-menu">
+        <li
+          nz-menu-item
+          routerLink="/dashboard"
+          routerLinkActive="ant-menu-item-selected"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <nz-icon nzType="dashboard" />
+          <span>Overview</span>
+        </li>
+
+        <li nz-menu-item routerLink="/reports" routerLinkActive="ant-menu-item-selected">
+          <nz-icon nzType="file-text" />
+          <span>Reports</span>
+        </li>
+
+        <li nz-menu-item routerLink="/risks" routerLinkActive="ant-menu-item-selected">
+          <nz-icon nzType="warning" />
+          <span>Risks</span>
+        </li>
+
+        <li nz-menu-item routerLink="/team" routerLinkActive="ant-menu-item-selected">
+          <nz-icon nzType="team" />
+          <span>Team</span>
+        </li>
+      </ul>
+    </nav>
+  </nz-sider>
+
+  <nz-layout class="workspace">
+    <nz-header class="topbar">
+      <div class="topbar-content">
+        <div class="topbar-left">
+          <button
+            nz-button
+            nzType="text"
+            type="button"
+            class="sidebar-toggle"
+            (click)="toggleSidebar()"
+            [attr.aria-label]="isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+          >
+            <nz-icon [nzType]="isCollapsed() ? 'menu-unfold' : 'menu-fold'" />
+          </button>
+
+          <div class="product-context">
+            <div class="product-name">AI Engineering Manager</div>
+
+            <div class="product-subtitle">Engineering Intelligence Platform</div>
+          </div>
+        </div>
+
+        <span class="environment-badge">
+          <span class="environment-dot"></span>
+          Development
+        </span>
+      </div>
+    </nz-header>
+
+    <nz-content class="content">
+      <router-outlet />
+    </nz-content>
+  </nz-layout>
+</nz-layout>

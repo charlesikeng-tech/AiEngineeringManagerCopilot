@@ -1,0 +1,71 @@
+:host {
+  display: block;
+}
+
+.health-card {
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-sm);
+
+  ::ng-deep .ant-card-body {
+    padding: 24px;
+  }
+}
+
+.health-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+
+    color: var(--app-text-primary);
+
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+  }
+
+  p {
+    margin: 4px 0 0;
+
+    color: var(--app-text-secondary);
+
+    font-size: 13px;
+  }
+}
+
+.history-count {
+  color: var(--app-text-tertiary);
+
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.health-chart {
+  width: 100%;
+  height: 280px;
+}
+
+.empty-state {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+}
+
+@media (max-width: 767px) {
+  .health-card {
+    ::ng-deep .ant-card-body {
+      padding: 20px;
+    }
+  }
+
+  .health-chart {
+    height: 240px;
+  }
+}

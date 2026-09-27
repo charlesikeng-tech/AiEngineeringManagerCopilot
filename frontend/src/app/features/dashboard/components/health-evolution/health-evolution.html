@@ -1,0 +1,20 @@
+<nz-card class="health-card">
+  <div class="health-header">
+    <div>
+      <h2>Health Evolution</h2>
+      <p>Engineering health score over time</p>
+    </div>
+
+    @if (history().length > 0) {
+      <span class="history-count"> {{ history().length }} periods </span>
+    }
+  </div>
+
+  @if (history().length > 0) {
+    <div echarts class="health-chart" [options]="chartOptions()"></div>
+  } @else {
+    <div class="empty-state">
+      <nz-empty nzNotFoundContent="No health history available" />
+    </div>
+  }
+</nz-card>

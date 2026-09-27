@@ -1,0 +1,52 @@
+<nz-card class="risks-card">
+  <div class="section-header">
+    <div>
+      <h2>Risks</h2>
+      <p>Engineering risks requiring attention</p>
+    </div>
+
+    @if (risks().length > 0) {
+      <nz-tag>{{ risks().length }}</nz-tag>
+    }
+  </div>
+
+  @if (risks().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">✓</div>
+
+      <div>
+        <strong>No active risks</strong>
+        <p>No engineering risks detected for this period.</p>
+      </div>
+    </div>
+  } @else {
+    <div class="risk-list">
+      @for (risk of risks(); track risk.id) {
+        <article class="risk-item" [class]="severityClass(risk.severity)">
+          <div class="risk-header">
+            <span class="risk-indicator"></span>
+
+            <div class="risk-title">
+              <strong>{{ risk.title }}</strong>
+
+              <span class="severity">
+                {{ risk.severity }}
+              </span>
+            </div>
+          </div>
+
+          <p class="risk-description">
+            {{ risk.description }}
+          </p>
+
+          @if (risk.recommendation) {
+            <div class="recommendation">
+              <span>Recommendation</span>
+              <p>{{ risk.recommendation }}</p>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</nz-card>

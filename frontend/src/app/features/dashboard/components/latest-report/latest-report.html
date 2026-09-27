@@ -1,0 +1,69 @@
+<nz-card class="report-card">
+  <div class="section-header">
+    <div>
+      <h2>Latest Engineering Report</h2>
+      <p>Engineering health summary for the latest reporting period</p>
+    </div>
+
+    @if (report(); as currentReport) {
+      <span
+        class="health-status"
+        [class.health-status--healthy]="currentReport.healthLevel === 'Healthy'"
+        [class.health-status--attention]="currentReport.healthLevel === 'Needs Attention'"
+        [class.health-status--critical]="currentReport.healthLevel === 'Critical'"
+      >
+        <span class="health-status-dot"></span>
+        {{ currentReport.healthLevel }}
+      </span>
+    }
+  </div>
+
+  @if (report(); as currentReport) {
+    <div class="report-content">
+      <div class="report-period">
+        <span>Reporting period</span>
+        <strong>{{ period() }}</strong>
+      </div>
+
+      <div class="report-stats">
+        <div class="report-stat">
+          <span class="stat-label">Overall score</span>
+
+          <div class="score-value">
+            {{ currentReport.overallScore }}
+            <span>/100</span>
+          </div>
+
+          <nz-progress
+            [nzPercent]="currentReport.overallScore"
+            [nzShowInfo]="false"
+            nzSize="small"
+          />
+        </div>
+
+        <div class="report-stat">
+          <span class="stat-label">Data coverage</span>
+
+          <div class="score-value">
+            {{ coveragePercentage() }}
+            <span>%</span>
+          </div>
+
+          <nz-progress [nzPercent]="coveragePercentage()" [nzShowInfo]="false" nzSize="small" />
+        </div>
+      </div>
+
+      <div class="executive-summary">
+        <span class="summary-label">Executive summary</span>
+
+        <p>
+          {{ currentReport.executiveSummary }}
+        </p>
+      </div>
+    </div>
+  } @else {
+    <div class="empty-report">
+      <nz-empty nzNotFoundContent="No engineering report available" />
+    </div>
+  }
+</nz-card>

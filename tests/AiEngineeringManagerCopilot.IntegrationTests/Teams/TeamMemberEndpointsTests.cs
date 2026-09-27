@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using AiEngineeringManagerCopilot.Application.TeamMembers;
 using AiEngineeringManagerCopilot.Application.Teams;
 using AiEngineeringManagerCopilot.Domain.Enums;
+using AiEngineeringManagerCopilot.IntegrationTests.Helpers;
 using AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 using FluentAssertions;
 
@@ -33,7 +34,7 @@ public sealed class TeamMemberEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var team = await response.Content
-            .ReadFromJsonAsync<TeamResponse>();
+            .ReadApiJsonAsync<TeamResponse>();
 
         team.Should().NotBeNull();
 
@@ -59,7 +60,7 @@ public sealed class TeamMemberEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var member = await response.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         member.Should().NotBeNull();
         member!.TeamId.Should().Be(team.Id);
@@ -89,7 +90,7 @@ public sealed class TeamMemberEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var members = await response.Content
-            .ReadFromJsonAsync<List<TeamMemberResponse>>();
+            .ReadApiJsonAsync<List<TeamMemberResponse>>();
 
         members.Should().NotBeNull();
         members.Should().ContainSingle();
@@ -110,7 +111,7 @@ public sealed class TeamMemberEndpointsTests
                 null));
 
         var createdMember = await createResponse.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         createdMember.Should().NotBeNull();
 
@@ -121,7 +122,7 @@ public sealed class TeamMemberEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var member = await response.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         member.Should().NotBeNull();
         member!.Id.Should().Be(createdMember.Id);
@@ -141,7 +142,7 @@ public sealed class TeamMemberEndpointsTests
                 null));
 
         var createdMember = await createResponse.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         createdMember.Should().NotBeNull();
 
@@ -157,7 +158,7 @@ public sealed class TeamMemberEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var member = await updateResponse.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         member.Should().NotBeNull();
         member!.Name.Should().Be("New Name");
@@ -180,7 +181,7 @@ public sealed class TeamMemberEndpointsTests
                 null));
 
         var member = await createResponse.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         member.Should().NotBeNull();
 
@@ -263,7 +264,7 @@ public sealed class TeamMemberEndpointsTests
                 null));
 
         var member = await createResponse.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         member.Should().NotBeNull();
 
@@ -430,7 +431,7 @@ public sealed class TeamMemberEndpointsTests
                 null));
 
         var firstMember = await firstResponse.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         var secondResponse = await _client.PostAsJsonAsync(
             $"/teams/{team.Id}/members",
@@ -441,7 +442,7 @@ public sealed class TeamMemberEndpointsTests
                 null));
 
         var secondMember = await secondResponse.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         firstMember.Should().NotBeNull();
         secondMember.Should().NotBeNull();
@@ -472,7 +473,7 @@ public sealed class TeamMemberEndpointsTests
                 "github-100"));
 
         var firstMember = await firstResponse.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         var secondResponse = await _client.PostAsJsonAsync(
             $"/teams/{team.Id}/members",
@@ -483,7 +484,7 @@ public sealed class TeamMemberEndpointsTests
                 "github-200"));
 
         var secondMember = await secondResponse.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         firstMember.Should().NotBeNull();
         secondMember.Should().NotBeNull();
@@ -514,7 +515,7 @@ public sealed class TeamMemberEndpointsTests
                 null));
 
         var createdMember = await createResponse.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         createdMember.Should().NotBeNull();
 
@@ -536,7 +537,7 @@ public sealed class TeamMemberEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var member = await getResponse.Content
-            .ReadFromJsonAsync<TeamMemberResponse>();
+            .ReadApiJsonAsync<TeamMemberResponse>();
 
         member.Should().NotBeNull();
         member!.Name.Should().Be("New Name");

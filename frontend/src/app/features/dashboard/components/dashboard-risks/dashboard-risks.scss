@@ -1,0 +1,155 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.risks-card {
+  height: 100%;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-sm);
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0;
+    color: var(--app-text-primary);
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--app-text-secondary);
+    font-size: 13px;
+  }
+}
+
+.risk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.risk-item {
+  padding: 14px;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface-secondary);
+}
+
+.risk-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.risk-indicator {
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--app-text-tertiary);
+}
+
+.risk-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+
+  strong {
+    color: var(--app-text-primary);
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+.severity {
+  color: var(--app-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.risk-description {
+  margin: 8px 0 0 18px;
+  color: var(--app-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.recommendation {
+  margin: 12px 0 0 18px;
+  padding-top: 10px;
+  border-top: 1px solid var(--app-border);
+
+  span {
+    color: var(--app-text-tertiary);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--app-text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+.risk-critical .risk-indicator,
+.risk-high .risk-indicator {
+  background: var(--app-danger);
+}
+
+.risk-medium .risk-indicator {
+  background: var(--app-warning);
+}
+
+.risk-low .risk-indicator {
+  background: var(--app-success);
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface-secondary);
+
+  strong {
+    color: var(--app-text-primary);
+    font-size: 13px;
+  }
+
+  p {
+    margin: 2px 0 0;
+    color: var(--app-text-secondary);
+    font-size: 12px;
+  }
+}
+
+.empty-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  color: var(--app-success);
+  background: rgb(18 183 106 / 10%);
+  font-weight: 700;
+}

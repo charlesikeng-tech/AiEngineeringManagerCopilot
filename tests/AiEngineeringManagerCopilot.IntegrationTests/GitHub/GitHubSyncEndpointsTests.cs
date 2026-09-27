@@ -8,6 +8,7 @@ using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.IntegrationTests.Fakes;
+using AiEngineeringManagerCopilot.IntegrationTests.Helpers;
 using AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,7 @@ public sealed class GitHubSyncEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var team = await response.Content
-            .ReadFromJsonAsync<TeamResponse>();
+            .ReadApiJsonAsync<TeamResponse>();
 
         team.Should().NotBeNull();
 
@@ -107,7 +108,7 @@ public sealed class GitHubSyncEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var result = await response.Content
-            .ReadFromJsonAsync<GitHubSyncResponse>();
+            .ReadApiJsonAsync<GitHubSyncResponse>();
 
         result.Should().NotBeNull();
         result!.Synchronized.Should().Be(2);
@@ -145,7 +146,7 @@ public sealed class GitHubSyncEndpointsTests
 
         var firstResult =
             await firstSyncResponse.Content
-                .ReadFromJsonAsync<GitHubSyncResponse>();
+                .ReadApiJsonAsync<GitHubSyncResponse>();
 
         firstResult.Should().NotBeNull();
         firstResult!.Created.Should().Be(1);
@@ -172,7 +173,7 @@ public sealed class GitHubSyncEndpointsTests
 
         var secondResult =
             await secondSyncResponse.Content
-                .ReadFromJsonAsync<GitHubSyncResponse>();
+                .ReadApiJsonAsync<GitHubSyncResponse>();
 
         secondResult.Should().NotBeNull();
         secondResult!.Synchronized.Should().Be(1);
@@ -217,7 +218,7 @@ public sealed class GitHubSyncEndpointsTests
 
         var firstResult =
             await firstResponse.Content
-                .ReadFromJsonAsync<GitHubSyncResponse>();
+                .ReadApiJsonAsync<GitHubSyncResponse>();
 
         // Act - second synchronization with exactly the same data
         var secondResponse = await _client.PostAsync(
@@ -229,7 +230,7 @@ public sealed class GitHubSyncEndpointsTests
 
         var secondResult =
             await secondResponse.Content
-                .ReadFromJsonAsync<GitHubSyncResponse>();
+                .ReadApiJsonAsync<GitHubSyncResponse>();
 
         // Assert
         firstResult.Should().NotBeNull();
@@ -713,7 +714,7 @@ public sealed class GitHubSyncEndpointsTests
         .Be(HttpStatusCode.OK);
 
     var metric = await metricResponse.Content
-        .ReadFromJsonAsync<EngineeringMetricResponse>();
+        .ReadApiJsonAsync<EngineeringMetricResponse>();
 
     metric.Should().NotBeNull();
 
@@ -977,7 +978,7 @@ public sealed class GitHubSyncEndpointsTests
         .Be(HttpStatusCode.OK);
 
     var metric = await metricResponse.Content
-        .ReadFromJsonAsync<EngineeringMetricResponse>();
+        .ReadApiJsonAsync<EngineeringMetricResponse>();
 
     metric.Should().NotBeNull();
 
@@ -1092,7 +1093,7 @@ public sealed class GitHubSyncEndpointsTests
         .Be(HttpStatusCode.OK);
 
     var metric = await metricResponse.Content
-        .ReadFromJsonAsync<EngineeringMetricResponse>();
+        .ReadApiJsonAsync<EngineeringMetricResponse>();
 
     metric.Should().NotBeNull();
 
@@ -1189,7 +1190,7 @@ public sealed class GitHubSyncEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var metric = await metricResponse.Content
-            .ReadFromJsonAsync<EngineeringMetricResponse>();
+            .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         metric.Should().NotBeNull();
 
@@ -1295,7 +1296,7 @@ public sealed class GitHubSyncEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var metric = await metricResponse.Content
-            .ReadFromJsonAsync<EngineeringMetricResponse>();
+            .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         metric.Should().NotBeNull();
 
@@ -1404,7 +1405,7 @@ public sealed class GitHubSyncEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var metric = await metricResponse.Content
-            .ReadFromJsonAsync<EngineeringMetricResponse>();
+            .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         metric.Should().NotBeNull();
 

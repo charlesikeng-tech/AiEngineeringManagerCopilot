@@ -1,0 +1,163 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.report-card {
+  height: 100%;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-sm);
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    color: var(--app-text-primary);
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--app-text-secondary);
+    font-size: 13px;
+  }
+}
+
+.report-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.report-period {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--app-border);
+
+  span {
+    color: var(--app-text-secondary);
+    font-size: 12px;
+  }
+
+  strong {
+    color: var(--app-text-primary);
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+.report-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.report-stat {
+  padding: 16px;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  background: var(--app-surface-secondary);
+}
+
+.stat-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--app-text-secondary);
+  font-size: 12px;
+}
+
+.score-value {
+  margin-bottom: 10px;
+  color: var(--app-text-primary);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1;
+
+  span {
+    margin-left: 2px;
+    color: var(--app-text-tertiary);
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
+
+.executive-summary {
+  padding-top: 4px;
+
+  .summary-label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--app-text-tertiary);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  p {
+    margin: 0;
+    color: var(--app-text-secondary);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+}
+
+.empty-report {
+  padding: 24px 0;
+}
+
+.health-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  color: var(--app-text-secondary);
+
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.health-status-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.health-status--healthy {
+  color: var(--app-success);
+}
+
+.health-status--attention {
+  color: var(--app-warning);
+}
+
+.health-status--critical {
+  color: var(--app-danger);
+}
+
+@media (max-width: 640px) {
+  .report-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .report-period {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+}

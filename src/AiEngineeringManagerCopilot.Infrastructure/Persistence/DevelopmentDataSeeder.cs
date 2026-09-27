@@ -1,4 +1,5 @@
 using AiEngineeringManagerCopilot.Domain.Entities;
+using AiEngineeringManagerCopilot.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace AiEngineeringManagerCopilot.Infrastructure.Persistence;
@@ -22,6 +23,10 @@ public static class DevelopmentDataSeeder
             cancellationToken);
 
         await SeedTeamAsync(
+            dbContext,
+            cancellationToken);
+        
+        await SeedEngineeringMetricsAsync(
             dbContext,
             cancellationToken);
 
@@ -76,5 +81,145 @@ public static class DevelopmentDataSeeder
                 Description = "Development environment team",
                 CreatedAt = DateTimeOffset.UtcNow
             });
+    }
+    
+    private static async Task SeedEngineeringMetricsAsync(
+    AppDbContext dbContext,
+    CancellationToken cancellationToken)
+    {
+        var hasMetrics = await dbContext.EngineeringMetrics
+            .AnyAsync(
+                x => x.TeamId == DevelopmentTeamId,
+                cancellationToken);
+
+        if (hasMetrics)
+        {
+            return;
+        }
+
+        var augustStart = new DateOnly(2026, 8, 1);
+        var augustEnd = new DateOnly(2026, 8, 31);
+
+        var septemberStart = new DateOnly(2026, 9, 1);
+        var septemberEnd = new DateOnly(2026, 9, 30);
+
+        var metrics = new[]
+        {
+            CreateMetric(
+                MetricType.CycleTime,
+                38m,
+                augustStart,
+                augustEnd),
+
+            CreateMetric(
+                MetricType.PRReviewTime,
+                18m,
+                augustStart,
+                augustEnd),
+
+            CreateMetric(
+                MetricType.DeploymentFrequency,
+                12m,
+                augustStart,
+                augustEnd),
+
+            CreateMetric(
+                MetricType.ChangeFailureRate,
+                14m,
+                augustStart,
+                augustEnd),
+
+            CreateMetric(
+                MetricType.LeadTime,
+                52m,
+                augustStart,
+                augustEnd),
+
+            CreateMetric(
+                MetricType.OpenPRs,
+                14m,
+                augustStart,
+                augustEnd),
+
+            CreateMetric(
+                MetricType.MergedPRs,
+                32m,
+                augustStart,
+                augustEnd),
+
+            CreateMetric(
+                MetricType.BlockedItems,
+                5m,
+                augustStart,
+                augustEnd),
+
+            CreateMetric(
+                MetricType.CycleTime,
+                26m,
+                septemberStart,
+                septemberEnd),
+
+            CreateMetric(
+                MetricType.PRReviewTime,
+                11m,
+                septemberStart,
+                septemberEnd),
+
+            CreateMetric(
+                MetricType.DeploymentFrequency,
+                18m,
+                septemberStart,
+                septemberEnd),
+
+            CreateMetric(
+                MetricType.ChangeFailureRate,
+                9m,
+                septemberStart,
+                septemberEnd),
+
+            CreateMetric(
+                MetricType.LeadTime,
+                36m,
+                septemberStart,
+                septemberEnd),
+
+            CreateMetric(
+                MetricType.OpenPRs,
+                9m,
+                septemberStart,
+                septemberEnd),
+
+            CreateMetric(
+                MetricType.MergedPRs,
+                47m,
+                septemberStart,
+                septemberEnd),
+
+            CreateMetric(
+                MetricType.BlockedItems,
+                2m,
+                septemberStart,
+                septemberEnd)
+        };
+
+        dbContext.EngineeringMetrics.AddRange(metrics);
+    }
+    
+    private static EngineeringMetric CreateMetric(
+        MetricType metricType,
+        decimal value,
+        DateOnly periodStart,
+        DateOnly periodEnd)
+    {
+        return new EngineeringMetric
+        {
+            Id = Guid.NewGuid(),
+            TeamId = DevelopmentTeamId,
+            MetricType = metricType,
+            Value = value,
+            PeriodStart = periodStart,
+            PeriodEnd = periodEnd,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
     }
 }

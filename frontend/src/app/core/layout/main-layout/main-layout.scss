@@ -1,0 +1,200 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.app-shell {
+  min-height: 100dvh;
+}
+
+.sidebar {
+  position: relative;
+  min-height: 100dvh;
+  background: #0b1220;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  height: 72px;
+  padding: 0 16px;
+}
+
+.brand-logo {
+  display: grid;
+  place-items: center;
+
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+
+  border-radius: 10px;
+
+  background: linear-gradient(135deg,
+      var(--app-primary),
+      var(--app-ai));
+
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.brand-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  strong {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  span {
+    color: rgb(255 255 255 / 45%);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+}
+
+.navigation {
+  padding: 12px 10px;
+}
+
+.navigation-menu {
+  background: transparent;
+  border: 0;
+}
+
+.navigation-menu.ant-menu-dark .ant-menu-item {
+  height: 42px;
+  margin: 4px 0;
+  border-radius: 8px;
+
+  color: rgb(255 255 255 / 60%);
+}
+
+.navigation-menu.ant-menu-dark .ant-menu-item:hover {
+  color: #fff;
+  background: rgb(255 255 255 / 6%);
+}
+
+.navigation-menu.ant-menu-dark .ant-menu-item-selected {
+  color: #fff;
+  background: rgb(79 70 229 / 22%);
+}
+
+
+
+.workspace {
+  min-width: 0;
+}
+
+.topbar {
+  height: 72px;
+  padding: 0 28px;
+
+  background: var(--app-surface);
+  border-bottom: 1px solid var(--app-border);
+
+  // Override du line-height par défaut de nz-header
+  line-height: normal;
+}
+
+.topbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  height: 100%;
+}
+
+
+.content {
+  min-width: 0;
+  padding: 32px;
+
+  background: var(--app-background);
+}
+
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sidebar-toggle {
+  display: grid;
+  place-items: center;
+
+  width: 36px;
+  height: 36px;
+  padding: 0;
+
+  color: var(--app-text-secondary);
+
+  border-radius: 8px;
+
+  font-size: 17px;
+
+  &:hover {
+    color: var(--app-text-primary);
+    background: var(--app-surface-secondary);
+  }
+}
+
+.product-context {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  line-height: normal;
+}
+
+.product-name {
+  color: var(--app-text-primary);
+
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.product-subtitle {
+  margin-top: 2px;
+
+  color: var(--app-text-secondary);
+
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.environment-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 4px 9px;
+
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+
+  background: var(--app-surface-secondary);
+  color: var(--app-text-secondary);
+
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.environment-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+
+  border-radius: 50%;
+  background: var(--app-success);
+}

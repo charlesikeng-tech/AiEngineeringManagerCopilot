@@ -1,0 +1,15 @@
+<div class="team-selector">
+  <span class="team-label">Team</span>
+
+  <nz-select
+    class="team-select"
+    [ngModel]="teamContext.selectedTeamId()"
+    (ngModelChange)="selectTeam($event)"
+    [nzLoading]="loading()"
+    nzPlaceHolder="Select a team"
+  >
+    @for (team of teams(); track team.id) {
+      <nz-option [nzValue]="team.id" [nzLabel]="team.name" />
+    }
+  </nz-select>
+</div>

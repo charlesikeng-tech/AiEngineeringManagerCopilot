@@ -7,6 +7,7 @@ using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.IntegrationTests.Fakes;
+using AiEngineeringManagerCopilot.IntegrationTests.Helpers;
 using AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -49,7 +50,7 @@ public class JiraConnectionEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var result = await response.Content
-            .ReadFromJsonAsync<JiraConnectionResponse>();
+            .ReadApiJsonAsync<JiraConnectionResponse>();
 
         result.Should().NotBeNull();
 
@@ -131,7 +132,7 @@ public class JiraConnectionEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var result = await response.Content
-            .ReadFromJsonAsync<JiraConnectionResponse>();
+            .ReadApiJsonAsync<JiraConnectionResponse>();
 
         result.Should().NotBeNull();
 
@@ -250,7 +251,7 @@ public class JiraConnectionEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var result = await response.Content
-            .ReadFromJsonAsync<TestJiraConnectionResponse>();
+            .ReadApiJsonAsync<TestJiraConnectionResponse>();
 
         result.Should().NotBeNull();
 
@@ -334,7 +335,7 @@ public class JiraConnectionEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var result = await response.Content
-            .ReadFromJsonAsync<JiraSyncResult>();
+            .ReadApiJsonAsync<JiraSyncResult>();
 
         result.Should().NotBeNull();
 
@@ -426,7 +427,7 @@ public class JiraConnectionEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var metric = await metricResponse.Content
-            .ReadFromJsonAsync<EngineeringMetricResponse>();
+            .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         metric.Should().NotBeNull();
 
@@ -505,7 +506,7 @@ public class JiraConnectionEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var team = await response.Content
-            .ReadFromJsonAsync<TeamResponse>();
+            .ReadApiJsonAsync<TeamResponse>();
 
         team.Should().NotBeNull();
 

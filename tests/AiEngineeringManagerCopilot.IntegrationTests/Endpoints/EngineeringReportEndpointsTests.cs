@@ -8,6 +8,7 @@ using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Infrastructure.AI;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
+using AiEngineeringManagerCopilot.IntegrationTests.Helpers;
 using AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -90,7 +91,7 @@ public sealed class EngineeringReportEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringReportResponse>();
+                .ReadApiJsonAsync<EngineeringReportResponse>();
 
         result.Should().NotBeNull();
         result.Actions.Should().BeEmpty();
@@ -129,7 +130,7 @@ public sealed class EngineeringReportEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringReportResponse>();
+                .ReadApiJsonAsync<EngineeringReportResponse>();
 
         result.Should().NotBeNull();
 
@@ -209,8 +210,7 @@ public sealed class EngineeringReportEndpointsTests
 
         var reports =
             await response.Content
-                .ReadFromJsonAsync<
-                    IReadOnlyList<EngineeringReportResponse>>();
+                .ReadApiJsonAsync<IReadOnlyList<EngineeringReportResponse>>();
 
         reports.Should().NotBeNull();
         reports!.Count.Should().Be(2);
@@ -254,8 +254,7 @@ public sealed class EngineeringReportEndpointsTests
 
         var reports =
             await response.Content
-                .ReadFromJsonAsync<
-                    IReadOnlyList<EngineeringReportResponse>>();
+                .ReadApiJsonAsync<IReadOnlyList<EngineeringReportResponse>>();
 
         reports.Should().NotBeNull();
         reports.Should().ContainSingle();
@@ -282,7 +281,7 @@ public sealed class EngineeringReportEndpointsTests
 
         var created =
             await createResponse.Content
-                .ReadFromJsonAsync<EngineeringReportResponse>();
+                .ReadApiJsonAsync<EngineeringReportResponse>();
 
         created.Should().NotBeNull();
 
@@ -295,7 +294,7 @@ public sealed class EngineeringReportEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringReportResponse>();
+                .ReadApiJsonAsync<EngineeringReportResponse>();
 
         result.Should().NotBeNull();
         result!.Id.Should().Be(created.Id);
@@ -340,7 +339,7 @@ public sealed class EngineeringReportEndpointsTests
 
         var report =
             await createResponse.Content
-                .ReadFromJsonAsync<EngineeringReportResponse>();
+                .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -385,7 +384,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var report = await response.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -431,7 +430,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var createdReport = await createResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         createdReport.Should().NotBeNull();
 
@@ -445,7 +444,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var report = await response.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
         report!.Trends.Should().ContainSingle();
@@ -499,8 +498,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var reports = await response.Content
-            .ReadFromJsonAsync<
-                IReadOnlyList<EngineeringReportResponse>>();
+            .ReadApiJsonAsync<IReadOnlyList<EngineeringReportResponse>>();
 
         reports.Should().NotBeNull();
         reports.Should().ContainSingle();
@@ -549,7 +547,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var report = await generateResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -630,7 +628,7 @@ public sealed class EngineeringReportEndpointsTests
 
         var team =
             await response.Content
-                .ReadFromJsonAsync<TeamResponse>();
+                .ReadApiJsonAsync<TeamResponse>();
 
         team.Should().NotBeNull();
 
@@ -771,7 +769,7 @@ public sealed class EngineeringReportEndpointsTests
         response.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var result = await response.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         result.Should().NotBeNull();
 
@@ -810,7 +808,7 @@ public sealed class EngineeringReportEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringReportResponse>();
+                .ReadApiJsonAsync<EngineeringReportResponse>();
 
         result.Should().NotBeNull();
 
@@ -859,7 +857,7 @@ public sealed class EngineeringReportEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringReportResponse>();
+                .ReadApiJsonAsync<EngineeringReportResponse>();
 
         result.Should().NotBeNull();
         result!.Actions.Should().HaveCount(3);
@@ -904,7 +902,7 @@ public sealed class EngineeringReportEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringReportResponse>();
+                .ReadApiJsonAsync<EngineeringReportResponse>();
 
         result.Should().NotBeNull();
 
@@ -950,7 +948,7 @@ public sealed class EngineeringReportEndpointsTests
         response.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var report = await response.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
         report!.Risks.Should().NotBeEmpty();
@@ -971,7 +969,7 @@ public sealed class EngineeringReportEndpointsTests
         response.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var report = await response.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
         report!.Risks.Should().HaveCount(8);
@@ -982,7 +980,7 @@ public sealed class EngineeringReportEndpointsTests
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var persistedReport = await getResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         persistedReport.Should().NotBeNull();
         persistedReport!.Risks.Should().HaveCount(8);
@@ -1011,7 +1009,7 @@ public sealed class EngineeringReportEndpointsTests
         generateResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var report = await generateResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
         report!.Risks.Should().HaveCount(8);
@@ -1048,7 +1046,7 @@ public sealed class EngineeringReportEndpointsTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var reports = await response.Content
-            .ReadFromJsonAsync<IReadOnlyList<EngineeringReportResponse>>();
+            .ReadApiJsonAsync<IReadOnlyList<EngineeringReportResponse>>();
 
         reports.Should().NotBeNull();
         reports.Should().ContainSingle();
@@ -1070,7 +1068,7 @@ public sealed class EngineeringReportEndpointsTests
         generateResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var report = await generateResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1113,7 +1111,7 @@ public sealed class EngineeringReportEndpointsTests
         
 
         var analysis = await response.Content
-            .ReadFromJsonAsync<AIAnalysisResult>();
+            .ReadApiJsonAsync<AIAnalysisResult>();
 
         analysis.Should().NotBeNull();
 
@@ -1171,7 +1169,7 @@ public sealed class EngineeringReportEndpointsTests
         generateResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var report = await generateResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1196,7 +1194,7 @@ public sealed class EngineeringReportEndpointsTests
         generateResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var report = await generateResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1239,7 +1237,7 @@ public sealed class EngineeringReportEndpointsTests
         generateResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var report = await generateResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1281,7 +1279,7 @@ public sealed class EngineeringReportEndpointsTests
         generateResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var report = await generateResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1347,7 +1345,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var report = await generateResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1401,7 +1399,7 @@ public sealed class EngineeringReportEndpointsTests
         generateResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var report = await generateResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1418,7 +1416,7 @@ public sealed class EngineeringReportEndpointsTests
         secondResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var secondAnalysis = await secondResponse.Content
-            .ReadFromJsonAsync<AIAnalysisResult>();
+            .ReadApiJsonAsync<AIAnalysisResult>();
 
         secondAnalysis.Should().NotBeNull();
 
@@ -1487,7 +1485,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var report = await response.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1528,7 +1526,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var report = await response.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1576,7 +1574,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var report = await response.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1622,7 +1620,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var report = await reportResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1686,7 +1684,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var team = await createTeamResponse.Content
-            .ReadFromJsonAsync<TeamResponse>();
+            .ReadApiJsonAsync<TeamResponse>();
 
         team.Should().NotBeNull();
 
@@ -1801,7 +1799,7 @@ public sealed class EngineeringReportEndpointsTests
                 $"report creation failed with body: {reportBody}");
 
         var report = await reportResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1853,7 +1851,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var report = await generateResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1873,7 +1871,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var analysis = await response.Content
-            .ReadFromJsonAsync<AIAnalysisResult>();
+            .ReadApiJsonAsync<AIAnalysisResult>();
 
         analysis.Should().NotBeNull();
 
@@ -1912,7 +1910,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var report = await generateResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1960,7 +1958,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var report = await generateResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -1993,7 +1991,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var dashboard = await response.Content
-            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+            .ReadApiJsonAsync<EngineeringDashboardResponse>();
 
         dashboard.Should().NotBeNull();
 
@@ -2061,7 +2059,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var dashboard = await response.Content
-            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+            .ReadApiJsonAsync<EngineeringDashboardResponse>();
 
         dashboard.Should().NotBeNull();
 
@@ -2108,7 +2106,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var dashboard = await response.Content
-            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+            .ReadApiJsonAsync<EngineeringDashboardResponse>();
 
         dashboard.Should().NotBeNull();
 
@@ -2141,7 +2139,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var report = await reportResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -2152,7 +2150,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var dashboard = await response.Content
-            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+            .ReadApiJsonAsync<EngineeringDashboardResponse>();
 
         dashboard.Should().NotBeNull();
 
@@ -2176,7 +2174,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var dashboard = await response.Content
-            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+            .ReadApiJsonAsync<EngineeringDashboardResponse>();
 
         dashboard.Should().NotBeNull();
 
@@ -2200,7 +2198,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var createdReport = await reportResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         createdReport.Should().NotBeNull();
 
@@ -2211,7 +2209,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var dashboard = await response.Content
-            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+            .ReadApiJsonAsync<EngineeringDashboardResponse>();
 
         dashboard.Should().NotBeNull();
         dashboard!.LatestReport.Should().NotBeNull();
@@ -2247,7 +2245,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var dashboard = await response.Content
-            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+            .ReadApiJsonAsync<EngineeringDashboardResponse>();
 
         dashboard.Should().NotBeNull();
 
@@ -2270,7 +2268,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.Created);
 
         var report = await reportResponse.Content
-            .ReadFromJsonAsync<EngineeringReportResponse>();
+            .ReadApiJsonAsync<EngineeringReportResponse>();
 
         report.Should().NotBeNull();
 
@@ -2282,7 +2280,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var createdAnalysis = await analysisResponse.Content
-            .ReadFromJsonAsync<AIAnalysisResult>();
+            .ReadApiJsonAsync<AIAnalysisResult>();
 
         createdAnalysis.Should().NotBeNull();
 
@@ -2293,7 +2291,7 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var dashboard = await response.Content
-            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+            .ReadApiJsonAsync<EngineeringDashboardResponse>();
 
         dashboard.Should().NotBeNull();
 
@@ -2334,11 +2332,135 @@ public sealed class EngineeringReportEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var dashboard = await response.Content
-            .ReadFromJsonAsync<EngineeringDashboardResponse>();
+            .ReadApiJsonAsync<EngineeringDashboardResponse>();
 
         dashboard.Should().NotBeNull();
 
         dashboard!.LatestReport.Should().NotBeNull();
         dashboard.AIAnalysis.Should().BeNull();
+    }
+    
+    [Fact]
+    public async Task GetDashboard_ShouldReturnHealthHistoryOrderedByPeriod()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var augustReportResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-08-01&periodEnd=2026-08-31",
+            null);
+
+        augustReportResponse.StatusCode.Should()
+            .Be(HttpStatusCode.Created);
+
+        var augustReport = await augustReportResponse.Content
+            .ReadApiJsonAsync<EngineeringReportResponse>();
+
+        augustReport.Should().NotBeNull();
+
+        var septemberReportResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            null);
+
+        septemberReportResponse.StatusCode.Should()
+            .Be(HttpStatusCode.Created);
+
+        var septemberReport = await septemberReportResponse.Content
+            .ReadApiJsonAsync<EngineeringReportResponse>();
+
+        septemberReport.Should().NotBeNull();
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/dashboard");
+
+        response.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        var dashboard = await response.Content
+            .ReadApiJsonAsync<EngineeringDashboardResponse>();
+
+        dashboard.Should().NotBeNull();
+
+        dashboard!.HealthHistory.Should()
+            .HaveCount(2);
+
+        dashboard.HealthHistory
+            .Select(point => point.PeriodStart)
+            .Should()
+            .BeInAscendingOrder();
+
+        dashboard.HealthHistory[0].PeriodStart.Should()
+            .Be(new DateOnly(2026, 8, 1));
+
+        dashboard.HealthHistory[0].PeriodEnd.Should()
+            .Be(new DateOnly(2026, 8, 31));
+
+        dashboard.HealthHistory[0].OverallScore.Should()
+            .Be(augustReport!.OverallScore);
+
+        dashboard.HealthHistory[0].HealthLevel.Should()
+            .Be(augustReport.HealthLevel);
+
+        dashboard.HealthHistory[0].DataCoverage.Should()
+            .Be(augustReport.DataCoverage);
+
+        dashboard.HealthHistory[1].PeriodStart.Should()
+            .Be(new DateOnly(2026, 9, 1));
+
+        dashboard.HealthHistory[1].PeriodEnd.Should()
+            .Be(new DateOnly(2026, 9, 30));
+
+        dashboard.HealthHistory[1].OverallScore.Should()
+            .Be(septemberReport!.OverallScore);
+
+        dashboard.HealthHistory[1].HealthLevel.Should()
+            .Be(septemberReport.HealthLevel);
+
+        dashboard.HealthHistory[1].DataCoverage.Should()
+            .Be(septemberReport.DataCoverage);
+    }
+    
+    [Fact]
+    public async Task GetDashboard_ShouldUseLatestReportingPeriod()
+    {
+        var teamId = await CreateTeamAsync();
+
+        await SeedMetricsWithManyInsightsAsync(teamId);
+
+        var augustResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-08-01&periodEnd=2026-08-31",
+            null);
+
+        augustResponse.EnsureSuccessStatusCode();
+
+        var septemberResponse = await _client.PostAsync(
+            $"/teams/{teamId}/reports" +
+            "?periodStart=2026-09-01&periodEnd=2026-09-30",
+            null);
+
+        septemberResponse.EnsureSuccessStatusCode();
+
+        var response = await _client.GetAsync(
+            $"/teams/{teamId}/dashboard");
+
+        response.EnsureSuccessStatusCode();
+
+        var dashboard =
+            await response.Content
+                .ReadApiJsonAsync<EngineeringDashboardResponse>();
+
+        dashboard.Should().NotBeNull();
+
+        dashboard!.LatestReport.Should().NotBeNull();
+
+        dashboard.LatestReport!.PeriodStart
+            .Should().Be(new DateOnly(2026, 9, 1));
+
+        dashboard.LatestReport.PeriodEnd
+            .Should().Be(new DateOnly(2026, 9, 30));
     }
 }

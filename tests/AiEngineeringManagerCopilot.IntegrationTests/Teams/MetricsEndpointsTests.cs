@@ -6,6 +6,7 @@ using AiEngineeringManagerCopilot.Application.Teams;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
+using AiEngineeringManagerCopilot.IntegrationTests.Helpers;
 using AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -249,7 +250,7 @@ public sealed class MetricsEndpointsTests
 
         var team =
             await response.Content
-                .ReadFromJsonAsync<TeamResponse>();
+                .ReadApiJsonAsync<TeamResponse>();
 
         team.Should().NotBeNull();
 
@@ -363,7 +364,7 @@ public sealed class MetricsEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
         result!.TeamId.Should().Be(team.Id);
@@ -395,7 +396,7 @@ public sealed class MetricsEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
 
@@ -462,7 +463,7 @@ public sealed class MetricsEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
         result!.Value.Should().Be(0);
@@ -488,7 +489,7 @@ public sealed class MetricsEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
         result!.TeamId.Should().Be(team.Id);
@@ -517,7 +518,7 @@ public sealed class MetricsEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
         result!.Value.Should().Be(0);
@@ -566,7 +567,7 @@ public sealed class MetricsEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
         result!.MetricType.Should()
@@ -602,7 +603,7 @@ public sealed class MetricsEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
         result!.Value.Should().Be(1);
@@ -657,7 +658,7 @@ public sealed class MetricsEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
         result!.MetricType.Should()
@@ -682,7 +683,7 @@ public sealed class MetricsEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
         result!.MetricType.Should()
@@ -728,7 +729,7 @@ public sealed class MetricsEndpointsTests
 
         var metric =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         metric.Should().NotBeNull();
         metric!.MetricType.Should().Be(MetricType.LeadTime);
@@ -766,7 +767,7 @@ public sealed class MetricsEndpointsTests
 
         var metric =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         metric.Should().NotBeNull();
         metric!.MetricType.Should().Be(MetricType.LeadTime);
@@ -804,7 +805,7 @@ public sealed class MetricsEndpointsTests
 
         var metric =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         metric.Should().NotBeNull();
         metric!.TeamId.Should().Be(team.Id);
@@ -836,7 +837,7 @@ public sealed class MetricsEndpointsTests
 
         var metric =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         metric.Should().NotBeNull();
         metric!.Value.Should().Be(2);
@@ -894,7 +895,7 @@ public sealed class MetricsEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
         result!.MetricType.Should().Be(MetricType.OpenPRs);
@@ -920,7 +921,7 @@ public sealed class MetricsEndpointsTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var result =
-            await response.Content.ReadFromJsonAsync<EngineeringMetricResponse>();
+            await response.Content.ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
         result!.MetricType.Should().Be(MetricType.MergedPRs);
@@ -946,7 +947,7 @@ public sealed class MetricsEndpointsTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var result =
-            await response.Content.ReadFromJsonAsync<EngineeringMetricResponse>();
+            await response.Content.ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
         result!.MetricType.Should().Be(MetricType.MergedPRs);
@@ -984,7 +985,7 @@ public sealed class MetricsEndpointsTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var result =
-            await response.Content.ReadFromJsonAsync<EngineeringMetricResponse>();
+            await response.Content.ReadApiJsonAsync<EngineeringMetricResponse>();
         
         result.Should().NotBeNull();
         result!.MetricType.Should().Be(MetricType.BlockedItems);
@@ -1009,7 +1010,7 @@ public sealed class MetricsEndpointsTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var result =
-            await response.Content.ReadFromJsonAsync<EngineeringMetricResponse>();
+            await response.Content.ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
         result!.MetricType.Should().Be(MetricType.BlockedItems);
@@ -1083,7 +1084,7 @@ public sealed class MetricsEndpointsTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var result =
-            await response.Content.ReadFromJsonAsync<
+            await response.Content.ReadApiJsonAsync<
                 EngineeringHealthScoreResponse>();
 
         result.Should().NotBeNull();
@@ -1128,7 +1129,7 @@ public sealed class MetricsEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringMetricResponse>();
+                .ReadApiJsonAsync<EngineeringMetricResponse>();
 
         result.Should().NotBeNull();
 
@@ -1165,7 +1166,7 @@ public sealed class MetricsEndpointsTests
 
         var result =
             await response.Content
-                .ReadFromJsonAsync<EngineeringHealthScoreResponse>();
+                .ReadApiJsonAsync<EngineeringHealthScoreResponse>();
 
         result.Should().NotBeNull();
 
