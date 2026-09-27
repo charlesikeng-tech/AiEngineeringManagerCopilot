@@ -1310,8 +1310,8 @@ The generated section is delimited by:
 ### Automated tests
 
 ```text
-454 tests
-454 passed
+460 tests
+460 passed
 0 failed
 0 skipped
 ```
