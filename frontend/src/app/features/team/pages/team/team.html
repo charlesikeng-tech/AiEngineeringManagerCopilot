@@ -1,0 +1,317 @@
+<div class="team-page">
+  @if (loading()) {
+    <div class="state-container">
+      <nz-spin nzSimple nzSize="large"></nz-spin>
+      <span>Loading team...</span>
+    </div>
+  } @else if (error()) {
+    <nz-alert
+      nzType="error"
+      nzShowIcon
+      nzMessage="Unable to load team"
+      nzDescription="The selected team and its members could not be loaded."
+    ></nz-alert>
+  } @else if (team(); as currentTeam) {
+    <header class="page-header">
+      <div>
+        <span class="page-eyebrow">TEAM MANAGEMENT</span>
+
+        <h1>{{ currentTeam.name }}</h1>
+
+        <p>
+          {{ currentTeam.description || 'Manage your engineering team and its members.' }}
+        </p>
+      </div>
+
+      <div class="team-summary">
+        <span class="team-summary__label"> TEAM MEMBERS </span>
+
+        <strong>{{ members().length }}</strong>
+      </div>
+    </header>
+
+    <section class="team-overview">
+      <div class="overview-card">
+        <div class="overview-card__header">
+          <span class="overview-card__label"> TEAM </span>
+
+          <button
+            nz-button
+            nzType="default"
+            type="button"
+            [disabled]="updatingTeam()"
+            (click)="openEditTeam()"
+          >
+            Edit team
+          </button>
+        </div>
+
+        <strong>{{ currentTeam.name }}</strong>
+
+        <p>
+          {{ currentTeam.description || 'No description available.' }}
+        </p>
+      </div>
+
+      <div class="overview-card">
+        <span class="overview-card__label"> MEMBERS </span>
+
+        <strong>{{ members().length }}</strong>
+
+        <p>People currently assigned to this team.</p>
+      </div>
+    </section>
+
+    <section class="members-section">
+      <div class="section-header">
+        <div>
+          <span class="section-eyebrow"> PEOPLE </span>
+
+          <h2>Team Members</h2>
+        </div>
+
+        <div class="section-actions">
+          <span class="member-count">
+            {{ members().length }}
+            {{ members().length === 1 ? 'member' : 'members' }}
+          </span>
+
+          <button
+            nz-button
+            nzType="primary"
+            type="button"
+            [disabled]="memberMutationInProgress()"
+            (click)="openAddMember()"
+          >
+            <nz-icon nzType="plus" />
+            Add member
+          </button>
+        </div>
+      </div>
+
+      @if (members().length === 0) {
+        <nz-empty nzNotFoundContent="No members have been added to this team."></nz-empty>
+      } @else {
+        <div class="members-list">
+          @for (member of members(); track member.id) {
+            <article class="member-card">
+              <div class="member-avatar">
+                {{ member.name.charAt(0).toUpperCase() }}
+              </div>
+
+              <div class="member-main">
+                <div class="member-identity">
+                  <strong>
+                    {{ member.name }}
+                  </strong>
+
+                  <span>
+                    {{ member.email }}
+                  </span>
+                </div>
+
+                <div class="member-metadata">
+                  <span class="member-role">
+                    {{ roleLabel(member.role) }}
+                  </span>
+
+                  @if (member.providerUserId) {
+                    <span class="provider-id">
+                      Provider ID:
+                      {{ member.providerUserId }}
+                    </span>
+                  }
+                </div>
+
+                <div class="member-actions">
+                  <button
+                    nz-button
+                    nzType="text"
+                    type="button"
+                    [disabled]="memberMutationInProgress()"
+                    (click)="openEditMember(member)"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    nz-button
+                    nzType="text"
+                    nzDanger
+                    type="button"
+                    nz-popconfirm
+                    nzPopconfirmTitle="Remove this member from the team?"
+                    nzPopconfirmPlacement="topRight"
+                    [disabled]="memberMutationInProgress()"
+                    (nzOnConfirm)="deleteMember(member)"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <nz-drawer
+      nzTitle="Edit team"
+      [nzVisible]="editTeamOpen()"
+      [nzWidth]="480"
+      [nzClosable]="!updatingTeam()"
+      [nzMaskClosable]="!updatingTeam()"
+      (nzOnClose)="closeEditTeam()"
+    >
+      <ng-container *nzDrawerContent>
+        <form nz-form nzLayout="vertical" [formGroup]="editTeamForm">
+          <nz-form-item>
+            <nz-form-label nzRequired> Team name </nz-form-label>
+
+            <nz-form-control nzErrorTip="Team name is required and cannot exceed 200 characters.">
+              <input
+                nz-input
+                type="text"
+                formControlName="name"
+                maxlength="200"
+                placeholder="Engineering team"
+              />
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label> Description </nz-form-label>
+
+            <nz-form-control nzErrorTip="Description cannot exceed 2000 characters.">
+              <textarea
+                nz-input
+                formControlName="description"
+                maxlength="2000"
+                rows="5"
+                placeholder="Describe the team's mission and responsibilities..."
+              ></textarea>
+            </nz-form-control>
+          </nz-form-item>
+
+          <div class="drawer-actions">
+            <button nz-button type="button" [disabled]="updatingTeam()" (click)="closeEditTeam()">
+              Cancel
+            </button>
+
+            <button
+              nz-button
+              nzType="primary"
+              type="button"
+              [nzLoading]="updatingTeam()"
+              [disabled]="editTeamForm.invalid || updatingTeam()"
+              (click)="updateTeam()"
+            >
+              Save changes
+            </button>
+          </div>
+        </form>
+      </ng-container>
+    </nz-drawer>
+
+    <nz-drawer
+      [nzTitle]="editingMember() ? 'Edit team member' : 'Add team member'"
+      [nzVisible]="addMemberOpen()"
+      [nzWidth]="480"
+      [nzClosable]="!creatingMember()"
+      [nzMaskClosable]="!creatingMember()"
+      (nzOnClose)="closeAddMember()"
+    >
+      <ng-container *nzDrawerContent>
+        <form nz-form nzLayout="vertical" [formGroup]="addMemberForm">
+          <!-- Name -->
+
+          <nz-form-item>
+            <nz-form-label nzRequired> Name </nz-form-label>
+
+            <nz-form-control nzErrorTip="Enter a valid name (maximum 200 characters).">
+              <input
+                nz-input
+                type="text"
+                formControlName="name"
+                maxlength="200"
+                placeholder="e.g. Jane Smith"
+              />
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- Email -->
+
+          <nz-form-item>
+            <nz-form-label nzRequired> Email </nz-form-label>
+
+            <nz-form-control nzErrorTip="Enter a valid email address.">
+              <input
+                nz-input
+                type="email"
+                formControlName="email"
+                maxlength="320"
+                placeholder="jane.smith@example.com"
+              />
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- Role -->
+
+          <nz-form-item>
+            <nz-form-label nzRequired> Role </nz-form-label>
+
+            <nz-form-control>
+              <nz-select formControlName="role">
+                @for (role of memberRoles; track role.value) {
+                  <nz-option [nzValue]="role.value" [nzLabel]="role.label"></nz-option>
+                }
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- Provider User ID -->
+
+          <nz-form-item>
+            <nz-form-label> Provider User ID </nz-form-label>
+
+            <nz-form-control nzErrorTip="Provider User ID cannot exceed 200 characters.">
+              <input
+                nz-input
+                type="text"
+                formControlName="providerUserId"
+                maxlength="200"
+                placeholder="Optional"
+              />
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- Actions -->
+
+          <div class="drawer-actions">
+            <button
+              nz-button
+              type="button"
+              [disabled]="creatingMember()"
+              (click)="closeAddMember()"
+            >
+              Cancel
+            </button>
+
+            <button
+              nz-button
+              nzType="primary"
+              type="button"
+              [nzLoading]="creatingMember()"
+              [disabled]="addMemberForm.invalid || creatingMember()"
+              (click)="saveMember()"
+            >
+              {{ editingMember() ? 'Save changes' : 'Add member' }}
+            </button>
+          </div>
+        </form>
+      </ng-container>
+    </nz-drawer>
+  } @else {
+    <nz-empty nzNotFoundContent="No team is currently selected."></nz-empty>
+  }
+</div>

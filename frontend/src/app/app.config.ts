@@ -11,6 +11,7 @@ import {
   MenuFoldOutline,
   MenuUnfoldOutline,
   MinusOutline,
+  PlusOutline,
   TeamOutline,
   WarningOutline,
 } from '@ant-design/icons-angular/icons';
@@ -54,6 +55,7 @@ export const appConfig: ApplicationConfig = {
       ArrowUpOutline,
       ArrowDownOutline,
       MinusOutline,
+      PlusOutline,
     ]),
 
     provideNzDateFnsAdapter({
