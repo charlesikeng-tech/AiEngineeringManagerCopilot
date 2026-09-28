@@ -5,6 +5,7 @@ using AiEngineeringManagerCopilot.Api.Endpoints;
 using AiEngineeringManagerCopilot.Api.Middleware;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.Application.Abstractions;
+using AiEngineeringManagerCopilot.Application.Actions;
 using AiEngineeringManagerCopilot.Application.AI;
 using AiEngineeringManagerCopilot.Application.BackgroundJobs;
 using AiEngineeringManagerCopilot.Application.Dashboard;
@@ -180,6 +181,7 @@ builder.Services.AddScoped<IEngineeringHealthScoreService, EngineeringHealthScor
 builder.Services.AddScoped<IEngineeringReportService, EngineeringReportService>();
 builder.Services.AddScoped<IEngineeringDashboardService, EngineeringDashboardService>();
 builder.Services.AddScoped<IEngineeringRiskService, EngineeringRiskService>();
+builder.Services.AddScoped<IEngineeringActionService, EngineeringActionService>();
 
 builder.Services.AddScoped<ICycleTimeCalculator, CycleTimeCalculator>();
 builder.Services.AddScoped<IPRReviewTimeCalculator, PRReviewTimeCalculator>();
@@ -293,6 +295,7 @@ app.MapEngineeringReportEndpoints();
 app.MapAIAnalysisEndpoints();
 app.MapEngineeringDashboardEndpoints();
 app.MapEngineeringRiskEndpoints();
+app.MapEngineeringActionEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

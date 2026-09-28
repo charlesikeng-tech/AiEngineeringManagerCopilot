@@ -40,6 +40,16 @@ public sealed class EngineeringActionRepository(
             .ToList();
     }
 
+    public async Task<EngineeringAction?> GetByIdAsync(
+        Guid actionId,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.EngineeringActions
+            .FirstOrDefaultAsync(
+                x => x.Id == actionId,
+                cancellationToken);
+    }
+
     public async Task SaveChangesAsync(
         CancellationToken cancellationToken)
     {

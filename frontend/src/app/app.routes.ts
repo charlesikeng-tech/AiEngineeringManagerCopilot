@@ -35,6 +35,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/risks/pages/risks/risks').then(({ Risks }) => Risks),
       },
+      {
+        path: 'actions',
+        loadComponent: () =>
+          import('./features/actions/pages/actions/actions').then(({ Actions }) => Actions),
+      },
     ],
   },
   {

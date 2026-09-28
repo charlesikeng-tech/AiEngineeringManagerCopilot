@@ -1,8 +1,9 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
+using AiEngineeringManagerCopilot.Application.Reports;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Domain.Enums;
 
-namespace AiEngineeringManagerCopilot.Application.Reports;
+namespace AiEngineeringManagerCopilot.Application.Actions;
 
 public sealed class EngineeringActionGenerator
     : IEngineeringActionGenerator

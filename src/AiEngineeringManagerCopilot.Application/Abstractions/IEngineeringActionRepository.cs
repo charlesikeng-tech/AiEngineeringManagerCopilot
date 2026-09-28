@@ -11,6 +11,10 @@ public interface IEngineeringActionRepository
     Task<IReadOnlyList<EngineeringAction>> GetByReportIdAsync(
         Guid reportId,
         CancellationToken cancellationToken);
+    
+    Task<EngineeringAction?> GetByIdAsync(
+        Guid actionId,
+        CancellationToken cancellationToken);
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken);

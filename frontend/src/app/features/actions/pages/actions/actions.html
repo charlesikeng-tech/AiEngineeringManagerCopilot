@@ -1,0 +1,160 @@
+<div class="actions-page">
+  @if (loading()) {
+    <div class="state-container">
+      <nz-spin nzSimple nzSize="large"></nz-spin>
+      <span>Loading engineering actions...</span>
+    </div>
+  } @else if (error()) {
+    <nz-alert
+      nzType="error"
+      nzShowIcon
+      nzMessage="Unable to load engineering actions"
+      nzDescription="The current action plan could not be loaded."
+    ></nz-alert>
+  } @else if (data(); as actionData) {
+    <header class="page-header">
+      <div>
+        <span class="page-eyebrow">ACTION PLAN</span>
+        <h1>Engineering Actions</h1>
+        <p>Track and manage the actions identified from the latest engineering report.</p>
+      </div>
+
+      <div class="reporting-period">
+        <span class="reporting-period__label"> REPORTING PERIOD </span>
+
+        <strong>
+          {{ actionData.periodStart | date: 'MMM d, y' }}
+          –
+          {{ actionData.periodEnd | date: 'MMM d, y' }}
+        </strong>
+      </div>
+    </header>
+
+    @if (actions().length === 0) {
+      <nz-empty nzNotFoundContent="No engineering actions for this reporting period."></nz-empty>
+    } @else {
+      <section class="action-summary">
+        <article class="summary-card summary-card--todo">
+          <span>TODO</span>
+          <strong>{{ todoCount() }}</strong>
+          <small>actions</small>
+        </article>
+
+        <article class="summary-card summary-card--progress">
+          <span>IN PROGRESS</span>
+          <strong>{{ inProgressCount() }}</strong>
+          <small>actions</small>
+        </article>
+
+        <article class="summary-card summary-card--done">
+          <span>DONE</span>
+          <strong>{{ doneCount() }}</strong>
+          <small>actions</small>
+        </article>
+
+        <article class="summary-card summary-card--cancelled">
+          <span>CANCELLED</span>
+          <strong>{{ cancelledCount() }}</strong>
+          <small>actions</small>
+        </article>
+      </section>
+
+      <div class="action-count">
+        <strong>{{ totalCount() }}</strong>
+        {{ totalCount() === 1 ? 'action' : 'actions' }}
+        in the current action plan
+      </div>
+
+      <section class="actions-list">
+        @for (action of actions(); track action.id) {
+          <article
+            class="action-card"
+            [class.action-card--critical]="action.priority === 'Critical'"
+            [class.action-card--high]="action.priority === 'High'"
+            [class.action-card--medium]="action.priority === 'Medium'"
+            [class.action-card--low]="action.priority === 'Low'"
+          >
+            <div class="action-card__header">
+              <div class="action-metadata">
+                <span
+                  class="action-priority"
+                  [class.action-priority--critical]="action.priority === 'Critical'"
+                  [class.action-priority--high]="action.priority === 'High'"
+                  [class.action-priority--medium]="action.priority === 'Medium'"
+                  [class.action-priority--low]="action.priority === 'Low'"
+                >
+                  <span class="priority-dot"></span>
+                  {{ action.priority | uppercase }}
+                </span>
+
+                @if (action.metricType) {
+                  <span class="action-metric">
+                    {{ metricLabel(action.metricType) }}
+                  </span>
+                }
+              </div>
+
+              <nz-select
+                class="status-select"
+                [ngModel]="action.status"
+                [nzDisabled]="updatingActionId() === action.id"
+                (ngModelChange)="updateStatus(action, $event)"
+              >
+                <nz-option nzValue="Todo" nzLabel="Todo"></nz-option>
+
+                <nz-option nzValue="InProgress" nzLabel="In Progress"></nz-option>
+
+                <nz-option nzValue="Done" nzLabel="Done"></nz-option>
+
+                <nz-option nzValue="Cancelled" nzLabel="Cancelled"></nz-option>
+              </nz-select>
+            </div>
+
+            <div class="action-card__content">
+              <h2>{{ action.title }}</h2>
+              <p>{{ action.description }}</p>
+            </div>
+
+            <div class="action-card__footer">
+              <div class="action-field">
+                <label class="field-label" [for]="'owner-' + action.id"> OWNER </label>
+
+                <input
+                  nz-input
+                  [id]="'owner-' + action.id"
+                  type="text"
+                  [ngModel]="action.owner ?? ''"
+                  [disabled]="updatingActionId() === action.id"
+                  placeholder="Unassigned"
+                  (blur)="updateOwner(action, $any($event.target).value)"
+                  (keyup.enter)="$any($event.target).blur()"
+                />
+              </div>
+
+              <div class="action-field">
+                <span class="field-label">DUE DATE</span>
+
+                <nz-date-picker
+                  nzFormat="MMM d, yyyy"
+                  [ngModel]="action.dueDateValue"
+                  [nzDisabled]="updatingActionId() === action.id"
+                  (ngModelChange)="updateDueDate(action, $event)"
+                ></nz-date-picker>
+              </div>
+
+              <div class="action-field action-field--status">
+                <span class="field-label">STATUS</span>
+
+                <strong>
+                  {{ statusLabel(action.status) }}
+                </strong>
+              </div>
+            </div>
+          </article>
+        }
+      </section>
+    }
+  } @else {
+    <nz-empty nzNotFoundContent="No action plan is available for this team."></nz-empty>
+  }
+</div>

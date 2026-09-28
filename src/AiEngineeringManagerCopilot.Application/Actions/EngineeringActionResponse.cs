@@ -1,6 +1,6 @@
 using AiEngineeringManagerCopilot.Domain.Enums;
 
-namespace AiEngineeringManagerCopilot.Application.Reports;
+namespace AiEngineeringManagerCopilot.Application.Actions;
 
 public sealed record EngineeringActionResponse(
     Guid Id,
