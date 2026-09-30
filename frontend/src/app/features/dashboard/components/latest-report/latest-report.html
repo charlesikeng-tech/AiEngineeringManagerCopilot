@@ -60,6 +60,24 @@
           {{ currentReport.executiveSummary }}
         </p>
       </div>
+
+      <div class="report-actions">
+        <a
+          class="report-action report-action--primary"
+          [routerLink]="['/reports', currentReport.id]"
+        >
+          View full report
+          <span aria-hidden="true">→</span>
+        </a>
+
+        <a
+          class="report-action report-action--secondary"
+          routerLink="/actions"
+        >
+          Open action plan
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
     </div>
   } @else {
     <div class="empty-report">

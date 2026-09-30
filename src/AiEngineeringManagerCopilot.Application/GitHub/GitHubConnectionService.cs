@@ -38,7 +38,7 @@ public sealed class GitHubConnectionService(
                 "A GitHub connection already exists for this team.");
         }
 
-        var organization = request.Organization.Trim();
+        var owner = request.Owner.Trim();
         var accessToken = request.AccessToken.Trim();
 
         var encryptedToken = secretProtector.Protect(
@@ -48,7 +48,8 @@ public sealed class GitHubConnectionService(
         {
             Id = Guid.NewGuid(),
             TeamId = teamId,
-            Organization = organization,
+            Owner = owner,
+            OwnerType = request.OwnerType,
             AccessTokenEncrypted = encryptedToken,
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -149,23 +150,23 @@ public sealed class GitHubConnectionService(
         var accessToken = secretProtector.Unprotect(
             connection.AccessTokenEncrypted);
 
-        var organization =
-            await gitHubClient.GetOrganizationAsync(
-                connection.Organization,
-                accessToken,
-                cancellationToken);
+        var owner = await gitHubClient.GetOwnerAsync(
+            connection.Owner,
+            connection.OwnerType,
+            accessToken,
+            cancellationToken);
 
-        if (organization is null)
+        if (owner is null)
         {
             return new TestGitHubConnectionResponse(
                 false,
-                connection.Organization,
+                connection.Owner,
                 "GitHub organization was not found or is not accessible.");
         }
 
         return new TestGitHubConnectionResponse(
             true,
-            organization.Login,
+            owner.Login,
             "GitHub connection is valid.");
     }
 }

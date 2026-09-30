@@ -4,10 +4,10 @@ import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzIconModule } from 'ng-zorro-antd/icon';
-import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 
 import {
   EngineeringMetric,
+  MetricDataStatus,
   MetricTrend,
   MetricTrendDirection,
   MetricType,
@@ -16,15 +16,16 @@ import {
 interface MetricViewModel {
   type: MetricType;
   label: string;
-  value: number;
+  value: number | null;
   suffix: string;
+  dataStatus: MetricDataStatus;
   trend: MetricTrend | null;
 }
 
 @Component({
   selector: 'app-engineering-metrics',
   standalone: true,
-  imports: [NzCardModule, NzEmptyModule, NzGridModule, NzIconModule, NzStatisticModule],
+  imports: [NzCardModule, NzEmptyModule, NzGridModule, NzIconModule],
   templateUrl: './engineering-metrics.html',
   styleUrl: './engineering-metrics.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,9 +40,25 @@ export class EngineeringMetrics {
       label: this.getLabel(metric.metricType),
       value: metric.value,
       suffix: this.getSuffix(metric.metricType),
-      trend: this.trends().find((trend) => trend.metricType === metric.metricType) ?? null,
+      dataStatus: metric.dataStatus,
+      trend:
+        metric.dataStatus === 'Available'
+          ? (this.trends().find((trend) => trend.metricType === metric.metricType) ?? null)
+          : null,
     })),
   );
+
+  displayValue(item: MetricViewModel): string {
+    if (item.dataStatus === 'SourceNotConfigured') {
+      return 'Not connected';
+    }
+
+    if (item.dataStatus === 'NoData' || item.value === null) {
+      return 'No data';
+    }
+
+    return `${item.value}${item.suffix}`;
+  }
 
   trendIcon(direction: MetricTrendDirection): string {
     switch (direction) {
@@ -64,6 +81,19 @@ export class EngineeringMetrics {
     const percentage = Math.abs(trend.changePercentage);
 
     return `${trend.direction} ${percentage.toFixed(1)}%`;
+  }
+
+  trendClass(direction: MetricTrendDirection): string {
+    switch (direction) {
+      case 'Improving':
+        return 'trend-improving';
+
+      case 'Degrading':
+        return 'trend-degrading';
+
+      case 'Stable':
+        return 'trend-stable';
+    }
   }
 
   private getLabel(metricType: MetricType): string {
@@ -93,19 +123,6 @@ export class EngineeringMetrics {
 
       default:
         return '';
-    }
-  }
-
-  trendClass(direction: MetricTrendDirection): string {
-    switch (direction) {
-      case 'Improving':
-        return 'trend-improving';
-
-      case 'Degrading':
-        return 'trend-degrading';
-
-      case 'Stable':
-        return 'trend-stable';
     }
   }
 }

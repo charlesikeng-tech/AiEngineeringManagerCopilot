@@ -1,0 +1,152 @@
+<div class="app-page">
+  @if (loading()) {
+    <div class="state-container">
+      <nz-spin nzSimple nzSize="large"></nz-spin>
+
+      <span> Loading teams... </span>
+    </div>
+  } @else if (error()) {
+    <div class="state-container">
+      <nz-alert
+        nzType="error"
+        nzShowIcon
+        nzMessage="Unable to load teams"
+        nzDescription="Your teams could not be loaded. Please try again."
+      ></nz-alert>
+    </div>
+  } @else {
+    <!-- Page header -->
+
+    <header class="page-header">
+      <div class="page-header__content">
+        <span class="page-eyebrow"> TEAM MANAGEMENT </span>
+
+        <h1>Teams</h1>
+
+        <p>Manage your engineering teams and their members.</p>
+      </div>
+
+      <div class="page-header__actions">
+        <div class="team-summary">
+          <span class="team-summary__label"> TEAMS </span>
+
+          <strong>
+            {{ teams().length }}
+          </strong>
+        </div>
+
+        <button nz-button nzType="primary" type="button" (click)="openCreateTeam()">
+          <nz-icon nzType="plus" />
+          Create team
+        </button>
+      </div>
+    </header>
+
+    @if (teams().length === 0) {
+      <div class="empty-state">
+        <nz-empty nzNotFoundContent="You don't have any teams yet."></nz-empty>
+      </div>
+    } @else {
+      <!-- Teams -->
+
+      <section class="app-section">
+        <div class="section-header">
+          <div class="section-header__content">
+            <span class="section-eyebrow"> ORGANIZATION </span>
+
+            <h2>Engineering Teams</h2>
+
+            <p>Select a team to manage its configuration and members.</p>
+          </div>
+        </div>
+
+        <div class="teams-grid">
+          @for (team of teams(); track team.id) {
+            <article
+              class="app-card team-card"
+              role="button"
+              tabindex="0"
+              (click)="openTeam(team)"
+              (keydown.enter)="openTeam(team)"
+              (keydown.space)="openTeam(team); $event.preventDefault()"
+            >
+              <div class="team-card__header">
+                <span class="team-card__label"> TEAM </span>
+
+                <span class="team-card__arrow" aria-hidden="true"> → </span>
+              </div>
+
+              <h3>
+                {{ team.name }}
+              </h3>
+
+              <p>
+                {{ team.description || 'No description available.' }}
+              </p>
+            </article>
+          }
+        </div>
+      </section>
+    }
+  }
+
+  <!-- Create team drawer -->
+
+  <nz-drawer
+    nzTitle="Create team"
+    [nzVisible]="createTeamOpen()"
+    [nzWidth]="480"
+    [nzClosable]="!creatingTeam()"
+    [nzMaskClosable]="!creatingTeam()"
+    (nzOnClose)="closeCreateTeam()"
+  >
+    <ng-container *nzDrawerContent>
+      <form nz-form nzLayout="vertical" [formGroup]="createTeamForm">
+        <nz-form-item>
+          <nz-form-label nzRequired> Team name </nz-form-label>
+
+          <nz-form-control nzErrorTip="Team name is required and cannot exceed 200 characters.">
+            <input
+              nz-input
+              type="text"
+              formControlName="name"
+              maxlength="200"
+              placeholder="e.g. Recommendation"
+            />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label> Description </nz-form-label>
+
+          <nz-form-control nzErrorTip="Description cannot exceed 2000 characters.">
+            <textarea
+              nz-input
+              formControlName="description"
+              maxlength="2000"
+              rows="5"
+              placeholder="Describe the team's mission and responsibilities..."
+            ></textarea>
+          </nz-form-control>
+        </nz-form-item>
+
+        <div class="drawer-actions">
+          <button nz-button type="button" [disabled]="creatingTeam()" (click)="closeCreateTeam()">
+            Cancel
+          </button>
+
+          <button
+            nz-button
+            nzType="primary"
+            type="button"
+            [nzLoading]="creatingTeam()"
+            [disabled]="createTeamForm.invalid || creatingTeam()"
+            (click)="createTeam()"
+          >
+            Create team
+          </button>
+        </div>
+      </form>
+    </ng-container>
+  </nz-drawer>
+</div>

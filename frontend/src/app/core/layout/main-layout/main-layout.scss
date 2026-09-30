@@ -1,105 +1,326 @@
+/* =========================================================
+   APP SHELL
+   ========================================================= */
+
 :host {
   display: block;
-  min-height: 100dvh;
+
+  width: 100%;
+  min-height: 100vh;
 }
 
 .app-shell {
-  min-height: 100dvh;
+  min-height: 100vh;
+
+  background: var(--app-bg);
 }
 
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
 .sidebar {
-  position: relative;
-  min-height: 100dvh;
-  background: #0b1220;
+  position: fixed;
+  z-index: 100;
+
+  top: 0;
+  bottom: 0;
+  left: 0;
+
+  height: 100vh;
+
+  overflow: hidden;
+
+  background: #001529;
 }
+
+
+/* ---------------------------------------------------------
+   Brand
+   --------------------------------------------------------- */
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
 
-  height: 72px;
-  padding: 0 16px;
+  height: 64px;
+
+  padding: 0 20px;
+
+  gap: 12px;
+
+  overflow: hidden;
+
+  border-bottom: 1px solid rgb(255 255 255 / 6%);
+}
+
+.brand--collapsed {
+  justify-content: center;
+
+  padding: 0;
 }
 
 .brand-logo {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
+  width: 32px;
+  height: 32px;
 
-  border-radius: 10px;
-
-  background: linear-gradient(135deg,
-      var(--app-primary),
-      var(--app-ai));
+  flex: 0 0 32px;
 
   color: #fff;
+
+  background: var(--app-primary);
+
+  border-radius: 8px;
+
   font-size: 12px;
   font-weight: 700;
+
+  letter-spacing: 0.04em;
 }
 
 .brand-content {
   display: flex;
-  flex-direction: column;
+
   min-width: 0;
 
-  strong {
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
-  }
+  flex-direction: column;
 
-  span {
-    color: rgb(255 255 255 / 45%);
-    font-size: 11px;
-    white-space: nowrap;
-  }
+  gap: 2px;
+
+  white-space: nowrap;
 }
 
+.brand-content strong {
+  overflow: hidden;
+
+  color: #fff;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  line-height: 20px;
+
+  text-overflow: ellipsis;
+}
+
+.brand-content span {
+  overflow: hidden;
+
+  color: rgb(255 255 255 / 45%);
+
+  font-size: 10px;
+
+  line-height: 14px;
+
+  text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
 .navigation {
-  padding: 12px 10px;
+  padding-top: 16px;
+}
+
+.navigation-section {
+  display: block;
+}
+
+.navigation-section--management {
+  margin-top: 20px;
+}
+
+.navigation-label {
+  display: block;
+
+  padding: 0 24px 8px;
+
+  color: rgb(255 255 255 / 35%);
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 16px;
+
+  letter-spacing: 0.12em;
 }
 
 .navigation-menu {
+  border-right: 0 !important;
+
+  background: transparent !important;
+}
+
+:host ::ng-deep .navigation-menu.ant-menu-dark {
   background: transparent;
-  border: 0;
 }
 
-.navigation-menu.ant-menu-dark .ant-menu-item {
-  height: 42px;
-  margin: 4px 0;
-  border-radius: 8px;
+:host ::ng-deep .navigation-menu.ant-menu-dark .ant-menu-item {
+  height: 40px;
 
-  color: rgb(255 255 255 / 60%);
+  margin: 2px 8px;
+
+  width: calc(100% - 16px);
+
+  padding-right: 16px !important;
+
+  border-radius: 6px;
+
+  color: rgb(255 255 255 / 65%);
+
+  font-size: 12px;
+
+  line-height: 40px;
 }
 
-.navigation-menu.ant-menu-dark .ant-menu-item:hover {
+:host ::ng-deep .navigation-menu.ant-menu-dark .ant-menu-item:hover {
   color: #fff;
+
   background: rgb(255 255 255 / 6%);
 }
 
-.navigation-menu.ant-menu-dark .ant-menu-item-selected {
+:host ::ng-deep .navigation-menu.ant-menu-dark .ant-menu-item-selected {
   color: #fff;
-  background: rgb(79 70 229 / 22%);
+
+  background: var(--app-primary);
+}
+
+:host ::ng-deep .navigation-menu .anticon {
+  font-size: 14px;
 }
 
 
+/* ---------------------------------------------------------
+   Collapsed navigation
+   --------------------------------------------------------- */
+
+:host ::ng-deep .sidebar.ant-layout-sider-collapsed .navigation-menu .ant-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 48px;
+
+  margin-right: auto;
+  margin-left: auto;
+
+  padding: 0 !important;
+}
+
+:host ::ng-deep .sidebar.ant-layout-sider-collapsed .navigation-menu .ant-menu-item .anticon {
+  margin: 0;
+
+  font-size: 16px;
+}
+
+.sidebar.ant-layout-sider-collapsed {
+  .navigation-section--management {
+    position: relative;
+
+    margin-top: 18px;
+
+    padding-top: 10px;
+
+    &::before {
+      position: absolute;
+
+      top: 0;
+      right: 20px;
+      left: 20px;
+
+      height: 1px;
+
+      background: rgb(255 255 255 / 8%);
+
+      content: '';
+    }
+  }
+}
+
+
+/* =========================================================
+   SIDEBAR FOOTER
+   ========================================================= */
+
+.sidebar-footer {
+  position: absolute;
+
+  right: 20px;
+  bottom: 20px;
+  left: 20px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 3px;
+
+  padding-top: 16px;
+
+  border-top: 1px solid rgb(255 255 255 / 6%);
+}
+
+.sidebar-footer__label {
+  color: rgb(255 255 255 / 45%);
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 0.1em;
+}
+
+.sidebar-footer__version {
+  color: rgb(255 255 255 / 25%);
+
+  font-size: 9px;
+
+  line-height: 14px;
+}
+
+
+/* =========================================================
+   WORKSPACE
+   ========================================================= */
 
 .workspace {
   min-width: 0;
+  min-height: 100vh;
+
+  margin-left: 240px;
+
+  transition: margin-left 0.2s;
 }
 
+:host ::ng-deep .sidebar.ant-layout-sider-collapsed+.workspace {
+  margin-left: 72px;
+}
+
+
+/* =========================================================
+   TOPBAR
+   ========================================================= */
+
 .topbar {
-  height: 72px;
+  position: sticky;
+  z-index: 90;
+
+  top: 0;
+
+  height: 64px;
+
   padding: 0 28px;
 
   background: var(--app-surface);
+
   border-bottom: 1px solid var(--app-border);
 
-  // Override du line-height par défaut de nz-header
   line-height: normal;
 }
 
@@ -108,93 +329,171 @@
   align-items: center;
   justify-content: space-between;
 
+  width: 100%;
   height: 100%;
 }
 
-
-.content {
-  min-width: 0;
-  padding: 32px;
-
-  background: var(--app-background);
-}
-
-
-.topbar-left {
+.topbar-left,
+.topbar-right {
   display: flex;
   align-items: center;
-  gap: 16px;
 }
 
-.sidebar-toggle {
-  display: grid;
-  place-items: center;
+.topbar-left {
+  min-width: 0;
 
-  width: 36px;
-  height: 36px;
+  gap: 14px;
+}
+
+.topbar-right {
+  flex: 0 0 auto;
+
+  gap: 18px;
+}
+
+
+/* ---------------------------------------------------------
+   Sidebar toggle
+   --------------------------------------------------------- */
+
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
   padding: 0;
+
+  flex: 0 0 32px;
 
   color: var(--app-text-secondary);
 
-  border-radius: 8px;
-
-  font-size: 17px;
-
-  &:hover {
-    color: var(--app-text-primary);
-    background: var(--app-surface-secondary);
-  }
+  border-radius: 6px;
 }
+
+.sidebar-toggle:hover {
+  color: var(--app-text-primary);
+
+  background: var(--app-surface-hover);
+}
+
+
+/* ---------------------------------------------------------
+   Product context
+   --------------------------------------------------------- */
 
 .product-context {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
 
-  line-height: normal;
+  min-width: 0;
+
+  flex-direction: column;
+
+  gap: 2px;
 }
 
 .product-name {
   color: var(--app-text-primary);
 
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 20px;
+
+  line-height: 18px;
 }
 
 .product-subtitle {
-  margin-top: 2px;
+  color: var(--app-text-tertiary);
 
-  color: var(--app-text-secondary);
+  font-size: 10px;
 
-  font-size: 12px;
-  line-height: 18px;
+  line-height: 14px;
 }
+
+
+/* ---------------------------------------------------------
+   Topbar divider
+   --------------------------------------------------------- */
+
+.topbar-divider {
+  width: 1px;
+  height: 28px;
+
+  background: var(--app-border);
+}
+
+
+/* ---------------------------------------------------------
+   Environment
+   --------------------------------------------------------- */
 
 .environment-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
 
-  padding: 4px 9px;
+  gap: 7px;
 
-  border: 1px solid var(--app-border);
-  border-radius: 999px;
-
-  background: var(--app-surface-secondary);
   color: var(--app-text-secondary);
 
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 18px;
+  font-size: 10px;
+  font-weight: 600;
+
   white-space: nowrap;
 }
 
 .environment-dot {
   width: 6px;
   height: 6px;
-  flex: 0 0 6px;
+
+  background: var(--app-success);
 
   border-radius: 50%;
-  background: var(--app-success);
+}
+
+
+/* =========================================================
+   CONTENT
+   ========================================================= */
+
+.content {
+  min-width: 0;
+  min-height: calc(100vh - 64px);
+
+  padding: 0;
+
+  background: var(--app-bg);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .product-subtitle {
+    display: none;
+  }
+
+  .topbar {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .product-context,
+  .topbar-divider,
+  .environment-badge {
+    display: none;
+  }
+
+  .topbar-right {
+    margin-left: auto;
+  }
 }

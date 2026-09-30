@@ -26,6 +26,11 @@ public sealed class EngineeringMetricConfiguration
 
         builder.Property(x => x.Value)
             .HasPrecision(18, 4)
+            .IsRequired(false);
+
+        builder.Property(x => x.DataStatus)
+            .HasConversion<string>()
+            .HasMaxLength(50)
             .IsRequired();
 
         builder.Property(x => x.PeriodStart)

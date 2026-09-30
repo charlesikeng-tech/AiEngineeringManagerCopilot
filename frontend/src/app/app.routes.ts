@@ -43,6 +43,11 @@ export const routes: Routes = [
       {
         path: 'team',
         loadComponent: () =>
+          import('./features/team/pages/teams/teams').then(({ TeamsPage }) => TeamsPage),
+      },
+      {
+        path: 'team/:teamId',
+        loadComponent: () =>
           import('./features/team/pages/team/team').then(({ TeamPage }) => TeamPage),
       },
     ],

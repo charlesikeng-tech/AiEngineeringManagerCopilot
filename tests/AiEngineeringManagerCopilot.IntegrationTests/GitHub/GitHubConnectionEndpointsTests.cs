@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
+using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.GitHub;
 using AiEngineeringManagerCopilot.Application.Teams;
+using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.IntegrationTests.Fakes;
 using AiEngineeringManagerCopilot.IntegrationTests.Helpers;
 using AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
@@ -47,23 +49,30 @@ public sealed class GitHubConnectionEndpointsTests
         return team!;
     }
     
-    private async Task CreateGitHubConnectionAsync(
+    private async Task<GitHubConnectionResponse> CreateGitHubConnectionAsync(
         Guid teamId,
-        string organization,
-        string accessToken)
+        string owner,
+        string accessToken,
+        GitHubOwnerType ownerType = GitHubOwnerType.Organization)
     {
-        var request = new
-        {
-            Organization = organization,
-            AccessToken = accessToken
-        };
+        var request = new CreateGitHubConnectionRequest(
+            owner,
+            ownerType,
+            accessToken);
 
         var response = await _client.PostAsJsonAsync(
             $"/teams/{teamId}/github",
             request);
 
-        response.StatusCode.Should()
-            .Be(HttpStatusCode.Created);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var result =
+            await response.Content
+                .ReadApiJsonAsync<GitHubConnectionResponse>();
+
+        result.Should().NotBeNull();
+
+        return result!;
     }
 
     [Fact]
@@ -74,7 +83,8 @@ public sealed class GitHubConnectionEndpointsTests
         var response = await _client.PostAsJsonAsync(
             $"/teams/{team.Id}/github",
             new CreateGitHubConnectionRequest(
-                "my-company",
+                "my-org",
+                GitHubOwnerType.Organization,
                 "github-secret-token"));
 
         response.StatusCode.Should()
@@ -85,7 +95,8 @@ public sealed class GitHubConnectionEndpointsTests
 
         connection.Should().NotBeNull();
         connection!.TeamId.Should().Be(team.Id);
-        connection.Organization.Should().Be("my-company");
+        connection.Owner.Should().Be("my-org");
+        connection.OwnerType.Should().Be(GitHubOwnerType.Organization);
         connection.LastSyncAt.Should().BeNull();
     }
 
@@ -97,7 +108,8 @@ public sealed class GitHubConnectionEndpointsTests
         var response = await _client.PostAsJsonAsync(
             $"/teams/{team.Id}/github",
             new CreateGitHubConnectionRequest(
-                "my-company",
+                "my-org",
+                GitHubOwnerType.Organization,
                 "github-secret-token"));
 
         response.StatusCode.Should()
@@ -119,7 +131,8 @@ public sealed class GitHubConnectionEndpointsTests
         var response = await _client.PostAsJsonAsync(
             $"/teams/{Guid.NewGuid()}/github",
             new CreateGitHubConnectionRequest(
-                "my-company",
+                "my-org",
+                GitHubOwnerType.Organization,
                 "github-secret-token"));
 
         response.StatusCode.Should()
@@ -135,6 +148,7 @@ public sealed class GitHubConnectionEndpointsTests
             $"/teams/{team.Id}/github",
             new CreateGitHubConnectionRequest(
                 "",
+                GitHubOwnerType.Organization,
                 "github-secret-token"));
 
         response.StatusCode.Should()
@@ -149,7 +163,8 @@ public sealed class GitHubConnectionEndpointsTests
         var response = await _client.PostAsJsonAsync(
             $"/teams/{team.Id}/github",
             new CreateGitHubConnectionRequest(
-                "my-company",
+                "my-org",
+                GitHubOwnerType.Organization,
                 ""));
 
         response.StatusCode.Should()
@@ -164,7 +179,8 @@ public sealed class GitHubConnectionEndpointsTests
         var firstResponse = await _client.PostAsJsonAsync(
             $"/teams/{team.Id}/github",
             new CreateGitHubConnectionRequest(
-                "my-company",
+                "my-org",
+                GitHubOwnerType.Organization,
                 "github-token-1"));
 
         firstResponse.StatusCode.Should()
@@ -173,7 +189,8 @@ public sealed class GitHubConnectionEndpointsTests
         var secondResponse = await _client.PostAsJsonAsync(
             $"/teams/{team.Id}/github",
             new CreateGitHubConnectionRequest(
-                "my-company",
+                "my-org",
+                GitHubOwnerType.Organization,
                 "github-token-2"));
 
         secondResponse.StatusCode.Should()
@@ -188,7 +205,8 @@ public sealed class GitHubConnectionEndpointsTests
         var createResponse = await _client.PostAsJsonAsync(
             $"/teams/{team.Id}/github",
             new CreateGitHubConnectionRequest(
-                "my-company",
+                "my-org",
+                GitHubOwnerType.Organization,
                 "github-secret-token"));
 
         createResponse.StatusCode
@@ -207,7 +225,8 @@ public sealed class GitHubConnectionEndpointsTests
 
         connection.Should().NotBeNull();
         connection!.TeamId.Should().Be(team.Id);
-        connection.Organization.Should().Be("my-company");
+        connection.Owner.Should().Be("my-org");
+        connection.OwnerType.Should().Be(GitHubOwnerType.Organization);
         connection.LastSyncAt.Should().BeNull();
     }
     
@@ -243,7 +262,8 @@ public sealed class GitHubConnectionEndpointsTests
         await _client.PostAsJsonAsync(
             $"/teams/{team.Id}/github",
             new CreateGitHubConnectionRequest(
-                "my-company",
+                "my-org",
+                GitHubOwnerType.Organization,
                 "github-secret-token"));
 
         var response = await _client.GetAsync(
@@ -273,7 +293,8 @@ public sealed class GitHubConnectionEndpointsTests
         var createResponse = await _client.PostAsJsonAsync(
             $"/teams/{team.Id}/github",
             new CreateGitHubConnectionRequest(
-                "my-company",
+                "my-org",
+                GitHubOwnerType.Organization,
                 "github-secret-token"));
 
         createResponse.StatusCode
@@ -320,7 +341,8 @@ public sealed class GitHubConnectionEndpointsTests
         await _client.PostAsJsonAsync(
             $"/teams/{team.Id}/github",
             new CreateGitHubConnectionRequest(
-                "my-company",
+                "my-org",
+                GitHubOwnerType.Organization,
                 "github-secret-token"));
 
         var deleteResponse = await _client.DeleteAsync(
@@ -345,9 +367,15 @@ public sealed class GitHubConnectionEndpointsTests
         var team = await CreateTeamAsync();
         var teamId = team.Id;
 
+        _fakeGitHubClient.OwnerToReturn = new GitHubOwner(
+            123,
+            "my-org",
+            "My Organization",
+            "https://github.com/my-org");
+        
         await CreateGitHubConnectionAsync(
             teamId,
-            "my-company",
+            "my-org",
             "secret-token");
 
         // Act
@@ -360,12 +388,11 @@ public sealed class GitHubConnectionEndpointsTests
             .Be(HttpStatusCode.OK);
 
         var result =
-            await response.Content.ReadApiJsonAsync<
-                TestGitHubConnectionResponse>();
+            await response.Content.ReadApiJsonAsync<TestGitHubConnectionResponse>();
 
         result.Should().NotBeNull();
         result!.Success.Should().BeTrue();
-        result.Organization.Should().Be("my-company");
+        result.Organization.Should().Be("my-org");
         result.Message.Should().Be(
             "GitHub connection is valid.");
     }
@@ -378,10 +405,10 @@ public sealed class GitHubConnectionEndpointsTests
 
         await CreateGitHubConnectionAsync(
             teamId,
-            "unknown-company",
+            "unknown-org",
             "secret-token");
 
-        _fakeGitHubClient.ShouldReturnOrganization = false;
+        _fakeGitHubClient.OwnerToReturn = null;
 
         var response = await _client.PostAsync(
             $"/teams/{teamId}/github/test",
@@ -396,7 +423,7 @@ public sealed class GitHubConnectionEndpointsTests
 
         result.Should().NotBeNull();
         result!.Success.Should().BeFalse();
-        result.Organization.Should().Be("unknown-company");
+        result.Organization.Should().Be("unknown-org");
     }
     
     [Fact]
@@ -435,7 +462,7 @@ public sealed class GitHubConnectionEndpointsTests
 
         await CreateGitHubConnectionAsync(
             teamId,
-            "my-company",
+            "my-org",
             accessToken);
 
         var response = await _client.PostAsync(
@@ -457,17 +484,17 @@ public sealed class GitHubConnectionEndpointsTests
 
         await CreateGitHubConnectionAsync(
             teamId,
-            "my-company",
+            "my-org",
             accessToken);
 
         await _client.PostAsync(
             $"/teams/{teamId}/github/test",
             null);
 
-        _fakeGitHubClient.ReceivedOrganization
+        _fakeGitHubClient.ReceivedOwner
             .Should()
-            .Be("my-company");
-
+            .Be("my-org");
+        
         _fakeGitHubClient.ReceivedAccessToken
             .Should()
             .Be(accessToken);

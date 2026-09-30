@@ -1,4 +1,5 @@
 using System.Globalization;
+using AiEngineeringManagerCopilot.Domain.Enums;
 
 namespace AiEngineeringManagerCopilot.Application.AI;
 
@@ -6,10 +7,22 @@ public sealed class AIAnalysisPromptBuilder
 {
     public string Build(AIAnalysisContext context)
     {
-        var metrics = string.Join(
+        var availableMetrics = string.Join(
             Environment.NewLine,
-            context.Metrics.Select(x =>
-                $"- {x.Key}: {x.Value.ToString("0.##", CultureInfo.InvariantCulture)}"));
+            context.Metrics
+                .Where(x =>
+                    x.DataStatus == MetricDataStatus.Available &&
+                    x.Value.HasValue)
+                .Select(x =>
+                    $"- {x.MetricType}: " +
+                    $"{x.Value!.Value.ToString("0.##", CultureInfo.InvariantCulture)}"));
+
+        var unavailableMetrics = string.Join(
+            Environment.NewLine,
+            context.Metrics
+                .Where(x => x.DataStatus != MetricDataStatus.Available)
+                .Select(x =>
+                    $"- {x.MetricType}: {x.DataStatus}"));
 
         var insights = string.Join(
             Environment.NewLine,
@@ -38,14 +51,13 @@ public sealed class AIAnalysisPromptBuilder
                         "+0.##;-0.##;0",
                         CultureInfo.InvariantCulture) + "%"
                     : "N/A";
-                
-                
+
                 return
                     $"- {x.MetricType}: " +
                     $"{previousValue} → {currentValue} " +
                     $"({change}) — {x.Direction}";
             }));
-        
+
         var periodStart = context.PeriodStart.ToString(
             "yyyy-MM-dd",
             CultureInfo.InvariantCulture);
@@ -54,26 +66,36 @@ public sealed class AIAnalysisPromptBuilder
             "yyyy-MM-dd",
             CultureInfo.InvariantCulture);
 
+        var dataCoverage = context.DataCoverage.ToString(
+            "0.##",
+            CultureInfo.InvariantCulture);
+
         return $$"""
             You are an Engineering Manager Copilot.
 
-            Analyze the engineering health of the team.
+            Analyze the engineering health of the team using only the
+            engineering evidence provided below.
 
             ## Period
 
             {{periodStart}} to {{periodEnd}}
 
-            ## Overall score
+            ## Engineering health
 
-            {{context.OverallScore}}/100
+            Overall score: {{context.OverallScore}}/100
+            Data coverage: {{dataCoverage}}%
 
             ## Executive summary
 
             {{context.ExecutiveSummary}}
 
-            ## Metrics
+            ## Available metrics
 
-            {{metrics}}
+            {{availableMetrics}}
+
+            ## Unavailable metrics
+
+            {{unavailableMetrics}}
 
             ## Metric trends compared with previous period
 
@@ -102,32 +124,81 @@ public sealed class AIAnalysisPromptBuilder
             - engineering process
             - technical risks
 
+            ## Data interpretation rules
+
+            The data coverage percentage represents how much of the expected
+            engineering health signal is currently observable.
+
+            Take data coverage into account when determining the strength
+            and confidence of conclusions.
+
+            Always mention limited data coverage in the executive assessment
+            when coverage is below 70%.
+
+            When coverage is below 50%, explicitly state that the analysis is
+            partial and that conclusions apply only to the observable
+            engineering signals.
+
+            SourceNotConfigured means that this engineering dimension is not
+            observable by the system. It does not indicate poor performance.
+
+            NoData means that the source is configured but no usable observation
+            was available for the selected period. It does not indicate a zero
+            value or poor performance.
+
+            A metric marked Available with value 0 is an observed zero value.
+            Do not reinterpret it as missing data.
+
+            Do not infer team-wide engineering performance from unavailable
+            metrics.
+
+            Do not present an observed metric as proof of the complete
+            real-world state when the metric may depend on integration or
+            telemetry coverage.
+
+            For zero-valued operational metrics such as DeploymentFrequency,
+            distinguish between "zero observed/recorded by the system" and
+            "zero actually occurred" unless the provided data proves complete
+            observability.
+
+            Do not invent organizational policies, SLAs, SLOs, sprint cadences,
+            release cadences, or performance targets.
+
+            When recommending a target or cadence that is not present in the
+            data, present it as something the Engineering Manager should define
+            based on team context, not as a prescribed target.
+
             ## Evidence
 
             Every important conclusion should be supported by observable
-            engineering evidence from the metrics and metric trends provided
-            above.
+            engineering evidence from the available metrics and metric trends
+            provided above.
+
+            Evidence proves only what the provided metric directly measures.
+            Do not extend evidence beyond the observable scope of the metric.
 
             For each evidence item:
-            - metricType must reference a metric present in the provided metrics;
-            - value must be the current value of that metric;
+            - metricType must reference an Available metric;
+            - value must exactly match the current value of that metric;
             - reason must explain why the metric supports the analysis;
             - confidence must be between 0 and 1;
             - confidence represents how strongly the available engineering data
               supports the conclusion.
 
-            Do not invent metrics or metric values.
+            Never use NoData or SourceNotConfigured metrics as evidence.
 
-            Prefer evidence based on measurable engineering signals rather than
-            assumptions.
+            Do not invent metrics, metric values, targets, units, benchmarks,
+            incidents, causes, or trends.
 
-            Use higher confidence when the evidence is direct and supported by
-            clear metric or trend data.
+            Prefer measurable engineering signals over assumptions.
 
-            Use lower confidence when the interpretation is less certain.
+            Use higher confidence when evidence is direct and supported by
+            multiple consistent signals.
 
-            If the available data does not support an evidence item, do not
-            create it.
+            Use lower confidence when the interpretation is uncertain or when
+            data coverage is limited.
+
+            If the available data does not support a conclusion, do not make it.
 
             Provide practical and actionable recommendations.
             """;

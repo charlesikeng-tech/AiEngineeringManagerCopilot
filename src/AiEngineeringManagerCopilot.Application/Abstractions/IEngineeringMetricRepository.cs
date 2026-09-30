@@ -9,7 +9,7 @@ public interface IEngineeringMetricRepository
         EngineeringMetric metric,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<EngineeringMetric>> GetByTeamAndPeriodAsync(
+    Task<EngineeringMetric?> GetByTeamAndPeriodAsync(
         Guid teamId,
         MetricType metricType,
         DateOnly periodStart,

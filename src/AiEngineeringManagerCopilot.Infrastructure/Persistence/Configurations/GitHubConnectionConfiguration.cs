@@ -20,9 +20,14 @@ public sealed class GitHubConnectionConfiguration
         builder.Property(x => x.TeamId)
             .IsRequired();
 
-        builder.Property(x => x.Organization)
+        builder.Property(x => x.Owner)
             .IsRequired()
             .HasMaxLength(200);
+        
+        builder.Property(x => x.OwnerType)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20);
 
         builder.Property(x => x.AccessTokenEncrypted)
             .IsRequired();

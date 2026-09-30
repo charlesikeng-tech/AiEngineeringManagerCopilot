@@ -9,11 +9,13 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 
@@ -38,6 +40,7 @@ type EngineeringActionView = EngineeringAction & {
   standalone: true,
   imports: [
     FormsModule,
+    RouterLink,
     DatePipe,
     UpperCasePipe,
     NzAlertModule,
@@ -55,6 +58,7 @@ export class Actions {
   private readonly actionsApi = inject(ActionsApi);
   private readonly teamContext = inject(TeamContext);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly message = inject(NzMessageService);
 
   readonly loading = signal(false);
   readonly error = signal(false);
@@ -80,6 +84,24 @@ export class Actions {
   );
 
   readonly totalCount = computed(() => this.actions().length);
+
+  readonly sortedActions = computed(() => {
+    const priorityOrder: Record<string, number> = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+    const statusOrder: Record<ActionStatus, number> = { InProgress: 0, Todo: 1, Done: 2, Cancelled: 3 };
+
+    return [...this.actions()].sort((left, right) => {
+      const priorityDifference =
+        (priorityOrder[left.priority] ?? 99) - (priorityOrder[right.priority] ?? 99);
+
+      return priorityDifference !== 0
+        ? priorityDifference
+        : statusOrder[left.status] - statusOrder[right.status];
+    });
+  });
+
+  readonly overdueCount = computed(
+    () => this.actions().filter((action) => this.dueState(action) === 'overdue').length,
+  );
 
   constructor() {
     toObservable(this.teamContext.selectedTeamId)
@@ -158,6 +180,25 @@ export class Actions {
     });
   }
 
+  dueState(action: EngineeringActionView): 'overdue' | 'soon' | 'scheduled' | null {
+    if (!action.dueDateValue || action.status === 'Done' || action.status === 'Cancelled') return null;
+
+    const today = this.startOfDay(new Date());
+    const dueDate = this.startOfDay(action.dueDateValue);
+    const days = Math.ceil((dueDate.getTime() - today.getTime()) / 86_400_000);
+
+    if (days < 0) return 'overdue';
+    if (days <= 3) return 'soon';
+    return 'scheduled';
+  }
+
+  dueLabel(action: EngineeringActionView): string | null {
+    const state = this.dueState(action);
+    if (state === 'overdue') return 'Overdue';
+    if (state === 'soon') return 'Due soon';
+    return null;
+  }
+
   metricLabel(metricType: string): string {
     const labels: Record<string, string> = {
       CycleTime: 'Cycle Time',
@@ -216,13 +257,19 @@ export class Actions {
           );
 
           this.updatingActionId.set(null);
+          this.message.success('Action updated');
         },
         error: (error) => {
           console.error('Failed to update engineering action', error);
 
           this.updatingActionId.set(null);
+          this.message.error('Unable to update this action');
         },
       });
+  }
+
+  private startOfDay(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
 
   private formatDateOnly(date: Date): string {

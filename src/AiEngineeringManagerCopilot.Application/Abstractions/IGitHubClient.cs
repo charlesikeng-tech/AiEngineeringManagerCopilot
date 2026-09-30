@@ -1,16 +1,19 @@
 using AiEngineeringManagerCopilot.Application.GitHub;
+using AiEngineeringManagerCopilot.Domain.Enums;
 
 namespace AiEngineeringManagerCopilot.Application.Abstractions;
 
 public interface IGitHubClient
 {
-    Task<GitHubOrganization?> GetOrganizationAsync(
-        string organization,
+    Task<GitHubOwner?> GetOwnerAsync(
+        string owner,
+        GitHubOwnerType ownerType,
         string accessToken,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<GitHubRepository>> GetRepositoriesAsync(
-        string organization,
+        string owner,
+        GitHubOwnerType ownerType,
         string accessToken,
         CancellationToken cancellationToken);
     
@@ -43,7 +46,7 @@ public interface IGitHubClient
             CancellationToken cancellationToken);
 }
 
-public sealed record GitHubOrganization(
+public sealed record GitHubOwner(
     long Id,
     string Login,
     string Name,

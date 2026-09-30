@@ -699,6 +699,7 @@ public sealed class EngineeringReportEndpointsTests
                 TeamId = teamId,
                 MetricType = metricType,
                 Value = value,
+                DataStatus = MetricDataStatus.Available,
                 PeriodStart = periodStart
                               ?? new DateOnly(2026, 9, 1),
                 PeriodEnd = periodEnd
@@ -990,7 +991,7 @@ public sealed class EngineeringReportEndpointsTests
             r.Severity == RiskSeverity.Critical);
 
         persistedReport.Risks.Should().Contain(r =>
-            r.Title == "Low deployment frequency" &&
+            r.Title == "Low recorded deployment frequency" &&
             r.Severity == RiskSeverity.High);
     }
     
@@ -1534,9 +1535,8 @@ public sealed class EngineeringReportEndpointsTests
             .Should()
             .ContainSingle();
 
-        report.Insights[0].Title
-            .Should()
-            .Be("Cycle time is too high");
+        report.Insights[0].Title.Should().Be(
+            "Cycle time is above the healthy range");
 
         report.Insights
             .Should()

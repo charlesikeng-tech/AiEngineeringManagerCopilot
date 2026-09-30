@@ -6,7 +6,8 @@ public sealed record EngineeringMetricResponse(
     Guid Id,
     Guid TeamId,
     MetricType MetricType,
-    decimal Value,
+    decimal? Value,
+    MetricDataStatus DataStatus,
     DateOnly PeriodStart,
     DateOnly PeriodEnd,
     DateTimeOffset CreatedAt);

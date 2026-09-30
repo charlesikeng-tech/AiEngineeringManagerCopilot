@@ -2,6 +2,12 @@ namespace AiEngineeringManagerCopilot.Application.Metrics;
 
 public interface IEngineeringMetricsService
 {
+    Task<IReadOnlyList<EngineeringMetricResponse>?> CalculateAllAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        CancellationToken cancellationToken);
+    
     Task<EngineeringMetricResponse?> CalculateCycleTimeAsync(
         Guid teamId,
         DateOnly periodStart,

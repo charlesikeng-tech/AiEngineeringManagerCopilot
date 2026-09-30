@@ -1,83 +1,151 @@
-<div class="reports-page">
+<div class="app-page">
+  <!-- Page header -->
+
   <header class="page-header">
-    <div>
+    <div class="page-header__content">
+      <span class="page-eyebrow"> ENGINEERING </span>
+
       <h1>Engineering Reports</h1>
-      <p>Engineering health reports and historical performance</p>
-    </div>
-  </header>
 
-  <nz-card class="history-card">
-    <div class="section-header">
-      <div>
-        <h2>Report History</h2>
-        <p>Review engineering health across reporting periods</p>
-      </div>
-
-      @if (!loading() && reports().length > 0) {
-        <span class="report-count">
-          {{ reports().length }} reports
-        </span>
-      }
+      <p>Engineering health reports and historical performance.</p>
     </div>
 
-    @if (loading()) {
-      <nz-skeleton
-        [nzActive]="true"
-        [nzParagraph]="{ rows: 5 }"
-      />
-    } @else if (error(); as errorMessage) {
-      <div class="state-message state-message--error">
-        {{ errorMessage }}
-      </div>
-    } @else if (reports().length === 0) {
-      <div class="empty-state">
-        <nz-empty nzNotFoundContent="No engineering reports available" />
-      </div>
-    } @else {
-      <div class="report-list">
-        @for (report of reports(); track report.id) {
-          <article class="report-row">
-            <div class="report-period">
-              <span class="report-month">
-                {{ report.periodStart | date: 'MMMM y' }}
-              </span>
+    @if (!loading() && reports().length > 0) {
+      <div class="report-summary">
+        <span class="report-summary__label"> REPORTS </span>
 
-              <span class="report-dates">
-                {{ report.periodStart | date: 'MMM d' }}
-                –
-                {{ report.periodEnd | date: 'MMM d, y' }}
-              </span>
-            </div>
-
-            <div class="report-score">
-              <strong>{{ report.overallScore }}</strong>
-              <span>/100</span>
-            </div>
-
-            <div
-              class="health-status"
-              [class.health-status--healthy]="report.healthLevel === 'Healthy'"
-              [class.health-status--attention]="report.healthLevel === 'Needs Attention'"
-              [class.health-status--critical]="report.healthLevel === 'Critical'"
-            >
-              <span class="health-status-dot"></span>
-              {{ report.healthLevel }}
-            </div>
-
-            <div class="coverage">
-              <strong>{{ report.dataCoverage | number: '1.0-0' }}%</strong>
-              <span>coverage</span>
-            </div>
-
-            <a
-              class="view-report"
-              [routerLink]="['/reports', report.id]"
-            >
-              View report →
-            </a>
-          </article>
-        }
+        <strong>
+          {{ reports().length }}
+        </strong>
       </div>
     }
-  </nz-card>
+  </header>
+
+  <!-- Report history -->
+
+  <section class="app-section">
+    <div class="app-card">
+      <div class="app-card__header">
+        <div>
+          <span class="section-eyebrow"> HISTORY </span>
+
+          <h2 class="app-card__title">Report History</h2>
+
+          <p class="app-card__description">Review engineering health across reporting periods.</p>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="reports-loading">
+          <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 5 }" />
+        </div>
+      } @else if (error(); as errorMessage) {
+        <div class="reports-error">
+          {{ errorMessage }}
+        </div>
+      } @else if (reports().length === 0) {
+        <div class="empty-state">
+          <nz-empty nzNotFoundContent="No engineering reports available" />
+        </div>
+      } @else {
+        <div class="report-list">
+          @for (report of reportHistory(); track report.id) {
+            <article class="report-row">
+              <!-- Period -->
+
+              <div class="report-period">
+                <span class="report-month">
+                  {{ report.periodStart | date: 'MMMM y' }}
+                </span>
+
+                <span class="report-dates">
+                  {{ report.periodStart | date: 'MMM d' }}
+                  –
+                  {{ report.periodEnd | date: 'MMM d, y' }}
+                </span>
+              </div>
+
+              <!-- Score -->
+
+              <div class="report-score">
+                <div class="report-value">
+                  <strong>
+                    {{ report.overallScore }}
+                  </strong>
+
+                  <span> /100 </span>
+                </div>
+
+                <span
+                  class="report-delta"
+                  [class.report-delta--up]="deltaDirection(report.scoreDelta) === 'up'"
+                  [class.report-delta--down]="deltaDirection(report.scoreDelta) === 'down'"
+                  [class.report-delta--flat]="deltaDirection(report.scoreDelta) === 'flat'"
+                >
+                  @if (deltaDirection(report.scoreDelta) === 'up') {
+                    <span aria-hidden="true">↑</span>
+                  } @else if (deltaDirection(report.scoreDelta) === 'down') {
+                    <span aria-hidden="true">↓</span>
+                  }
+
+                  {{ deltaValue(report.scoreDelta) }}
+                  @if (report.scoreDelta !== null) {
+                    <span>vs previous</span>
+                  }
+                </span>
+              </div>
+
+              <!-- Health -->
+
+              <div
+                class="health-status"
+                [class.health-status--healthy]="report.healthLevel === 'Healthy'"
+                [class.health-status--attention]="report.healthLevel === 'Needs Attention'"
+                [class.health-status--critical]="report.healthLevel === 'Critical'"
+              >
+                <span class="health-status-dot"></span>
+
+                {{ report.healthLevel }}
+              </div>
+
+              <!-- Coverage -->
+
+              <div class="coverage">
+                <div class="report-value">
+                  <strong> {{ report.dataCoverage | number: '1.0-0' }}% </strong>
+
+                  <span> coverage </span>
+                </div>
+
+                <span
+                  class="coverage-delta"
+                  [class.coverage-delta--up]="deltaDirection(report.coverageDelta) === 'up'"
+                  [class.coverage-delta--down]="deltaDirection(report.coverageDelta) === 'down'"
+                  [class.coverage-delta--flat]="deltaDirection(report.coverageDelta) === 'flat'"
+                >
+                  @if (deltaDirection(report.coverageDelta) === 'up') {
+                    <span aria-hidden="true">↑</span>
+                  } @else if (deltaDirection(report.coverageDelta) === 'down') {
+                    <span aria-hidden="true">↓</span>
+                  }
+
+                  {{ deltaValue(report.coverageDelta) }}
+                  @if (report.coverageDelta !== null) {
+                    <span>pts</span>
+                  }
+                </span>
+              </div>
+
+              <!-- Action -->
+
+              <a class="view-report" [routerLink]="['/reports', report.id]">
+                View report
+                <span aria-hidden="true">→</span>
+              </a>
+            </article>
+          }
+        </div>
+      }
+    </div>
+  </section>
 </div>

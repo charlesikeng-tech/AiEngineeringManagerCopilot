@@ -34,7 +34,8 @@ public sealed class GitHubSyncService(
 
         var repositories =
             await gitHubClient.GetRepositoriesAsync(
-                connection.Organization,
+                connection.Owner,
+                connection.OwnerType,
                 accessToken,
                 cancellationToken);
 
@@ -101,7 +102,7 @@ public sealed class GitHubSyncService(
                 pullRequests =
                     await gitHubClient.GetPullRequestsAsync(
                         accessToken,
-                        connection.Organization,
+                        connection.Owner,
                         repository.Name,
                         cancellationToken);
             }
@@ -165,7 +166,7 @@ public sealed class GitHubSyncService(
                     reviews =
                         await gitHubClient.GetPullRequestReviewsAsync(
                             accessToken,
-                            connection.Organization,
+                            connection.Owner,
                             repository.Name,
                             githubPullRequest.Number,
                             cancellationToken);
@@ -227,7 +228,7 @@ public sealed class GitHubSyncService(
                 githubDeployments =
                     await gitHubClient.GetDeploymentsAsync(
                         accessToken,
-                        connection.Organization,
+                        connection.Owner,
                         repository.Name,
                         cancellationToken);
             }
@@ -245,7 +246,7 @@ public sealed class GitHubSyncService(
                     statuses =
                         await gitHubClient.GetDeploymentStatusesAsync(
                             accessToken,
-                            connection.Organization,
+                            connection.Owner,
                             repository.Name,
                             githubDeployment.Id,
                             cancellationToken);

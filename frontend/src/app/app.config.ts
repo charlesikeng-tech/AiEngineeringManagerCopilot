@@ -8,6 +8,7 @@ import {
   CheckSquareOutline,
   DashboardOutline,
   FileTextOutline,
+  GithubOutline,
   MenuFoldOutline,
   MenuUnfoldOutline,
   MinusOutline,
@@ -56,6 +57,7 @@ export const appConfig: ApplicationConfig = {
       ArrowDownOutline,
       MinusOutline,
       PlusOutline,
+      GithubOutline,
     ]),
 
     provideNzDateFnsAdapter({

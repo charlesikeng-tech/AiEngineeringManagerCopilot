@@ -1,3 +1,5 @@
+using AiEngineeringManagerCopilot.Domain.Enums;
+
 namespace AiEngineeringManagerCopilot.Domain.Entities;
 
 public sealed class GitHubConnection
@@ -6,7 +8,9 @@ public sealed class GitHubConnection
 
     public Guid TeamId { get; set; }
 
-    public string Organization { get; set; } = string.Empty;
+    public string Owner { get; set; } = string.Empty;
+
+    public GitHubOwnerType OwnerType { get; set; }
 
     public string AccessTokenEncrypted { get; set; } = string.Empty;
 

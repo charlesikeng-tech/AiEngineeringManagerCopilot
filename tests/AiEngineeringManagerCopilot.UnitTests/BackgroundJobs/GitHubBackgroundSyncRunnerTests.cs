@@ -2,6 +2,7 @@ using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.BackgroundJobs;
 using AiEngineeringManagerCopilot.Application.GitHub;
 using AiEngineeringManagerCopilot.Domain.Entities;
+using AiEngineeringManagerCopilot.Domain.Enums;
 using FluentAssertions;
 
 namespace AiEngineeringManagerCopilot.UnitTests.BackgroundJobs;
@@ -125,7 +126,8 @@ public sealed class GitHubBackgroundSyncRunnerTests
         {
             Id = Guid.NewGuid(),
             TeamId = teamId,
-            Organization = $"org-{teamId:N}",
+            Owner = $"org-{teamId:N}",
+            OwnerType = GitHubOwnerType.Organization,
             AccessTokenEncrypted = "encrypted-token",
             CreatedAt = DateTimeOffset.UtcNow
         };

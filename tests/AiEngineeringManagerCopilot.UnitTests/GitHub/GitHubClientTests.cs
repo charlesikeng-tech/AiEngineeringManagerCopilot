@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Infrastructure.GitHub;
 using FluentAssertions;
 
@@ -30,8 +31,9 @@ public sealed class GitHubClientTests
 
         var client = new GitHubClient(httpClient);
 
-        var result = await client.GetOrganizationAsync(
+        var result = await client.GetOwnerAsync(
             "my-company",
+            GitHubOwnerType.Organization,
             "secret-token",
             CancellationToken.None);
 
@@ -58,8 +60,9 @@ public sealed class GitHubClientTests
 
         var client = new GitHubClient(httpClient);
 
-        var result = await client.GetOrganizationAsync(
-            "unknown-company",
+        var result = await client.GetOwnerAsync(
+            "my-company",
+            GitHubOwnerType.Organization,
             "secret-token",
             CancellationToken.None);
 
@@ -88,8 +91,9 @@ public sealed class GitHubClientTests
 
         var client = new GitHubClient(httpClient);
 
-        await client.GetOrganizationAsync(
+        await client.GetOwnerAsync(
             "my-company",
+            GitHubOwnerType.Organization,
             "secret-token",
             CancellationToken.None);
 
@@ -487,8 +491,9 @@ public sealed class GitHubClientTests
 
         var client = new GitHubClient(httpClient);
 
-        await client.GetOrganizationAsync(
+        await client.GetOwnerAsync(
             "my-company",
+            GitHubOwnerType.Organization,
             "secret-token",
             CancellationToken.None);
 
@@ -1184,11 +1189,11 @@ public sealed class GitHubClientTests
             httpClient,
             retryDelay);
 
-        var result = await client.GetOrganizationAsync(
+        var result = await client.GetOwnerAsync(
             "my-company",
+            GitHubOwnerType.Organization,
             "secret-token",
             CancellationToken.None);
-
         result.Should().NotBeNull();
         result!.Login.Should().Be("my-company");
 
@@ -1308,8 +1313,9 @@ public sealed class GitHubClientTests
             httpClient,
             retryDelay);
 
-        var result = await client.GetOrganizationAsync(
+        var result = await client.GetOwnerAsync(
             "my-company",
+            GitHubOwnerType.Organization,
             "secret-token",
             CancellationToken.None);
 
@@ -1338,8 +1344,9 @@ public sealed class GitHubClientTests
         var client = new GitHubClient(httpClient);
 
         var act = async () =>
-            await client.GetOrganizationAsync(
+            await client.GetOwnerAsync(
                 "my-company",
+                GitHubOwnerType.Organization,
                 "secret-token",
                 CancellationToken.None);
 
@@ -1391,11 +1398,11 @@ public sealed class GitHubClientTests
             httpClient,
             retryDelay);
 
-        var result = await client.GetOrganizationAsync(
+        var result = await client.GetOwnerAsync(
             "my-company",
+            GitHubOwnerType.Organization,
             "secret-token",
             CancellationToken.None);
-
         result.Should().NotBeNull();
         result!.Login.Should().Be("my-company");
 
@@ -1444,8 +1451,9 @@ public sealed class GitHubClientTests
             httpClient,
             retryDelay);
 
-        var result = await client.GetOrganizationAsync(
+        var result = await client.GetOwnerAsync(
             "my-company",
+            GitHubOwnerType.Organization,
             "secret-token",
             CancellationToken.None);
 
@@ -1510,8 +1518,9 @@ public sealed class GitHubClientTests
             httpClient,
             retryDelay);
 
-        var result = await client.GetOrganizationAsync(
+        var result = await client.GetOwnerAsync(
             "my-company",
+            GitHubOwnerType.Organization,
             "secret-token",
             CancellationToken.None);
 

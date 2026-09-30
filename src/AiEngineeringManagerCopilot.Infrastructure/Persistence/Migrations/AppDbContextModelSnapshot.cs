@@ -238,6 +238,11 @@ namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DataStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("MetricType")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -252,7 +257,7 @@ namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("TeamId")
                         .HasColumnType("uuid");
 
-                    b.Property<decimal>("Value")
+                    b.Property<decimal?>("Value")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
 
@@ -420,10 +425,15 @@ namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("LastSyncAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Organization")
+                    b.Property<string>("Owner")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("OwnerType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<Guid>("TeamId")
                         .HasColumnType("uuid");

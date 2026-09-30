@@ -13,14 +13,53 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
     {
         var risks = new List<EngineeringRisk>();
 
-        DetectCycleTimeRisk(teamId, reportId, metrics, risks);
-        DetectReviewTimeRisk(teamId, reportId, metrics, risks);
-        DetectDeploymentFrequencyRisk(teamId, reportId, metrics, risks);
-        DetectChangeFailureRateRisk(teamId, reportId, metrics, risks);
-        DetectLeadTimeRisk(teamId, reportId, metrics, risks);
-        DetectOpenPullRequestsRisk(teamId, reportId, metrics, risks);
-        DetectMergedPullRequestsRisk(teamId, reportId, metrics, risks);
-        DetectBlockedItemsRisk(teamId, reportId, metrics, risks);
+        DetectCycleTimeRisk(
+            teamId,
+            reportId,
+            metrics,
+            risks);
+
+        DetectReviewTimeRisk(
+            teamId,
+            reportId,
+            metrics,
+            risks);
+
+        DetectDeploymentFrequencyRisk(
+            teamId,
+            reportId,
+            metrics,
+            risks);
+
+        DetectChangeFailureRateRisk(
+            teamId,
+            reportId,
+            metrics,
+            risks);
+
+        DetectLeadTimeRisk(
+            teamId,
+            reportId,
+            metrics,
+            risks);
+
+        DetectOpenPullRequestsRisk(
+            teamId,
+            reportId,
+            metrics,
+            risks);
+
+        DetectMergedPullRequestsRisk(
+            teamId,
+            reportId,
+            metrics,
+            risks);
+
+        DetectBlockedItemsRisk(
+            teamId,
+            reportId,
+            metrics,
+            risks);
 
         return risks;
     }
@@ -31,21 +70,24 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         IReadOnlyDictionary<MetricType, decimal> metrics,
         List<EngineeringRisk> risks)
     {
-        if (!metrics.TryGetValue(MetricType.CycleTime, out var value) ||
+        if (!metrics.TryGetValue(
+                MetricType.CycleTime,
+                out var value) ||
             value <= EngineeringHealthPolicy.CycleTime.NeedsAttentionMax)
         {
             return;
         }
 
-        risks.Add(CreateRisk(
-            teamId,
-            reportId,
-            MetricType.CycleTime,
-            RiskSeverity.High,
-            RiskCategory.Delivery,
-            "High cycle time",
-            $"Average cycle time is {value:0.##} hours.",
-            "Reduce work in progress and split large pull requests."));
+        risks.Add(
+            CreateRisk(
+                teamId,
+                reportId,
+                MetricType.CycleTime,
+                RiskSeverity.High,
+                RiskCategory.Delivery,
+                "High cycle time",
+                $"Average cycle time is {value:0.##} hours.",
+                "Reduce work in progress and split large pull requests."));
     }
 
     private static void DetectReviewTimeRisk(
@@ -54,21 +96,25 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         IReadOnlyDictionary<MetricType, decimal> metrics,
         List<EngineeringRisk> risks)
     {
-        if (!metrics.TryGetValue(MetricType.PRReviewTime, out var value) ||
+        if (!metrics.TryGetValue(
+                MetricType.PRReviewTime,
+                out var value) ||
             value <= EngineeringHealthPolicy.PrReviewTime.NeedsAttentionMax)
         {
             return;
         }
 
-        risks.Add(CreateRisk(
-            teamId,
-            reportId,
-            MetricType.PRReviewTime,
-            RiskSeverity.High,
-            RiskCategory.Review,
-            "Slow pull request reviews",
-            $"Average PR review time is {value:0.##} hours.",
-            "Set a review SLA and prioritize reviewing open pull requests."));
+        risks.Add(
+            CreateRisk(
+                teamId,
+                reportId,
+                MetricType.PRReviewTime,
+                RiskSeverity.High,
+                RiskCategory.Review,
+                "Slow pull request reviews",
+                $"Average PR review time is {value:0.##} hours.",
+                "Review the causes of long review times and define a review-time expectation " +
+                "appropriate to the team's context."));
     }
 
     private static void DetectDeploymentFrequencyRisk(
@@ -77,21 +123,44 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         IReadOnlyDictionary<MetricType, decimal> metrics,
         List<EngineeringRisk> risks)
     {
-        if (!metrics.TryGetValue(MetricType.DeploymentFrequency, out var value) ||
+        if (!metrics.TryGetValue(
+                MetricType.DeploymentFrequency,
+                out var value) ||
             value >= EngineeringHealthPolicy.DeploymentFrequency.NeedsAttentionMin)
         {
             return;
         }
 
-        risks.Add(CreateRisk(
-            teamId,
-            reportId,
-            MetricType.DeploymentFrequency,
-            RiskSeverity.High,
-            RiskCategory.Delivery,
-            "Low deployment frequency",
-            $"The team deployed only {value:0.##} times during the period.",
-            "Reduce batch size and automate the path to production."));
+        if (value == 0)
+        {
+            risks.Add(
+                CreateRisk(
+                    teamId,
+                    reportId,
+                    MetricType.DeploymentFrequency,
+                    RiskSeverity.High,
+                    RiskCategory.Delivery,
+                    "No deployments were recorded during the period",
+                    "The system recorded 0 successful deployments during the selected period. " +
+                    "This may reflect a delivery-flow issue or incomplete deployment telemetry; " +
+                    "the observed value alone does not establish that no deployments actually occurred.",
+                    "Validate deployment telemetry and trace the path from merge to production " +
+                    "before concluding that deployment activity is low."));
+
+            return;
+        }
+
+        risks.Add(
+            CreateRisk(
+                teamId,
+                reportId,
+                MetricType.DeploymentFrequency,
+                RiskSeverity.High,
+                RiskCategory.Delivery,
+                "Low recorded deployment frequency",
+                $"The system recorded {value:0.##} successful deployments during the selected period.",
+                "Validate that deployment telemetry covers the relevant repositories and environments, " +
+                "then investigate delivery constraints if the recorded frequency reflects actual activity."));
     }
 
     private static void DetectChangeFailureRateRisk(
@@ -100,21 +169,24 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         IReadOnlyDictionary<MetricType, decimal> metrics,
         List<EngineeringRisk> risks)
     {
-        if (!metrics.TryGetValue(MetricType.ChangeFailureRate, out var value) ||
+        if (!metrics.TryGetValue(
+                MetricType.ChangeFailureRate,
+                out var value) ||
             value <= EngineeringHealthPolicy.ChangeFailureRate.NeedsAttentionMax)
         {
             return;
         }
 
-        risks.Add(CreateRisk(
-            teamId,
-            reportId,
-            MetricType.ChangeFailureRate,
-            RiskSeverity.Critical,
-            RiskCategory.Reliability,
-            "High change failure rate",
-            $"Change failure rate is {value:0.##}%.",
-            "Strengthen automated tests, deployment validation and rollback mechanisms."));
+        risks.Add(
+            CreateRisk(
+                teamId,
+                reportId,
+                MetricType.ChangeFailureRate,
+                RiskSeverity.Critical,
+                RiskCategory.Reliability,
+                "High change failure rate",
+                $"Change failure rate is {value:0.##}%.",
+                "Strengthen automated tests, deployment validation and rollback mechanisms."));
     }
 
     private static void DetectLeadTimeRisk(
@@ -123,21 +195,24 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         IReadOnlyDictionary<MetricType, decimal> metrics,
         List<EngineeringRisk> risks)
     {
-        if (!metrics.TryGetValue(MetricType.LeadTime, out var value) ||
+        if (!metrics.TryGetValue(
+                MetricType.LeadTime,
+                out var value) ||
             value <= EngineeringHealthPolicy.LeadTime.NeedsAttentionMax)
         {
             return;
         }
 
-        risks.Add(CreateRisk(
-            teamId,
-            reportId,
-            MetricType.LeadTime,
-            RiskSeverity.High,
-            RiskCategory.Delivery,
-            "High lead time",
-            $"Average lead time is {value:0.##} hours.",
-            "Reduce waiting time between development, review and deployment."));
+        risks.Add(
+            CreateRisk(
+                teamId,
+                reportId,
+                MetricType.LeadTime,
+                RiskSeverity.High,
+                RiskCategory.Delivery,
+                "High lead time",
+                $"Average lead time is {value:0.##} hours.",
+                "Reduce waiting time between development, review and deployment."));
     }
 
     private static void DetectOpenPullRequestsRisk(
@@ -146,21 +221,24 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         IReadOnlyDictionary<MetricType, decimal> metrics,
         List<EngineeringRisk> risks)
     {
-        if (!metrics.TryGetValue(MetricType.OpenPRs, out var value) ||
+        if (!metrics.TryGetValue(
+                MetricType.OpenPRs,
+                out var value) ||
             value <= EngineeringHealthPolicy.OpenPullRequests.NeedsAttentionMax)
         {
             return;
         }
 
-        risks.Add(CreateRisk(
-            teamId,
-            reportId,
-            MetricType.OpenPRs,
-            RiskSeverity.Medium,
-            RiskCategory.Review,
-            "Too many open pull requests",
-            $"There are {value:0.##} open pull requests.",
-            "Prioritize existing pull requests before starting new work."));
+        risks.Add(
+            CreateRisk(
+                teamId,
+                reportId,
+                MetricType.OpenPRs,
+                RiskSeverity.Medium,
+                RiskCategory.Review,
+                "Too many open pull requests",
+                $"There are {value:0.##} open pull requests.",
+                "Prioritize existing pull requests before starting new work."));
     }
 
     private static void DetectMergedPullRequestsRisk(
@@ -169,21 +247,24 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         IReadOnlyDictionary<MetricType, decimal> metrics,
         List<EngineeringRisk> risks)
     {
-        if (!metrics.TryGetValue(MetricType.MergedPRs, out var value) ||
+        if (!metrics.TryGetValue(
+                MetricType.MergedPRs,
+                out var value) ||
             value >= EngineeringHealthPolicy.MergedPullRequests.NeedsAttentionMin)
         {
             return;
         }
 
-        risks.Add(CreateRisk(
-            teamId,
-            reportId,
-            MetricType.MergedPRs,
-            RiskSeverity.High,
-            RiskCategory.Delivery,
-            "Low delivery throughput",
-            $"Only {value:0.##} pull requests were merged during the period.",
-            "Identify delivery bottlenecks and reduce work in progress."));
+        risks.Add(
+            CreateRisk(
+                teamId,
+                reportId,
+                MetricType.MergedPRs,
+                RiskSeverity.High,
+                RiskCategory.Delivery,
+                "Low delivery throughput",
+                $"Only {value:0.##} pull requests were merged during the period.",
+                "Identify delivery bottlenecks and reduce work in progress."));
     }
 
     private static void DetectBlockedItemsRisk(
@@ -192,21 +273,24 @@ public sealed class EngineeringRiskDetector : IEngineeringRiskDetector
         IReadOnlyDictionary<MetricType, decimal> metrics,
         List<EngineeringRisk> risks)
     {
-        if (!metrics.TryGetValue(MetricType.BlockedItems, out var value) ||
+        if (!metrics.TryGetValue(
+                MetricType.BlockedItems,
+                out var value) ||
             value <= EngineeringHealthPolicy.BlockedItems.NeedsAttentionMax)
         {
             return;
         }
 
-        risks.Add(CreateRisk(
-            teamId,
-            reportId,
-            MetricType.BlockedItems,
-            RiskSeverity.High,
-            RiskCategory.Process,
-            "Too many blocked items",
-            $"There are {value:0.##} blocked items.",
-            "Identify blockers, assign owners and track them until resolution."));
+        risks.Add(
+            CreateRisk(
+                teamId,
+                reportId,
+                MetricType.BlockedItems,
+                RiskSeverity.High,
+                RiskCategory.Process,
+                "Too many blocked items",
+                $"There are {value:0.##} blocked items.",
+                "Identify blockers, assign owners and track them until resolution."));
     }
 
     private static EngineeringRisk CreateRisk(

@@ -10,7 +10,9 @@ public sealed class EngineeringMetric
 
     public MetricType MetricType { get; set; }
 
-    public decimal Value { get; set; }
+    public decimal? Value { get; set; }
+
+    public MetricDataStatus DataStatus { get; set; }
 
     public DateOnly PeriodStart { get; set; }
 

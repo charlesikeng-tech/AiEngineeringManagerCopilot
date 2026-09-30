@@ -8,6 +8,8 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
+import { Subject, switchMap } from 'rxjs';
 
 import { TeamContext } from '../../../../core/team/team-context';
 import {
@@ -24,7 +26,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 @Component({
   selector: 'app-risks',
   standalone: true,
-  imports: [DatePipe, UpperCasePipe, NzAlertModule, NzEmptyModule, NzSpinModule],
+  imports: [DatePipe, UpperCasePipe, RouterLink, NzAlertModule, NzEmptyModule, NzSpinModule],
   templateUrl: './risks.html',
   styleUrl: './risks.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,31 +41,34 @@ export class Risks {
   readonly data = signal<EngineeringRisksResponse | null>(null);
   readonly risks = signal<readonly EngineeringRisk[]>([]);
 
+  private readonly loadRisks$ = new Subject<string>();
+
+  readonly sortedRisks = computed(() => {
+    const severityOrder: Record<string, number> = {
+      Critical: 0,
+      High: 1,
+      Medium: 2,
+      Low: 3,
+    };
+
+    return [...this.risks()].sort(
+      (a, b) => (severityOrder[a.severity] ?? 99) - (severityOrder[b.severity] ?? 99),
+    );
+  });
+
   constructor() {
-    effect(() => {
-      const teamId = this.teamContext.selectedTeamId();
+    this.loadRisks$
+      .pipe(
+        switchMap((teamId) => {
+          this.loading.set(true);
+          this.error.set(false);
+          this.data.set(null);
+          this.risks.set([]);
 
-      this.load(teamId);
-    });
-  }
-
-  private load(teamId: string | null): void {
-    if (!teamId) {
-      this.loading.set(false);
-      this.error.set(false);
-      this.data.set(null);
-      this.risks.set([]);
-      return;
-    }
-
-    this.loading.set(true);
-    this.error.set(false);
-    this.data.set(null);
-    this.risks.set([]);
-
-    this.risksApi
-      .getCurrentRisks(teamId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+          return this.risksApi.getCurrentRisks(teamId);
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: (response) => {
           this.data.set(response);
@@ -77,6 +82,20 @@ export class Risks {
           this.loading.set(false);
         },
       });
+
+    effect(() => {
+      const teamId = this.teamContext.selectedTeamId();
+
+      if (!teamId) {
+        this.loading.set(false);
+        this.error.set(false);
+        this.data.set(null);
+        this.risks.set([]);
+        return;
+      }
+
+      this.loadRisks$.next(teamId);
+    });
   }
 
   readonly criticalCount = computed(

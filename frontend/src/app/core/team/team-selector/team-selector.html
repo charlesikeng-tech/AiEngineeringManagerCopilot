@@ -1,15 +1,23 @@
 <div class="team-selector">
-  <span class="team-label">Team</span>
+  <div class="team-selector__icon" aria-hidden="true">
+    <nz-icon nzType="team" />
+  </div>
 
-  <nz-select
-    class="team-select"
-    [ngModel]="teamContext.selectedTeamId()"
-    (ngModelChange)="selectTeam($event)"
-    [nzLoading]="loading()"
-    nzPlaceHolder="Select a team"
-  >
-    @for (team of teams(); track team.id) {
-      <nz-option [nzValue]="team.id" [nzLabel]="team.name" />
-    }
-  </nz-select>
+  <div class="team-selector__content">
+    <span class="team-selector__label">ACTIVE TEAM</span>
+
+    <nz-select
+      class="team-selector__select"
+      [ngModel]="teamContext.selectedTeamId()"
+      (ngModelChange)="selectTeam($event)"
+      [nzLoading]="loading()"
+      nzPlaceHolder="Select a team"
+      nzBorderless
+      aria-label="Active team"
+    >
+      @for (team of teams(); track team.id) {
+        <nz-option [nzValue]="team.id" [nzLabel]="team.name" />
+      }
+    </nz-select>
+  </div>
 </div>

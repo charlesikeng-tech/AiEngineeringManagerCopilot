@@ -1,61 +1,115 @@
 <nz-layout class="app-shell">
+  <!-- =====================================================
+       SIDEBAR
+       ===================================================== -->
+
   <nz-sider
     class="sidebar"
     nzCollapsible
     [nzCollapsed]="isCollapsed()"
     [nzTrigger]="null"
-    [nzWidth]="220"
+    [nzWidth]="240"
     [nzCollapsedWidth]="72"
   >
-    <div class="brand">
+    <!-- Brand -->
+
+    <div class="brand" [class.brand--collapsed]="isCollapsed()">
       <div class="brand-logo">AI</div>
 
       @if (!isCollapsed()) {
         <div class="brand-content">
-          <strong>EM Copilot</strong>
-          <span>Engineering Intelligence</span>
+          <strong> EM Copilot </strong>
+
+          <span> Engineering Intelligence </span>
         </div>
       }
     </div>
 
+    <!-- Navigation -->
+
     <nav class="navigation">
-      <ul nz-menu nzTheme="dark" nzMode="inline" class="navigation-menu">
-        <li
-          nz-menu-item
-          routerLink="/dashboard"
-          routerLinkActive="ant-menu-item-selected"
-          [routerLinkActiveOptions]="{ exact: true }"
-        >
-          <nz-icon nzType="dashboard" />
-          <span>Overview</span>
-        </li>
+      <!-- Workspace -->
 
-        <li nz-menu-item routerLink="/reports" routerLinkActive="ant-menu-item-selected">
-          <nz-icon nzType="file-text" />
-          <span>Reports</span>
-        </li>
+      <div class="navigation-section">
+        @if (!isCollapsed()) {
+          <span class="navigation-label"> WORKSPACE </span>
+        }
 
-        <li nz-menu-item routerLink="/risks" routerLinkActive="ant-menu-item-selected">
-          <nz-icon nzType="warning" />
-          <span>Risks</span>
-        </li>
+        <ul nz-menu nzTheme="dark" nzMode="inline" class="navigation-menu">
+          <li
+            nz-menu-item
+            routerLink="/dashboard"
+            routerLinkActive="ant-menu-item-selected"
+            [routerLinkActiveOptions]="{
+              exact: true,
+            }"
+          >
+            <nz-icon nzType="dashboard" />
 
-        <li nz-menu-item routerLink="/actions" routerLinkActive="ant-menu-item-selected">
-          <nz-icon nzType="check-square" />
-          <span>Actions</span>
-        </li>
+            <span> Overview </span>
+          </li>
 
-        <li nz-menu-item routerLink="/team" routerLinkActive="ant-menu-item-selected">
-          <nz-icon nzType="team" />
-          <span>Team</span>
-        </li>
-      </ul>
+          <li nz-menu-item routerLink="/reports" routerLinkActive="ant-menu-item-selected">
+            <nz-icon nzType="file-text" />
+
+            <span> Reports </span>
+          </li>
+
+          <li nz-menu-item routerLink="/risks" routerLinkActive="ant-menu-item-selected">
+            <nz-icon nzType="warning" />
+
+            <span> Risks </span>
+          </li>
+
+          <li nz-menu-item routerLink="/actions" routerLinkActive="ant-menu-item-selected">
+            <nz-icon nzType="check-square" />
+
+            <span> Actions </span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Management -->
+
+      <div class="navigation-section navigation-section--management">
+        @if (!isCollapsed()) {
+          <span class="navigation-label"> MANAGEMENT </span>
+        }
+
+        <ul nz-menu nzTheme="dark" nzMode="inline" class="navigation-menu">
+          <li nz-menu-item routerLink="/team" routerLinkActive="ant-menu-item-selected">
+            <nz-icon nzType="team" />
+
+            <span> Teams </span>
+          </li>
+        </ul>
+      </div>
     </nav>
+
+    <!-- Sidebar footer -->
+
+    @if (!isCollapsed()) {
+      <div class="sidebar-footer">
+        <span class="sidebar-footer__label"> K&M ENGINEERING </span>
+
+        <span class="sidebar-footer__version"> Engineering Intelligence Platform </span>
+      </div>
+    }
   </nz-sider>
 
+  <!-- =====================================================
+       WORKSPACE
+       ===================================================== -->
+
   <nz-layout class="workspace">
+    <!-- ===================================================
+         TOPBAR
+         =================================================== -->
+
     <nz-header class="topbar">
       <div class="topbar-content">
+        <!-- Left -->
+
         <div class="topbar-left">
           <button
             nz-button
@@ -75,12 +129,20 @@
           </div>
         </div>
 
-        <span class="environment-badge">
-          <span class="environment-dot"></span>
-          Development
-        </span>
+        <!-- Right -->
+
+        <div class="topbar-right">
+          <span class="environment-badge">
+            <span class="environment-dot"></span>
+            Development
+          </span>
+        </div>
       </div>
     </nz-header>
+
+    <!-- ===================================================
+         CONTENT
+         =================================================== -->
 
     <nz-content class="content">
       <router-outlet />

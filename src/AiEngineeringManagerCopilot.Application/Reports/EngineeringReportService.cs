@@ -451,24 +451,29 @@ public sealed class EngineeringReportService(
         DateOnly periodEnd,
         CancellationToken cancellationToken)
     {
-        var values = await metricRepository.GetByTeamAndPeriodAsync(
+        var metric = await metricRepository.GetByTeamAndPeriodAsync(
             teamId,
             metricType,
             periodStart,
             periodEnd,
             cancellationToken);
 
-        if (values.Count == 0)
+        if (metric is null)
         {
             return;
         }
 
-        var latestValue = values
-            .OrderByDescending(x => x.CreatedAt)
-            .Select(x => x.Value)
-            .First();
+        if (metric.DataStatus != MetricDataStatus.Available)
+        {
+            return;
+        }
 
-        metrics[metricType] = latestValue;
+        if (!metric.Value.HasValue)
+        {
+            return;
+        }
+
+        metrics[metricType] = metric.Value.Value;
     }
     
     private static EngineeringReportInsightResponse ToInsightResponse(
@@ -477,7 +482,7 @@ public sealed class EngineeringReportService(
         return new EngineeringReportInsightResponse(
             insight.Id,
             insight.ReportId,
-            insight.MetricType.ToString(),
+            insight.MetricType.ToString() ?? string.Empty,
             insight.Category.ToString(),
             insight.Title,
             insight.Description,

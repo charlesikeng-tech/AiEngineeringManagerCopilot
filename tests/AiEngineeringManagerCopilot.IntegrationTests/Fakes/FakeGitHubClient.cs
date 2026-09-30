@@ -1,13 +1,17 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.GitHub;
+using AiEngineeringManagerCopilot.Domain.Enums;
 
 namespace AiEngineeringManagerCopilot.IntegrationTests.Fakes;
 
 public sealed class FakeGitHubClient : IGitHubClient
 {
-    public bool ShouldReturnOrganization { get; set; } = true;
+    
+    public GitHubOwner? OwnerToReturn { get; set; }
 
-    public string? ReceivedOrganization { get; private set; }
+    public string? ReceivedOwner { get; private set; }
+    
+    public GitHubOwnerType? ReceivedOwnerType { get; private set; }
 
     public string? ReceivedAccessToken { get; private set; }
 
@@ -41,37 +45,30 @@ public sealed class FakeGitHubClient : IGitHubClient
     public Dictionary<long, Exception>
         DeploymentStatusExceptionsByDeploymentId { get; set; } = [];
 
-    public Task<GitHubOrganization?> GetOrganizationAsync(
-        string organization,
-        string accessToken,
-        CancellationToken cancellationToken)
-    {
-        ReceivedOrganization = organization;
-        ReceivedAccessToken = accessToken;
-
-        if (!ShouldReturnOrganization)
-        {
-            return Task.FromResult<GitHubOrganization?>(null);
-        }
-
-        return Task.FromResult<GitHubOrganization?>(
-            new GitHubOrganization(
-                123456,
-                organization,
-                "Test Organization",
-                $"https://github.com/{organization}"));
-    }
-
     public Task<IReadOnlyList<GitHubRepository>> GetRepositoriesAsync(
-        string organization,
+        string owner,
+        GitHubOwnerType ownerType,
         string accessToken,
         CancellationToken cancellationToken)
     {
-        ReceivedOrganization = organization;
+        ReceivedOwner = owner;
         ReceivedAccessToken = accessToken;
 
         return Task.FromResult<IReadOnlyList<GitHubRepository>>(
             Repositories);
+    }
+
+    public Task<GitHubOwner?> GetOwnerAsync(
+        string owner,
+        GitHubOwnerType ownerType,
+        string accessToken,
+        CancellationToken cancellationToken)
+    {
+        ReceivedOwner = owner;
+        ReceivedOwnerType = ownerType;
+        ReceivedAccessToken = accessToken;
+        
+        return Task.FromResult(OwnerToReturn);
     }
 
     public Task<IReadOnlyList<GitHubPullRequest>> GetPullRequestsAsync(
@@ -80,7 +77,7 @@ public sealed class FakeGitHubClient : IGitHubClient
         string repository,
         CancellationToken cancellationToken)
     {
-        ReceivedOrganization = owner;
+        ReceivedOwner = owner;
         ReceivedAccessToken = accessToken;
         
         if (PullRequestExceptionsByRepository.TryGetValue(
@@ -113,7 +110,7 @@ public sealed class FakeGitHubClient : IGitHubClient
             int pullRequestNumber,
             CancellationToken cancellationToken)
     {
-        ReceivedOrganization = owner;
+        ReceivedOwner = owner;
         ReceivedAccessToken = accessToken;
         
         if (ReviewExceptionsByPullRequestNumber.TryGetValue(
@@ -144,7 +141,7 @@ public sealed class FakeGitHubClient : IGitHubClient
             string repository,
             CancellationToken cancellationToken)
     {
-        ReceivedOrganization = owner;
+        ReceivedOwner = owner;
         ReceivedAccessToken = accessToken;
         
         if (DeploymentExceptionsByRepository.TryGetValue(
@@ -176,7 +173,7 @@ public sealed class FakeGitHubClient : IGitHubClient
             long deploymentId,
             CancellationToken cancellationToken)
     {
-        ReceivedOrganization = owner;
+        ReceivedOwner = owner;
         ReceivedAccessToken = accessToken;
 
         if (DeploymentStatusExceptionsByDeploymentId.TryGetValue(
@@ -201,8 +198,6 @@ public sealed class FakeGitHubClient : IGitHubClient
     
     public void Reset()
     {
-        ShouldReturnOrganization = true;
-
         Repositories = [];
 
         PullRequestsByRepository.Clear();
@@ -217,7 +212,8 @@ public sealed class FakeGitHubClient : IGitHubClient
         DeploymentStatusesByDeploymentId.Clear();
         DeploymentStatusExceptionsByDeploymentId.Clear();
 
-        ReceivedOrganization = null;
+        OwnerToReturn = null;
+        ReceivedOwner = null;
         ReceivedAccessToken = null;
     }
 }

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
@@ -10,7 +11,7 @@ import { EngineeringReport } from '../../models/engineering-dashboard-response';
 @Component({
   selector: 'app-latest-report',
   standalone: true,
-  imports: [NzCardModule, NzEmptyModule, NzProgressModule, NzTagModule],
+  imports: [RouterLink, NzCardModule, NzEmptyModule, NzProgressModule, NzTagModule],
   templateUrl: './latest-report.html',
   styleUrl: './latest-report.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

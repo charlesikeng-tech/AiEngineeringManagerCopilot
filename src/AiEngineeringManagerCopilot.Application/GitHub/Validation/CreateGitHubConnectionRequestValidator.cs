@@ -7,9 +7,12 @@ public sealed class CreateGitHubConnectionRequestValidator
 {
     public CreateGitHubConnectionRequestValidator()
     {
-        RuleFor(x => x.Organization)
+        RuleFor(x => x.Owner)
             .NotEmpty()
             .MaximumLength(200);
+
+        RuleFor(x => x.OwnerType)
+            .IsInEnum();
 
         RuleFor(x => x.AccessToken)
             .NotEmpty()

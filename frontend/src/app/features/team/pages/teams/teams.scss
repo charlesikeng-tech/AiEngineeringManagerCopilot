@@ -1,0 +1,161 @@
+/* =========================================================
+   TEAMS LIST
+   Shared layout/card/section styles live in styles.scss.
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   Team summary
+   --------------------------------------------------------- */
+
+.team-summary {
+  min-width: 130px;
+
+  padding: var(--app-space-md);
+
+  background: var(--app-surface);
+
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+
+  box-shadow: var(--app-shadow-sm);
+
+  strong {
+    display: block;
+
+    margin-top: var(--app-space-xs);
+
+    color: var(--app-text-primary);
+
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1;
+  }
+}
+
+.team-summary__label {
+  color: var(--app-text-tertiary);
+
+  font-size: 11px;
+  font-weight: 600;
+
+  letter-spacing: 0.08em;
+}
+
+
+/* ---------------------------------------------------------
+   Team grid
+   --------------------------------------------------------- */
+
+.teams-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fill,
+      minmax(280px, 1fr));
+
+  gap: var(--app-space-md);
+}
+
+
+/* ---------------------------------------------------------
+   Team card
+   --------------------------------------------------------- */
+
+.team-card {
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+
+  h3 {
+    margin:
+      var(--app-space-md) 0 var(--app-space-sm);
+
+    color: var(--app-text-primary);
+
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+
+    color: var(--app-text-secondary);
+
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  &:hover {
+    border-color: var(--app-primary);
+
+    box-shadow: var(--app-shadow-md);
+
+    transform: translateY(-1px);
+
+    .team-card__arrow {
+      color: var(--app-primary);
+
+      transform: translateX(3px);
+    }
+  }
+
+  &:focus-visible {
+    outline:
+      2px solid var(--app-primary);
+
+    outline-offset: 2px;
+  }
+}
+
+.team-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.team-card__label {
+  color: var(--app-text-tertiary);
+
+  font-size: 11px;
+  font-weight: 600;
+
+  letter-spacing: 0.08em;
+}
+
+.team-card__arrow {
+  color: var(--app-text-tertiary);
+
+  font-size: 18px;
+
+  transition:
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+
+/* ---------------------------------------------------------
+   Responsive
+   --------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .page-header__actions {
+    align-items: stretch;
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .team-summary {
+    width: 100%;
+  }
+
+  .teams-grid {
+    grid-template-columns: 1fr;
+  }
+}

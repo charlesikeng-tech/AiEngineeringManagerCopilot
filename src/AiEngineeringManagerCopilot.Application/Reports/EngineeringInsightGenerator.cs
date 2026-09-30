@@ -43,10 +43,10 @@ public sealed class EngineeringInsightGenerator
             new EngineeringInsight(
                 MetricType.CycleTime,
                 RiskCategory.Delivery,
-                "Cycle time is too high",
+                "Cycle time is above the healthy range",
                 $"Average cycle time is {hours:F1} hours.",
-                "Work takes longer than expected to move from creation to completion.",
-                "Break down large pull requests and identify the main sources of waiting time."));
+                "The observed cycle time is above the configured healthy range and may indicate waiting time or oversized work.",
+                "Review the cycle-time breakdown and identify the main sources of waiting time before deciding which improvements to prioritize."));
     }
 
     private static void AddReviewTimeInsight(
@@ -69,10 +69,10 @@ public sealed class EngineeringInsightGenerator
             new EngineeringInsight(
                 MetricType.PRReviewTime,
                 RiskCategory.Review,
-                "Pull request review time is high",
+                "Pull request review time is above the healthy range",
                 $"Average first review time is {hours:F1} hours.",
-                "Slow reviews can create delivery bottlenecks.",
-                "Define a review-time target and make pull request ownership explicit."));
+                "Longer review times may contribute to delivery delays, depending on the team's workflow and review practices.",
+                "Review the causes of long review times and define a review-time expectation appropriate to the team's context."));
     }
 
     private static void AddDeploymentFrequencyInsight(
@@ -91,14 +91,31 @@ public sealed class EngineeringInsightGenerator
             return;
         }
 
+        if (count == 0)
+        {
+            insights.Add(
+                new EngineeringInsight(
+                    MetricType.DeploymentFrequency,
+                    RiskCategory.Delivery,
+                    "No deployments were recorded during the period",
+                    "The system recorded 0 successful deployments during the selected period.",
+                    "This may indicate a delivery bottleneck or incomplete deployment telemetry. " +
+                    "The observed value alone does not establish that no deployments actually occurred.",
+                    "Validate deployment telemetry and trace the path from merge to production " +
+                    "before concluding that deployment activity is low."));
+
+            return;
+        }
+
         insights.Add(
             new EngineeringInsight(
                 MetricType.DeploymentFrequency,
                 RiskCategory.Delivery,
-                "Deployment frequency is low",
-                $"Only {count:F0} successful deployments were recorded.",
-                "Low deployment frequency can indicate large batches or release friction.",
-                "Reduce batch size and identify the main constraints preventing frequent releases."));
+                "Recorded deployment frequency is below the healthy range",
+                $"The system recorded {count:F0} successful deployments during the selected period.",
+                "The observed deployment frequency is below the configured healthy range. " +
+                "This may reflect delivery constraints, larger batches, or incomplete deployment telemetry.",
+                "Validate deployment telemetry and review the delivery path before deciding which constraints to address."));
     }
 
     private static void AddChangeFailureRateInsight(
@@ -121,10 +138,10 @@ public sealed class EngineeringInsightGenerator
             new EngineeringInsight(
                 MetricType.ChangeFailureRate,
                 RiskCategory.Quality,
-                "Change failure rate is high",
+                "Change failure rate is above the healthy range",
                 $"Change failure rate is {rate:F1}%.",
-                "A high failure rate indicates increased delivery risk and rework.",
-                "Strengthen automated testing, deployment safeguards and post-deployment monitoring."));
+                "The observed failure rate is above the configured healthy range and may increase delivery risk and rework.",
+                "Review failed changes and identify recurring causes before prioritizing improvements to testing, deployment safeguards, or monitoring."));
     }
 
     private static void AddLeadTimeInsight(
@@ -147,10 +164,10 @@ public sealed class EngineeringInsightGenerator
             new EngineeringInsight(
                 MetricType.LeadTime,
                 RiskCategory.Delivery,
-                "Lead time is high",
+                "Lead time is above the healthy range",
                 $"Average lead time is {hours:F1} hours.",
-                "Long lead times reduce delivery predictability.",
-                "Identify the longest waiting stages and reduce handoffs and queue time."));
+                "The observed lead time is above the configured healthy range and may reduce delivery predictability.",
+                "Identify the longest waiting stages and investigate handoffs, queues, or dependencies contributing to the observed lead time."));
     }
 
     private static void AddOpenPullRequestsInsight(
@@ -173,10 +190,10 @@ public sealed class EngineeringInsightGenerator
             new EngineeringInsight(
                 MetricType.OpenPRs,
                 RiskCategory.Review,
-                "Too many pull requests are open",
+                "Open pull requests are above the healthy range",
                 $"{count:F0} pull requests are currently open.",
-                "A large PR backlog can increase context switching and review delays.",
-                "Prioritize existing pull requests before starting additional work."));
+                "The observed number of open pull requests is above the configured healthy range and may increase context switching or review delays.",
+                "Review the open pull requests and identify whether any are waiting for review, blocked, stale, or no longer relevant."));
     }
 
     private static void AddMergedPullRequestsInsight(
@@ -199,10 +216,11 @@ public sealed class EngineeringInsightGenerator
             new EngineeringInsight(
                 MetricType.MergedPRs,
                 RiskCategory.Delivery,
-                "Low pull request throughput",
-                $"Only {count:F0} pull requests were merged.",
-                "Low throughput can indicate delivery bottlenecks or oversized work items.",
-                "Review work-item size and identify the main constraints limiting throughput."));
+                "Recorded pull request throughput is below the healthy range",
+                $"The system recorded {count:F0} merged pull requests during the selected period.",
+                "The observed merge count is below the configured healthy range. " +
+                "This may reflect delivery constraints, work-item size, team capacity, or the nature of work performed during the period.",
+                "Review the delivery context and work-item flow before concluding that low merge volume represents a team performance issue."));
     }
 
     private static void AddBlockedItemsInsight(
@@ -225,9 +243,9 @@ public sealed class EngineeringInsightGenerator
             new EngineeringInsight(
                 MetricType.BlockedItems,
                 RiskCategory.Process,
-                "Too many items are blocked",
-                $"{count:F0} items are currently blocked.",
-                "Blocked work increases delivery risk and reduces team flow.",
-                "Review blocked items during team rituals and assign an explicit owner to each blocker."));
+                "Blocked items are above the healthy range",
+                $"{count:F0} items are currently recorded as blocked.",
+                "The observed number of blocked items is above the configured healthy range and may reduce team flow.",
+                "Review the blocked items, identify their causes and assign ownership for resolving the blockers that materially affect delivery."));
     }
 }

@@ -288,6 +288,7 @@ public sealed class EngineeringRiskEndpointsTests
                 TeamId = teamId,
                 MetricType = MetricType.CycleTime,
                 Value = 49m,
+                DataStatus = MetricDataStatus.Available,
                 PeriodStart = periodStart,
                 PeriodEnd = periodEnd,
                 CreatedAt = DateTimeOffset.UtcNow

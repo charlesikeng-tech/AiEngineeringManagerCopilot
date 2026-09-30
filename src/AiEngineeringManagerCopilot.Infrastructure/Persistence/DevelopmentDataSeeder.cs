@@ -217,6 +217,7 @@ public static class DevelopmentDataSeeder
             TeamId = DevelopmentTeamId,
             MetricType = metricType,
             Value = value,
+            DataStatus = MetricDataStatus.Available,
             PeriodStart = periodStart,
             PeriodEnd = periodEnd,
             CreatedAt = DateTimeOffset.UtcNow

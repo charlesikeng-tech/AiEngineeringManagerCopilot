@@ -6,7 +6,7 @@
         <div class="kpi-header">
           <span class="kpi-label">Health Score</span>
 
-          <span class="status-dot status-healthy"></span>
+          <span class="status-dot" [class]="healthStatusClass()"></span>
         </div>
 
         <div class="kpi-value">
@@ -37,24 +37,33 @@
         </div>
 
         <div class="kpi-value">
-          {{ cycleTime() }}
-          <span class="kpi-unit">h</span>
+          {{ metricDisplay(cycleTimeMetric()) }}
+
+          @if (isAvailable(cycleTimeMetric())) {
+            <span class="kpi-unit">h</span>
+          }
         </div>
 
         <div class="kpi-footer">
-          @if (cycleTimeTrend(); as trend) {
-            <span
-              class="trend"
-              [class.trend-improving]="trend.direction === 'Improving'"
-              [class.trend-degrading]="trend.direction === 'Degrading'"
-            >
-              <nz-icon [nzType]="trendIcon(trend)" />
-              {{ trendPercentage(trend) }}
-            </span>
+          @if (isAvailable(cycleTimeMetric())) {
+            @if (cycleTimeTrend(); as trend) {
+              <span
+                class="trend"
+                [class.trend-improving]="trend.direction === 'Improving'"
+                [class.trend-degrading]="trend.direction === 'Degrading'"
+              >
+                <nz-icon [nzType]="trendIcon(trend)" />
+                {{ trendPercentage(trend) }}
+              </span>
 
-            <span class="kpi-context"> vs previous period </span>
+              <span class="kpi-context"> vs previous period </span>
+            } @else {
+              <span class="kpi-context"> No previous period </span>
+            }
+          } @else if (cycleTimeMetric()?.dataStatus === 'SourceNotConfigured') {
+            <span class="kpi-context"> GitHub not connected </span>
           } @else {
-            <span class="kpi-context">No previous period</span>
+            <span class="kpi-context"> Insufficient data </span>
           }
         </div>
       </div>
@@ -70,7 +79,7 @@
         </div>
 
         <div class="kpi-value">
-          {{ deployments() }}
+          {{ metricDisplay(deploymentMetric()) }}
         </div>
 
         <div class="kpi-footer">

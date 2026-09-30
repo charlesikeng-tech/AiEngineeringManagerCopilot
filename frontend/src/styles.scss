@@ -1,50 +1,78 @@
+/* =========================================================
+   K&M ENGINEERING — DESIGN SYSTEM
+   ========================================================= */
+
 :root {
-  // Surfaces
+  /* ---------------------------------------------------------
+     Surfaces
+     --------------------------------------------------------- */
   --app-background: #f5f7fa;
   --app-surface: #ffffff;
   --app-surface-secondary: #f9fafb;
 
-  // Text
+  /* ---------------------------------------------------------
+     Text
+     --------------------------------------------------------- */
   --app-text-primary: #101828;
   --app-text-secondary: #667085;
   --app-text-tertiary: #98a2b3;
 
-  // Borders
+  /* ---------------------------------------------------------
+     Borders
+     --------------------------------------------------------- */
   --app-border: #eaecf0;
 
-  // Brand
+  /* ---------------------------------------------------------
+     Brand
+     --------------------------------------------------------- */
   --app-primary: #4f46e5;
   --app-primary-soft: #eef2ff;
 
-  // Semantic
+  /* ---------------------------------------------------------
+     Semantic
+     --------------------------------------------------------- */
   --app-success: #12b76a;
   --app-warning: #f79009;
   --app-danger: #f04438;
   --app-ai: #7c3aed;
 
-  // Layout
+  /* ---------------------------------------------------------
+     Layout
+     --------------------------------------------------------- */
   --app-sidebar-width: 240px;
   --app-header-height: 64px;
+  --app-content-max-width: 1600px;
 
-  // Radius
+  /* ---------------------------------------------------------
+     Radius
+     --------------------------------------------------------- */
   --app-radius-sm: 6px;
   --app-radius-md: 10px;
   --app-radius-lg: 14px;
 
-  // Spacing
+  /* ---------------------------------------------------------
+     Spacing
+     --------------------------------------------------------- */
   --app-space-xs: 4px;
   --app-space-sm: 8px;
   --app-space-md: 16px;
   --app-space-lg: 24px;
   --app-space-xl: 32px;
 
-  // Shadows
+  /* ---------------------------------------------------------
+     Shadows
+     --------------------------------------------------------- */
   --app-shadow-sm:
     0 1px 2px rgb(16 24 40 / 5%);
 
   --app-shadow-md:
     0 4px 12px rgb(16 24 40 / 8%);
 }
+
+
+/* =========================================================
+   BASE
+   ========================================================= */
 
 html,
 body {
@@ -55,4 +83,420 @@ body {
 
 body {
   color: var(--app-text-primary);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   PAGE LAYOUT
+   ========================================================= */
+
+.app-page {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  max-width: var(--app-content-max-width);
+
+  margin: 0 auto;
+  padding: var(--app-space-lg);
+
+  gap: var(--app-space-lg);
+}
+
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: var(--app-space-lg);
+}
+
+.page-header__content {
+  min-width: 0;
+}
+
+.page-eyebrow {
+  display: block;
+
+  margin-bottom: var(--app-space-xs);
+
+  color: var(--app-text-tertiary);
+
+  font-size: 11px;
+  font-weight: 600;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.page-header h1 {
+  margin: 0;
+
+  color: var(--app-text-primary);
+
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.page-header p {
+  max-width: 720px;
+
+  margin:
+    var(--app-space-sm) 0 0;
+
+  color: var(--app-text-secondary);
+
+  font-size: 14px;
+}
+
+.page-header__actions {
+  display: flex;
+  align-items: center;
+
+  gap: var(--app-space-sm);
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   SECTIONS
+   ========================================================= */
+
+.app-section {
+  display: flex;
+  flex-direction: column;
+
+  gap: var(--app-space-md);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: var(--app-space-md);
+}
+
+.section-header__content {
+  min-width: 0;
+}
+
+.section-eyebrow {
+  display: block;
+
+  margin-bottom: var(--app-space-xs);
+
+  color: var(--app-text-tertiary);
+
+  font-size: 11px;
+  font-weight: 600;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.section-header h2 {
+  margin: 0;
+
+  color: var(--app-text-primary);
+
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.section-header p {
+  margin:
+    var(--app-space-xs) 0 0;
+
+  color: var(--app-text-secondary);
+}
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+.app-card {
+  min-width: 0;
+
+  padding: 20px;
+
+  background: var(--app-surface);
+
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+
+  box-shadow: var(--app-shadow-sm);
+}
+
+.app-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: var(--app-space-md);
+
+  margin-bottom: var(--app-space-md);
+}
+
+.app-card__title {
+  margin: 0;
+
+  color: var(--app-text-primary);
+
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.app-card__description {
+  margin:
+    var(--app-space-xs) 0 0;
+
+  color: var(--app-text-secondary);
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   KPI / OVERVIEW CARDS
+   ========================================================= */
+
+.overview-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fit,
+      minmax(220px, 1fr));
+
+  gap: var(--app-space-md);
+}
+
+.overview-card {
+  min-width: 0;
+
+  padding: 20px;
+
+  background: var(--app-surface);
+
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+
+  box-shadow: var(--app-shadow-sm);
+}
+
+.overview-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: var(--app-space-md);
+}
+
+.overview-card__label {
+  color: var(--app-text-tertiary);
+
+  font-size: 11px;
+  font-weight: 600;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.overview-card strong {
+  display: block;
+
+  margin-top: var(--app-space-sm);
+
+  color: var(--app-text-primary);
+
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.overview-card p {
+  margin:
+    var(--app-space-xs) 0 0;
+
+  color: var(--app-text-secondary);
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  color: var(--app-text-secondary);
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status::before {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: var(--app-text-tertiary);
+
+  content: "";
+}
+
+.status--success::before {
+  background: var(--app-success);
+}
+
+.status--warning::before {
+  background: var(--app-warning);
+}
+
+.status--danger::before {
+  background: var(--app-danger);
+}
+
+.status--ai::before {
+  background: var(--app-ai);
+}
+
+
+/* =========================================================
+   APPLICATION STATES
+   ========================================================= */
+
+.state-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  min-height: 320px;
+
+  gap: var(--app-space-md);
+
+  color: var(--app-text-secondary);
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  min-height: 260px;
+
+  padding: var(--app-space-xl);
+
+  background: var(--app-surface);
+
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-lg);
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   DRAWERS / FORMS
+   ========================================================= */
+
+.drawer-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: var(--app-space-sm);
+
+  margin-top: var(--app-space-lg);
+  padding-top: var(--app-space-md);
+
+  border-top: 1px solid var(--app-border);
+}
+
+
+/* =========================================================
+   NG-ZORRO — GLOBAL VISUAL CONSISTENCY
+   ========================================================= */
+
+.ant-btn {
+  border-radius: var(--app-radius-sm);
+  font-weight: 500;
+}
+
+.ant-btn-primary {
+  box-shadow: none;
+}
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector {
+  border-radius: var(--app-radius-sm) !important;
+}
+
+.ant-drawer-header {
+  border-bottom-color: var(--app-border);
+}
+
+.ant-drawer-title {
+  color: var(--app-text-primary);
+
+  font-size: 16px;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .app-page {
+    padding: var(--app-space-md);
+  }
+
+  .page-header {
+    flex-direction: column;
+  }
+
+  .page-header__actions {
+    width: 100%;
+  }
+
+  .section-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
 }

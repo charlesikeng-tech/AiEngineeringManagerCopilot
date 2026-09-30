@@ -1,5 +1,8 @@
+using AiEngineeringManagerCopilot.Domain.Enums;
+
 namespace AiEngineeringManagerCopilot.Application.GitHub;
 
 public sealed record CreateGitHubConnectionRequest(
-    string Organization,
+    string Owner,
+    GitHubOwnerType OwnerType,
     string AccessToken);

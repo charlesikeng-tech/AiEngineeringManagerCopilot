@@ -1,16 +1,23 @@
 @if (loading()) {
-  <div class="dashboard dashboard-loading">
+  <div class="app-page dashboard-loading">
     <div class="loading-header">
       <nz-skeleton
         [nzActive]="true"
         [nzTitle]="{ width: '220px' }"
-        [nzParagraph]="{ rows: 1, width: ['320px'] }"
+        [nzParagraph]="{
+          rows: 1,
+          width: ['320px']
+        }"
       />
     </div>
 
     <nz-row [nzGutter]="[16, 16]">
       @for (_ of [1, 2, 3, 4]; track $index) {
-        <nz-col [nzXs]="24" [nzSm]="12" [nzXl]="6">
+        <nz-col
+          [nzXs]="24"
+          [nzSm]="12"
+          [nzXl]="6"
+        >
           <nz-card class="loading-kpi">
             <nz-skeleton
               [nzActive]="true"
@@ -23,47 +30,74 @@
     </nz-row>
 
     <nz-card class="loading-section">
-      <nz-skeleton [nzActive]="true" [nzTitle]="{ width: '180px' }" [nzParagraph]="{ rows: 5 }" />
+      <nz-skeleton
+        [nzActive]="true"
+        [nzTitle]="{ width: '180px' }"
+        [nzParagraph]="{ rows: 5 }"
+      />
     </nz-card>
   </div>
 } @else if (error(); as errorMessage) {
-  <div class="dashboard-state">
-    <nz-alert
-      nzType="error"
-      nzShowIcon
-      nzMessage="Dashboard unavailable"
-      [nzDescription]="errorMessage"
-    />
+  <div class="app-page">
+    <div class="state-container">
+      <nz-alert
+        nzType="error"
+        nzShowIcon
+        nzMessage="Dashboard unavailable"
+        [nzDescription]="errorMessage"
+      />
+    </div>
   </div>
 } @else if (dashboard(); as dashboard) {
-  <div class="dashboard">
-    <!-- Page header -->
-    <header class="dashboard-header">
-      <div>
-        <h1>Engineering Overview</h1>
+  <div class="app-page">
 
-        <p>Monitor delivery, quality and engineering health</p>
+    <!-- Page header -->
+
+    <header class="page-header">
+      <div class="page-header__content">
+        <span class="page-eyebrow">
+          ENGINEERING
+        </span>
+
+        <h1>
+          Engineering Overview
+        </h1>
+
+        <p>
+          Monitor delivery, quality and
+          engineering health.
+        </p>
       </div>
 
-      <div class="dashboard-header-context">
+      <div class="page-header__actions dashboard-context">
         <app-team-selector />
 
         @if (dashboard.latestReport; as report) {
           <div class="reporting-period">
-            <span>Reporting period</span>
+            <span>
+              Reporting period
+            </span>
 
             <strong>
-              {{ report.periodStart | date: 'MMM d' }}
+              {{
+                report.periodStart
+                  | date: 'MMM d'
+              }}
               –
-              {{ report.periodEnd | date: 'MMM d, y' }}
+              {{
+                report.periodEnd
+                  | date: 'MMM d, y'
+              }}
             </strong>
           </div>
         }
       </div>
     </header>
 
-    <!-- KPIs -->
-    <section>
+
+    <!-- Overview -->
+
+    <section class="app-section">
       <app-dashboard-kpis
         [healthScore]="dashboard.healthScore"
         [metrics]="dashboard.metrics"
@@ -72,36 +106,66 @@
       />
     </section>
 
+
     <!-- Engineering performance -->
-    <section>
-      <app-engineering-metrics [metrics]="dashboard.metrics" [trends]="dashboard.trends" />
+
+    <section class="app-section">
+      <app-engineering-metrics
+        [metrics]="dashboard.metrics"
+        [trends]="dashboard.trends"
+      />
     </section>
+
 
     <!-- Health evolution -->
-    <section>
-      <app-health-evolution [history]="dashboard.healthHistory" />
+
+    <section class="app-section">
+      <app-health-evolution
+        [history]="dashboard.healthHistory"
+      />
     </section>
 
-    <!-- Intelligence -->
-    <section>
+
+    <!-- Engineering intelligence -->
+
+    <section class="app-section">
       <nz-row [nzGutter]="[24, 24]">
-        <nz-col [nzXs]="24" [nzXl]="16">
-          <app-ai-analysis [analysis]="dashboard.aiAnalysis" />
+        <nz-col
+          [nzXs]="24"
+          [nzXl]="16"
+        >
+          <app-ai-analysis
+            [analysis]="dashboard.aiAnalysis"
+          />
         </nz-col>
 
-        <nz-col [nzXs]="24" [nzXl]="8">
-          <app-dashboard-risks [risks]="dashboard.risks" />
+        <nz-col
+          [nzXs]="24"
+          [nzXl]="8"
+        >
+          <app-dashboard-risks
+            [risks]="dashboard.risks"
+          />
         </nz-col>
       </nz-row>
     </section>
 
-    <!-- Report -->
-    <section>
-      <app-latest-report [report]="dashboard.latestReport" />
+
+    <!-- Latest report -->
+
+    <section class="app-section">
+      <app-latest-report
+        [report]="dashboard.latestReport"
+      />
     </section>
+
   </div>
 } @else {
-  <div class="dashboard-state dashboard-empty">
-    <nz-empty nzNotFoundContent="No dashboard data available" />
+  <div class="app-page">
+    <div class="empty-state">
+      <nz-empty
+        nzNotFoundContent="No dashboard data available"
+      />
+    </div>
   </div>
 }

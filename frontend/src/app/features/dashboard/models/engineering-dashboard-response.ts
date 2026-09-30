@@ -88,7 +88,8 @@ export interface EngineeringMetric {
   id: string;
   teamId: string;
   metricType: MetricType;
-  value: number;
+  value: number | null;
+  dataStatus: MetricDataStatus;
   periodStart: string;
   periodEnd: string;
   createdAt: string;
@@ -163,16 +164,21 @@ export interface AIAnalysis {
   insights: LlmInsight[];
   actions: LlmAction[];
   evidence: LlmEvidence[] | null;
+  safeEvidence: LlmEvidence[] | null;
 }
 
 export interface LlmInsight {
+  category: string;
   title: string;
   description: string;
+  impact: string;
+  recommendation: string;
 }
 
 export interface LlmAction {
   title: string;
   description: string;
+  priority: ActionPriority;
 }
 
 export interface LlmEvidence {
@@ -191,6 +197,8 @@ export type MetricType =
   | 'OpenPRs'
   | 'MergedPRs'
   | 'BlockedItems';
+
+export type MetricDataStatus = 'Available' | 'NoData' | 'SourceNotConfigured';
 
 export type MetricTrendDirection = 'Improving' | 'Stable' | 'Degrading';
 

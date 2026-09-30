@@ -1,5 +1,6 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Domain.Entities;
+using AiEngineeringManagerCopilot.Domain.Enums;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 using FluentAssertions;
@@ -36,7 +37,8 @@ public class GitHubConnectionRepositoryTests
             {
                 Id = Guid.NewGuid(),
                 TeamId = firstTeamId,
-                Organization = "organization-one",
+                Owner = "organization-one",
+                OwnerType = GitHubOwnerType.Organization,
                 AccessTokenEncrypted = "token-one",
                 CreatedAt = DateTimeOffset.UtcNow
             },
@@ -44,7 +46,8 @@ public class GitHubConnectionRepositoryTests
             {
                 Id = Guid.NewGuid(),
                 TeamId = secondTeamId,
-                Organization = "organization-two",
+                Owner = "organization-two",
+                OwnerType = GitHubOwnerType.Organization,
                 AccessTokenEncrypted = "token-two",
                 CreatedAt = DateTimeOffset.UtcNow
             });

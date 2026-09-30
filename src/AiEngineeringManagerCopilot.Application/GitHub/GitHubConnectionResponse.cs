@@ -1,11 +1,13 @@
 using AiEngineeringManagerCopilot.Domain.Entities;
+using AiEngineeringManagerCopilot.Domain.Enums;
 
 namespace AiEngineeringManagerCopilot.Application.GitHub;
 
 public sealed record GitHubConnectionResponse(
     Guid Id,
     Guid TeamId,
-    string Organization,
+    string Owner,
+    GitHubOwnerType OwnerType,
     DateTimeOffset CreatedAt,
     DateTimeOffset? LastSyncAt)
 {
@@ -15,7 +17,8 @@ public sealed record GitHubConnectionResponse(
         return new GitHubConnectionResponse(
             connection.Id,
             connection.TeamId,
-            connection.Organization,
+            connection.Owner,
+            connection.OwnerType,
             connection.CreatedAt,
             connection.LastSyncAt);
     }

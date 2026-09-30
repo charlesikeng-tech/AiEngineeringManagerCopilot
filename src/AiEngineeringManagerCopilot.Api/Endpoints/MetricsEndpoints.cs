@@ -225,6 +225,35 @@ public static class MetricsEndpoints
                     : Results.Ok(result);
             });
         
+        group.MapPost(
+            "/calculate",
+            async (
+                Guid teamId,
+                DateOnly periodStart,
+                DateOnly periodEnd,
+                IEngineeringMetricsService service,
+                CancellationToken cancellationToken) =>
+            {
+                if (periodStart > periodEnd)
+                {
+                    return Results.BadRequest(new
+                    {
+                        message =
+                            "periodStart must be before or equal to periodEnd."
+                    });
+                }
+
+                var result = await service.CalculateAllAsync(
+                    teamId,
+                    periodStart,
+                    periodEnd,
+                    cancellationToken);
+
+                return result is null
+                    ? Results.NotFound()
+                    : Results.Ok(result);
+            });
+        
         return app;
     }
 }

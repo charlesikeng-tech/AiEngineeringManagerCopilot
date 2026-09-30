@@ -8,17 +8,26 @@ namespace AiEngineeringManagerCopilot.Application.Actions;
 public sealed class EngineeringActionGenerator
     : IEngineeringActionGenerator
 {
+    private const int MaxActions = 3;
+
     public IReadOnlyList<EngineeringActionSuggestion> Generate(
-        IReadOnlyList<EngineeringInsight> insights, 
+        IReadOnlyList<EngineeringInsight> insights,
         IReadOnlyList<EngineeringRisk> risks)
     {
-        var actions = insights
-            .Select(insight => CreateAction(insight, risks))
-            .OrderByDescending(x => x.Priority)
-            .Take(3)
-            .ToList();
+        ArgumentNullException.ThrowIfNull(insights);
+        ArgumentNullException.ThrowIfNull(risks);
 
-        return actions;
+        return insights
+            .Select((insight, index) => new
+            {
+                Action = CreateAction(insight, risks),
+                OriginalIndex = index
+            })
+            .OrderByDescending(x => x.Action.Priority)
+            .ThenBy(x => x.OriginalIndex)
+            .Take(MaxActions)
+            .Select(x => x.Action)
+            .ToList();
     }
 
     private static EngineeringActionSuggestion CreateAction(
@@ -29,8 +38,8 @@ public sealed class EngineeringActionGenerator
             EngineeringActionPolicy.GetPriority(insight.Category);
 
         var matchingRisk = risks
-            .Where(x => x.MetricType == insight.MetricType)
-            .OrderByDescending(x => x.Severity)
+            .Where(risk => risk.MetricType == insight.MetricType)
+            .OrderByDescending(risk => risk.Severity)
             .FirstOrDefault();
 
         var priority = matchingRisk is null
@@ -45,7 +54,7 @@ public sealed class EngineeringActionGenerator
             insight.Recommendation,
             priority);
     }
-    
+
     private static ActionPriority ToActionPriority(
         RiskSeverity severity)
     {
@@ -66,5 +75,4 @@ public sealed class EngineeringActionGenerator
             (int)first,
             (int)second);
     }
-    
 }

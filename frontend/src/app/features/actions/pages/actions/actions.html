@@ -1,21 +1,28 @@
-<div class="actions-page">
+<div class="app-page">
   @if (loading()) {
     <div class="state-container">
       <nz-spin nzSimple nzSize="large"></nz-spin>
-      <span>Loading engineering actions...</span>
+
+      <span> Loading engineering actions... </span>
     </div>
   } @else if (error()) {
-    <nz-alert
-      nzType="error"
-      nzShowIcon
-      nzMessage="Unable to load engineering actions"
-      nzDescription="The current action plan could not be loaded."
-    ></nz-alert>
+    <div class="state-container">
+      <nz-alert
+        nzType="error"
+        nzShowIcon
+        nzMessage="Unable to load engineering actions"
+        nzDescription="The current action plan could not be loaded."
+      ></nz-alert>
+    </div>
   } @else if (data(); as actionData) {
+    <!-- Page header -->
+
     <header class="page-header">
-      <div>
-        <span class="page-eyebrow">ACTION PLAN</span>
+      <div class="page-header__content">
+        <span class="page-eyebrow"> ENGINEERING </span>
+
         <h1>Engineering Actions</h1>
+
         <p>Track and manage the actions identified from the latest engineering report.</p>
       </div>
 
@@ -28,133 +35,236 @@
           {{ actionData.periodEnd | date: 'MMM d, y' }}
         </strong>
       </div>
+
+      <a class="source-report-link" [routerLink]="['/reports', actionData.reportId]">
+        View source report <span aria-hidden="true">→</span>
+      </a>
     </header>
 
     @if (actions().length === 0) {
-      <nz-empty nzNotFoundContent="No engineering actions for this reporting period."></nz-empty>
+      <div class="empty-state">
+        <nz-empty nzNotFoundContent="No engineering actions for this reporting period."></nz-empty>
+      </div>
     } @else {
-      <section class="action-summary">
-        <article class="summary-card summary-card--todo">
-          <span>TODO</span>
-          <strong>{{ todoCount() }}</strong>
-          <small>actions</small>
-        </article>
+      <!-- Action overview -->
 
-        <article class="summary-card summary-card--progress">
-          <span>IN PROGRESS</span>
-          <strong>{{ inProgressCount() }}</strong>
-          <small>actions</small>
-        </article>
+      <section class="app-section">
+        <div class="overview-grid">
+          <article class="overview-card action-overview action-overview--todo">
+            <div class="overview-card__header">
+              <span class="action-state">
+                <span class="state-dot"></span>
+                TODO
+              </span>
+            </div>
 
-        <article class="summary-card summary-card--done">
-          <span>DONE</span>
-          <strong>{{ doneCount() }}</strong>
-          <small>actions</small>
-        </article>
+            <strong>
+              {{ todoCount() }}
+            </strong>
 
-        <article class="summary-card summary-card--cancelled">
-          <span>CANCELLED</span>
-          <strong>{{ cancelledCount() }}</strong>
-          <small>actions</small>
-        </article>
+            <p>
+              {{ todoCount() === 1 ? 'action' : 'actions' }}
+            </p>
+          </article>
+
+          <article class="overview-card action-overview action-overview--progress">
+            <div class="overview-card__header">
+              <span class="action-state">
+                <span class="state-dot"></span>
+                IN PROGRESS
+              </span>
+            </div>
+
+            <strong>
+              {{ inProgressCount() }}
+            </strong>
+
+            <p>
+              {{ inProgressCount() === 1 ? 'action' : 'actions' }}
+            </p>
+          </article>
+
+          <article class="overview-card action-overview action-overview--done">
+            <div class="overview-card__header">
+              <span class="action-state">
+                <span class="state-dot"></span>
+                DONE
+              </span>
+            </div>
+
+            <strong>
+              {{ doneCount() }}
+            </strong>
+
+            <p>
+              {{ doneCount() === 1 ? 'action' : 'actions' }}
+            </p>
+          </article>
+
+          <article class="overview-card action-overview action-overview--cancelled">
+            <div class="overview-card__header">
+              <span class="action-state">
+                <span class="state-dot"></span>
+                CANCELLED
+              </span>
+            </div>
+
+            <strong>
+              {{ cancelledCount() }}
+            </strong>
+
+            <p>
+              {{ cancelledCount() === 1 ? 'action' : 'actions' }}
+            </p>
+          </article>
+        </div>
       </section>
 
-      <div class="action-count">
-        <strong>{{ totalCount() }}</strong>
-        {{ totalCount() === 1 ? 'action' : 'actions' }}
-        in the current action plan
-      </div>
+      <!-- Action plan -->
 
-      <section class="actions-list">
-        @for (action of actions(); track action.id) {
-          <article
-            class="action-card"
-            [class.action-card--critical]="action.priority === 'Critical'"
-            [class.action-card--high]="action.priority === 'High'"
-            [class.action-card--medium]="action.priority === 'Medium'"
-            [class.action-card--low]="action.priority === 'Low'"
-          >
-            <div class="action-card__header">
-              <div class="action-metadata">
-                <span
-                  class="action-priority"
-                  [class.action-priority--critical]="action.priority === 'Critical'"
-                  [class.action-priority--high]="action.priority === 'High'"
-                  [class.action-priority--medium]="action.priority === 'Medium'"
-                  [class.action-priority--low]="action.priority === 'Low'"
-                >
-                  <span class="priority-dot"></span>
-                  {{ action.priority | uppercase }}
-                </span>
+      <section class="app-section">
+        <div class="section-header">
+          <div class="section-header__content">
+            <span class="section-eyebrow"> ACTION PLAN </span>
 
-                @if (action.metricType) {
-                  <span class="action-metric">
-                    {{ metricLabel(action.metricType) }}
+            <h2>Current Actions</h2>
+
+            <p>Actions identified from the latest engineering health assessment.</p>
+
+            @if (overdueCount() > 0) {
+              <span class="overdue-summary">
+                {{ overdueCount() }} {{ overdueCount() === 1 ? 'overdue action' : 'overdue actions' }}
+              </span>
+            }
+          </div>
+
+          <div class="action-count">
+            <strong>
+              {{ totalCount() }}
+            </strong>
+
+            <span>
+              {{ totalCount() === 1 ? 'action' : 'actions' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="actions-list">
+          @for (action of sortedActions(); track action.id) {
+            <article
+              class="app-card action-card"
+              [class.action-card--critical]="action.priority === 'Critical'"
+              [class.action-card--high]="action.priority === 'High'"
+              [class.action-card--medium]="action.priority === 'Medium'"
+              [class.action-card--low]="action.priority === 'Low'"
+            >
+              <!-- Header -->
+
+              <div class="action-card__header">
+                <div class="action-metadata">
+                  <span
+                    class="action-priority"
+                    [class.action-priority--critical]="action.priority === 'Critical'"
+                    [class.action-priority--high]="action.priority === 'High'"
+                    [class.action-priority--medium]="action.priority === 'Medium'"
+                    [class.action-priority--low]="action.priority === 'Low'"
+                  >
+                    <span class="priority-dot"></span>
+
+                    {{ action.priority | uppercase }}
                   </span>
-                }
-              </div>
 
-              <nz-select
-                class="status-select"
-                [ngModel]="action.status"
-                [nzDisabled]="updatingActionId() === action.id"
-                (ngModelChange)="updateStatus(action, $event)"
-              >
-                <nz-option nzValue="Todo" nzLabel="Todo"></nz-option>
+                  @if (action.metricType) {
+                    <span class="action-metric">
+                      {{ metricLabel(action.metricType) }}
+                    </span>
+                  }
+                </div>
 
-                <nz-option nzValue="InProgress" nzLabel="In Progress"></nz-option>
-
-                <nz-option nzValue="Done" nzLabel="Done"></nz-option>
-
-                <nz-option nzValue="Cancelled" nzLabel="Cancelled"></nz-option>
-              </nz-select>
-            </div>
-
-            <div class="action-card__content">
-              <h2>{{ action.title }}</h2>
-              <p>{{ action.description }}</p>
-            </div>
-
-            <div class="action-card__footer">
-              <div class="action-field">
-                <label class="field-label" [for]="'owner-' + action.id"> OWNER </label>
-
-                <input
-                  nz-input
-                  [id]="'owner-' + action.id"
-                  type="text"
-                  [ngModel]="action.owner ?? ''"
-                  [disabled]="updatingActionId() === action.id"
-                  placeholder="Unassigned"
-                  (blur)="updateOwner(action, $any($event.target).value)"
-                  (keyup.enter)="$any($event.target).blur()"
-                />
-              </div>
-
-              <div class="action-field">
-                <span class="field-label">DUE DATE</span>
-
-                <nz-date-picker
-                  nzFormat="MMM d, yyyy"
-                  [ngModel]="action.dueDateValue"
+                <nz-select
+                  class="status-select"
+                  [ngModel]="action.status"
                   [nzDisabled]="updatingActionId() === action.id"
-                  (ngModelChange)="updateDueDate(action, $event)"
-                ></nz-date-picker>
+                  (ngModelChange)="updateStatus(action, $event)"
+                >
+                  <nz-option nzValue="Todo" nzLabel="Todo"></nz-option>
+
+                  <nz-option nzValue="InProgress" nzLabel="In Progress"></nz-option>
+
+                  <nz-option nzValue="Done" nzLabel="Done"></nz-option>
+
+                  <nz-option nzValue="Cancelled" nzLabel="Cancelled"></nz-option>
+                </nz-select>
               </div>
 
-              <div class="action-field action-field--status">
-                <span class="field-label">STATUS</span>
+              <!-- Content -->
 
-                <strong>
-                  {{ statusLabel(action.status) }}
-                </strong>
+              <div class="action-card__content">
+                <h3>
+                  {{ action.title }}
+                </h3>
+
+                <p>
+                  {{ action.description }}
+                </p>
               </div>
-            </div>
-          </article>
-        }
+
+              <!-- Management -->
+
+              <div class="action-card__footer">
+                <div class="action-field">
+                  <label class="field-label" [for]="'owner-' + action.id"> OWNER </label>
+
+                  <input
+                    nz-input
+                    [id]="'owner-' + action.id"
+                    type="text"
+                    [ngModel]="action.owner ?? ''"
+                    [disabled]="updatingActionId() === action.id"
+                    placeholder="Unassigned"
+                    (blur)="updateOwner(action, $any($event.target).value)"
+                    (keyup.enter)="$any($event.target).blur()"
+                  />
+                </div>
+
+                <div
+                  class="action-field action-field--due"
+                  [class.action-field--overdue]="dueState(action) === 'overdue'"
+                  [class.action-field--due-soon]="dueState(action) === 'soon'"
+                >
+                  <div class="field-label-row">
+                    <span class="field-label"> DUE DATE </span>
+                    @if (dueLabel(action); as label) {
+                      <span class="due-state"
+                        [class.due-state--overdue]="dueState(action) === 'overdue'"
+                        [class.due-state--soon]="dueState(action) === 'soon'">{{ label }}</span>
+                    }
+                  </div>
+
+                  <nz-date-picker
+                    nzFormat="MMM d, yyyy"
+                    [ngModel]="action.dueDateValue"
+                    [nzDisabled]="updatingActionId() === action.id"
+                    (ngModelChange)="updateDueDate(action, $event)"
+                  ></nz-date-picker>
+                </div>
+
+                <div class="action-field action-field--status">
+                  <span class="field-label"> STATUS </span>
+
+                  <strong>
+                    {{ statusLabel(action.status) }}
+                  </strong>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
       </section>
     }
   } @else {
-    <nz-empty nzNotFoundContent="No action plan is available for this team."></nz-empty>
+    <div class="empty-state">
+      <nz-empty nzNotFoundContent="No action plan is available for this team."></nz-empty>
+    </div>
   }
 </div>

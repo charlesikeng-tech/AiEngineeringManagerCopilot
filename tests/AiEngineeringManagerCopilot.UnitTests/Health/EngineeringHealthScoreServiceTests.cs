@@ -94,12 +94,12 @@ public sealed class EngineeringHealthScoreServiceTests
                     TeamId = teamId,
                     MetricType = metricType,
                     Value = value,
+                    DataStatus = MetricDataStatus.Available,
                     PeriodStart = new DateOnly(2026, 9, 1),
                     PeriodEnd = new DateOnly(2026, 9, 30),
                     CreatedAt = DateTimeOffset.UtcNow
                 });
         }
-
         public Task AddAsync(
             EngineeringMetric metric,
             CancellationToken cancellationToken)
@@ -109,22 +109,18 @@ public sealed class EngineeringHealthScoreServiceTests
             return Task.CompletedTask;
         }
 
-        public Task<IReadOnlyList<EngineeringMetric>>
-            GetByTeamAndPeriodAsync(
-                Guid teamId,
-                MetricType metricType,
-                DateOnly periodStart,
-                DateOnly periodEnd,
-                CancellationToken cancellationToken)
+        public Task<EngineeringMetric?> GetByTeamAndPeriodAsync(
+            Guid teamId,
+            MetricType metricType,
+            DateOnly periodStart,
+            DateOnly periodEnd,
+            CancellationToken cancellationToken)
         {
-            IReadOnlyList<EngineeringMetric> result =
-                _metrics
-                    .Where(x =>
-                        x.TeamId == teamId &&
-                        x.MetricType == metricType &&
-                        x.PeriodStart >= periodStart &&
-                        x.PeriodEnd <= periodEnd)
-                    .ToList();
+            var result = _metrics.SingleOrDefault(x =>
+                x.TeamId == teamId &&
+                x.MetricType == metricType &&
+                x.PeriodStart == periodStart &&
+                x.PeriodEnd == periodEnd);
 
             return Task.FromResult(result);
         }

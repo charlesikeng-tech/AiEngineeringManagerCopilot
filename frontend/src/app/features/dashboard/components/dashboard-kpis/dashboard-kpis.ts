@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-
 import { DecimalPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzGridModule } from 'ng-zorro-antd/grid';
@@ -28,9 +27,9 @@ export class DashboardKpis {
   readonly trends = input.required<readonly MetricTrend[]>();
   readonly risks = input.required<readonly EngineeringRisk[]>();
 
-  readonly cycleTime = computed(() => this.metricValue('CycleTime'));
+  readonly cycleTimeMetric = computed(() => this.metric('CycleTime'));
 
-  readonly deployments = computed(() => this.metricValue('DeploymentFrequency'));
+  readonly deploymentMetric = computed(() => this.metric('DeploymentFrequency'));
 
   readonly cycleTimeTrend = computed(() => this.metricTrend('CycleTime'));
 
@@ -42,8 +41,42 @@ export class DashboardKpis {
         .length,
   );
 
+  readonly healthStatusClass = computed(() => {
+    switch (this.healthScore().healthLevel) {
+      case 'Excellent':
+      case 'Healthy':
+        return 'status-healthy';
+
+      case 'Needs Attention':
+        return 'status-warning';
+
+      default:
+        return 'status-danger';
+    }
+  });
+
+  metricDisplay(metric: EngineeringMetric | null): string {
+    if (!metric) {
+      return 'No data';
+    }
+
+    if (metric.dataStatus === 'SourceNotConfigured') {
+      return 'Not connected';
+    }
+
+    if (metric.dataStatus === 'NoData' || metric.value === null) {
+      return 'No data';
+    }
+
+    return metric.value.toString();
+  }
+
+  isAvailable(metric: EngineeringMetric | null): boolean {
+    return metric?.dataStatus === 'Available' && metric.value !== null;
+  }
+
   trendPercentage(trend: MetricTrend | null): string {
-    if (!trend?.changePercentage) {
+    if (trend?.changePercentage == null) {
       return '0%';
     }
 
@@ -58,8 +91,8 @@ export class DashboardKpis {
     return trend.direction === 'Improving' ? 'arrow-up' : 'arrow-down';
   }
 
-  private metricValue(type: MetricType): number {
-    return this.metrics().find((metric) => metric.metricType === type)?.value ?? 0;
+  private metric(type: MetricType): EngineeringMetric | null {
+    return this.metrics().find((metric) => metric.metricType === type) ?? null;
   }
 
   private metricTrend(type: MetricType): MetricTrend | null {

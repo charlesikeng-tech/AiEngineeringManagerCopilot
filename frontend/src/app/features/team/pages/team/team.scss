@@ -1,275 +1,1044 @@
-.team-page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-space-lg);
-  padding: var(--app-space-lg);
-}
+/* =========================================================
+   TEAM DETAIL
 
-.state-container {
-  display: flex;
-  min-height: 320px;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: var(--app-space-md);
-  color: var(--app-text-secondary);
-}
+   Shared layout/card/section styles live in styles.scss.
+   ========================================================= */
 
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--app-space-lg);
 
-  h1 {
-    margin: 4px 0 8px;
-    color: var(--app-text-primary);
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-  p {
-    max-width: 680px;
-    margin: 0;
-    color: var(--app-text-secondary);
-    font-size: 14px;
-    line-height: 1.6;
-  }
-}
-
-.page-eyebrow,
-.section-eyebrow,
-.overview-card__label,
-.team-summary__label {
-  color: var(--app-text-tertiary);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-}
+/* ---------------------------------------------------------
+   Summary
+   --------------------------------------------------------- */
 
 .team-summary {
   min-width: 150px;
+
   padding: var(--app-space-md);
+
+  background: var(--app-surface);
+
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-lg);
-  background: var(--app-surface);
+
   box-shadow: var(--app-shadow-sm);
 
   strong {
     display: block;
-    margin-top: 4px;
+
+    margin-top: var(--app-space-xs);
+
     color: var(--app-text-primary);
-    font-size: 28px;
+
+    font-size: 24px;
+    font-weight: 600;
     line-height: 1;
   }
 }
 
+.team-summary__label {
+  color: var(--app-text-tertiary);
+
+  font-size: 11px;
+  font-weight: 600;
+
+  letter-spacing: 0.08em;
+}
+
+
+/* ---------------------------------------------------------
+   Team overview
+   --------------------------------------------------------- */
+
 .team-overview {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+
+  grid-template-columns:
+    minmax(0, 2fr) minmax(220px, 1fr);
+
   gap: var(--app-space-md);
 }
 
-.overview-card {
+.overview-card__actions {
+  display: flex;
+  align-items: center;
+
+  gap: var(--app-space-xs);
+}
+
+.member-total {
+  font-size: 30px !important;
+  line-height: 1.2;
+}
+
+
+/* ---------------------------------------------------------
+   Data sources
+   --------------------------------------------------------- */
+
+.data-sources-card {
+  padding: 0;
+
+  overflow: hidden;
+}
+
+.data-source {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: var(--app-space-xl);
+
+  padding: 22px 24px;
+}
+
+.data-source__main {
+  display: flex;
   min-width: 0;
-  padding: 20px;
+
+  flex: 1;
+
+  align-items: flex-start;
+
+  gap: var(--app-space-md);
+}
+
+.data-source__icon {
+  display: flex;
+
+  width: 44px;
+  height: 44px;
+
+  flex: 0 0 44px;
+
+  align-items: center;
+  justify-content: center;
+
+  color: var(--app-text-primary);
+
+  background: var(--app-surface-secondary);
+
   border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-lg);
-  background: var(--app-surface);
-  box-shadow: var(--app-shadow-sm);
+  border-radius: var(--app-radius-md);
+
+  font-size: 24px;
+
+  nz-icon {
+    display: flex;
+
+    font-size: 24px;
+  }
+}
+
+.data-source__content {
+  min-width: 0;
+  flex: 1;
+
+  >p {
+    max-width: 720px;
+
+    margin:
+      var(--app-space-xs) 0 0;
+
+    color: var(--app-text-secondary);
+
+    font-size: 13px;
+    line-height: 1.6;
+  }
+}
+
+.data-source__heading {
+  display: flex;
+  align-items: center;
+
+  gap: var(--app-space-sm);
+
+  strong {
+    color: var(--app-text-primary);
+
+    font-size: 15px;
+    font-weight: 600;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   Integration status
+   --------------------------------------------------------- */
+
+.integration-status {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 22px;
+
+  padding: 2px 8px;
+
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.integration-status--connected {
+  color: var(--app-success);
+
+  background: var(--app-success-soft);
+}
+
+.integration-status--disconnected {
+  color: var(--app-text-secondary);
+
+  background: var(--app-surface-secondary);
+}
+
+.integration-status--loading {
+  color: var(--app-text-secondary);
+
+  background: var(--app-surface-secondary);
+}
+
+.integration-status--error {
+  color: var(--app-danger);
+
+  background: var(--app-danger-soft);
+}
+
+
+/* ---------------------------------------------------------
+   Integration metadata
+   --------------------------------------------------------- */
+
+.integration-metadata {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap:
+    var(--app-space-sm) var(--app-space-xl);
+
+  margin-top: var(--app-space-md);
+}
+
+.integration-metadata__item {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+
+  span {
+    color: var(--app-text-tertiary);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  strong {
+    max-width: 260px;
+
+    overflow: hidden;
+
+    color: var(--app-text-primary);
+
+    font-size: 12px;
+    font-weight: 600;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   Data source actions
+   --------------------------------------------------------- */
+
+.data-source__actions {
+  display: flex;
+  flex-shrink: 0;
+
+  align-items: center;
+
+  gap: var(--app-space-xs);
+}
+
+
+/* ---------------------------------------------------------
+   Integration results
+   --------------------------------------------------------- */
+
+.integration-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: var(--app-space-lg);
+
+  padding:
+    var(--app-space-md) 24px;
+
+  border-top: 1px solid var(--app-border);
+}
+
+.integration-result--success {
+  background: var(--app-success-soft);
+}
+
+.integration-result--error {
+  background: var(--app-danger-soft);
+}
+
+.integration-result__content {
+  display: flex;
+  min-width: 0;
+
+  flex-direction: column;
+
+  gap: 3px;
+
+  strong {
+    color: var(--app-text-primary);
+
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  span {
+    color: var(--app-text-secondary);
+
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+.integration-result__meta {
+  flex-shrink: 0;
+
+  color: var(--app-text-secondary);
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* ---------------------------------------------------------
+   Sync statistics
+   --------------------------------------------------------- */
+
+.sync-stats {
+  display: flex;
+  align-items: center;
+
+  gap: var(--app-space-xl);
+}
+
+.sync-stat {
+  display: flex;
+
+  min-width: 70px;
+
+  flex-direction: column;
+
+  gap: 2px;
+
+  text-align: right;
+
+  strong {
+    color: var(--app-text-primary);
+
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  span {
+    color: var(--app-text-tertiary);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   GitHub connection drawer
+   --------------------------------------------------------- */
+
+.integration-drawer-intro {
+  margin-bottom: var(--app-space-lg);
+
+  padding: var(--app-space-md);
+
+  background: var(--app-surface-secondary);
+
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
 
   strong {
     display: block;
-    margin-top: 8px;
+
+    margin-bottom: var(--app-space-xs);
+
     color: var(--app-text-primary);
-    font-size: 18px;
+
+    font-size: 13px;
     font-weight: 600;
   }
 
   p {
-    margin: 8px 0 0;
+    margin: 0;
+
     color: var(--app-text-secondary);
-    font-size: 13px;
-    line-height: 1.5;
-  }
 
-  &:last-child {
-    strong {
-      font-size: 30px;
-      line-height: 1.2;
-    }
+    font-size: 12px;
+    line-height: 1.6;
   }
 }
 
-.overview-card__header {
+
+/* =========================================================
+   ENGINEERING DATA
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   Engineering data card
+   --------------------------------------------------------- */
+
+.engineering-data-card {
   display: flex;
-  align-items: center;
+
+  flex-direction: column;
+
+  gap: var(--app-space-lg);
+
+  padding: 24px;
+}
+
+
+/* ---------------------------------------------------------
+   Metrics toolbar
+   --------------------------------------------------------- */
+
+.metrics-toolbar {
+  display: flex;
+
+  align-items: flex-end;
   justify-content: space-between;
+
+  gap: var(--app-space-xl);
+
+  >button {
+    flex-shrink: 0;
+  }
+}
+
+.metrics-period {
+  display: flex;
+
+  align-items: flex-end;
+
   gap: var(--app-space-md);
 }
 
-.members-section {
-  overflow: hidden;
+.metrics-period__field {
+  display: flex;
+
+  min-width: 170px;
+
+  flex-direction: column;
+
+  gap: var(--app-space-xs);
+
+  label {
+    color: var(--app-text-secondary);
+
+    font-size: 11px;
+    font-weight: 600;
+
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  input {
+    min-height: 36px;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   Metrics summary
+   --------------------------------------------------------- */
+
+.metrics-summary {
+  display: flex;
+
+  align-items: center;
+
+  gap: var(--app-space-xl);
+
+  padding:
+    var(--app-space-md) var(--app-space-lg);
+
+  background: var(--app-surface-secondary);
+
   border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-lg);
-  background: var(--app-surface);
-  box-shadow: var(--app-shadow-sm);
-}
+  border-radius: var(--app-radius-md);
 
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--app-space-md);
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--app-border);
+  >div {
+    display: flex;
 
-  h2 {
-    margin: 4px 0 0;
+    flex-direction: column;
+
+    gap: 3px;
+  }
+
+  span {
+    color: var(--app-text-tertiary);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  strong {
     color: var(--app-text-primary);
-    font-size: 18px;
+
+    font-size: 13px;
     font-weight: 600;
   }
 }
 
+
+/* ---------------------------------------------------------
+   Metrics grid
+   --------------------------------------------------------- */
+
+.metrics-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: var(--app-space-md);
+}
+
+
+/* ---------------------------------------------------------
+   Metric card
+   --------------------------------------------------------- */
+
+.metric-card {
+  position: relative;
+
+  display: flex;
+
+  min-height: 150px;
+
+  flex-direction: column;
+
+  padding: var(--app-space-lg);
+
+  background: var(--app-surface);
+
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+
+  &:hover {
+    box-shadow: var(--app-shadow-sm);
+
+    transform: translateY(-1px);
+  }
+
+  >p {
+    margin:
+      var(--app-space-sm) 0 0;
+
+    color: var(--app-text-tertiary);
+
+    font-size: 11px;
+    line-height: 1.5;
+  }
+}
+
+.metric-card--unavailable {
+  background: var(--app-surface-secondary);
+
+  &:hover {
+    transform: none;
+
+    box-shadow: none;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   Metric header
+   --------------------------------------------------------- */
+
+.metric-card__header {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: var(--app-space-sm);
+}
+
+.metric-card__label {
+  color: var(--app-text-secondary);
+
+  font-size: 11px;
+  font-weight: 600;
+
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+
+  text-transform: uppercase;
+}
+
+
+/* ---------------------------------------------------------
+   Metric value
+   --------------------------------------------------------- */
+
+.metric-card__value {
+  display: block;
+
+  margin-top: auto;
+
+  padding-top: var(--app-space-lg);
+
+  color: var(--app-text-primary);
+
+  font-size: 30px;
+  font-weight: 600;
+
+  line-height: 1;
+
+  letter-spacing: -0.03em;
+}
+
+.metric-card--unavailable {
+  .metric-card__value {
+    color: var(--app-text-tertiary);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   Metric status
+   --------------------------------------------------------- */
+
+.metric-status {
+  display: inline-flex;
+
+  min-height: 22px;
+
+  flex-shrink: 0;
+
+  align-items: center;
+
+  padding: 2px 8px;
+
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  line-height: 1;
+
+  white-space: nowrap;
+}
+
+.metric-status--available {
+  color: var(--app-success);
+
+  background: var(--app-success-soft);
+}
+
+.metric-status--no-data {
+  color: var(--app-text-secondary);
+
+  background: var(--app-surface-secondary);
+}
+
+.metric-status--not-configured {
+  color: var(--app-warning, var(--app-text-secondary));
+
+  background: var(--app-warning-soft,
+      var(--app-surface-secondary));
+}
+
+
+/* ---------------------------------------------------------
+   Metrics empty state
+   --------------------------------------------------------- */
+
+.metrics-empty {
+  display: flex;
+
+  min-height: 190px;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: var(--app-space-xl);
+
+  text-align: center;
+
+  border:
+    1px dashed var(--app-border);
+
+  border-radius: var(--app-radius-md);
+
+  strong {
+    margin-top: var(--app-space-sm);
+
+    color: var(--app-text-primary);
+
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  p {
+    max-width: 440px;
+
+    margin:
+      var(--app-space-xs) 0 0;
+
+    color: var(--app-text-secondary);
+
+    font-size: 12px;
+    line-height: 1.6;
+  }
+}
+
+.metrics-empty__icon {
+  display: flex;
+
+  width: 44px;
+  height: 44px;
+
+  align-items: center;
+  justify-content: center;
+
+  color: var(--app-text-secondary);
+
+  background: var(--app-surface-secondary);
+
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+
+  font-size: 20px;
+
+  nz-icon {
+    display: flex;
+
+    font-size: 20px;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   Members section
+   --------------------------------------------------------- */
+
+.section-actions {
+  display: flex;
+  align-items: center;
+
+  gap: var(--app-space-md);
+}
+
 .member-count {
   color: var(--app-text-secondary);
+
   font-size: 12px;
   font-weight: 500;
 }
 
+
+/* ---------------------------------------------------------
+   Members card
+   --------------------------------------------------------- */
+
+.members-card {
+  padding: 0;
+
+  overflow: hidden;
+}
+
+.members-empty {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+
+/* ---------------------------------------------------------
+   Member list
+   --------------------------------------------------------- */
+
 .members-list {
   display: flex;
+
   flex-direction: column;
 }
 
 .member-card {
   display: flex;
   align-items: center;
+
   gap: var(--app-space-md);
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--app-border);
-  transition: background 160ms ease;
+
+  padding:
+    18px 20px;
+
+  border-bottom:
+    1px solid var(--app-border);
+
+  transition:
+    background 160ms ease;
 
   &:last-child {
     border-bottom: 0;
   }
 
   &:hover {
-    background: var(--app-surface-secondary);
+    background:
+      var(--app-surface-secondary);
   }
 }
 
+
+/* ---------------------------------------------------------
+   Avatar
+   --------------------------------------------------------- */
+
 .member-avatar {
   display: flex;
+
   width: 42px;
   height: 42px;
+
   flex: 0 0 42px;
+
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: var(--app-primary-soft);
+
   color: var(--app-primary);
+
+  background:
+    var(--app-primary-soft);
+
+  border-radius: 50%;
+
   font-size: 14px;
   font-weight: 700;
 }
 
+
+/* ---------------------------------------------------------
+   Member content
+   --------------------------------------------------------- */
+
 .member-main {
-  display: flex;
+  display: grid;
+
+  grid-template-columns:
+    minmax(180px, 1.5fr) minmax(180px, 1fr) auto;
+
   min-width: 0;
+
   flex: 1;
+
   align-items: center;
-  justify-content: space-between;
+
   gap: var(--app-space-lg);
 }
 
 .member-identity {
   display: flex;
+
   min-width: 0;
+
   flex-direction: column;
+
   gap: 3px;
 
-  strong {
+  strong,
+  span {
     overflow: hidden;
-    color: var(--app-text-primary);
-    font-size: 14px;
-    font-weight: 600;
+
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  strong {
+    color: var(--app-text-primary);
+
+    font-size: 14px;
+    font-weight: 600;
   }
 
   span {
-    overflow: hidden;
     color: var(--app-text-secondary);
+
     font-size: 12px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 }
 
+
+/* ---------------------------------------------------------
+   Member metadata
+   --------------------------------------------------------- */
+
 .member-metadata {
   display: flex;
+
   align-items: center;
-  justify-content: flex-end;
+
   gap: var(--app-space-md);
 }
 
 .member-role {
+  padding:
+    3px 8px;
+
   color: var(--app-text-primary);
-  font-size: 12px;
+
+  background:
+    var(--app-surface-secondary);
+
+  border:
+    1px solid var(--app-border);
+
+  border-radius: 999px;
+
+  font-size: 11px;
   font-weight: 600;
+
+  white-space: nowrap;
 }
 
 .provider-id {
-  max-width: 240px;
+  max-width: 220px;
+
   overflow: hidden;
+
   color: var(--app-text-tertiary);
+
   font-size: 11px;
+
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-nz-empty {
-  display: block;
-  padding: 48px 24px;
-}
 
-.section-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--app-space-md);
-
-  button {
-    border-radius: var(--app-radius-sm);
-    font-weight: 500;
-  }
-}
-
-.drawer-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--app-space-sm);
-  margin-top: var(--app-space-lg);
-  padding-top: var(--app-space-md);
-  border-top: 1px solid var(--app-border);
-}
+/* ---------------------------------------------------------
+   Member actions
+   --------------------------------------------------------- */
 
 .member-actions {
   display: flex;
+
   align-items: center;
+
   gap: var(--app-space-xs);
+
   flex-shrink: 0;
 }
+
+
+/* ---------------------------------------------------------
+   Responsive - Tablet
+   --------------------------------------------------------- */
 
 @media (max-width: 900px) {
   .team-overview {
     grid-template-columns: 1fr;
   }
 
-  .member-main {
+  .data-source {
     align-items: flex-start;
+
     flex-direction: column;
+  }
+
+  .data-source__actions {
+    width: 100%;
+
+    flex-wrap: wrap;
+
+    padding-left:
+      calc(44px + var(--app-space-md));
+  }
+
+  .integration-result {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .sync-stats {
+    width: 100%;
+
+    justify-content: flex-start;
+  }
+
+  .sync-stat {
+    text-align: left;
+  }
+
+
+  /* Engineering data */
+
+  .metrics-toolbar {
+    align-items: stretch;
+
+    flex-direction: column;
+  }
+
+  .metrics-period {
+    width: 100%;
+  }
+
+  .metrics-period__field {
+    flex: 1;
+  }
+
+  .metrics-toolbar>button {
+    align-self: flex-start;
+  }
+
+  .metrics-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+
+  /* Members */
+
+  .member-main {
+    grid-template-columns: 1fr;
+
     gap: var(--app-space-sm);
   }
 
@@ -278,37 +1047,124 @@ nz-empty {
   }
 }
 
+
+/* ---------------------------------------------------------
+   Responsive - Mobile
+   --------------------------------------------------------- */
+
 @media (max-width: 640px) {
-  .team-page {
-    padding: var(--app-space-md);
-  }
-
-  .page-header {
-    flex-direction: column;
-  }
-
   .team-summary {
     width: 100%;
   }
 
-  .section-header {
-    align-items: flex-start;
+  .section-actions {
+    width: 100%;
+
+    justify-content: space-between;
+  }
+
+
+  /* Data sources */
+
+  .data-source {
+    padding:
+      var(--app-space-md);
+  }
+
+  .data-source__main {
+    width: 100%;
+  }
+
+  .data-source__actions {
+    padding-left: 0;
+  }
+
+  .data-source__actions button {
+    flex: 1;
+  }
+
+  .integration-metadata {
+    flex-direction: column;
+
+    gap: var(--app-space-sm);
+  }
+
+  .integration-result {
     padding: var(--app-space-md);
   }
 
+  .sync-stats {
+    display: grid;
+
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+
+    gap: var(--app-space-sm);
+  }
+
+  .sync-stat {
+    min-width: 0;
+  }
+
+
+  /* Engineering data */
+
+  .engineering-data-card {
+    padding: var(--app-space-md);
+  }
+
+  .metrics-period {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .metrics-period__field {
+    width: 100%;
+
+    min-width: 0;
+  }
+
+  .metrics-toolbar>button {
+    width: 100%;
+
+    align-self: stretch;
+  }
+
+  .metrics-summary {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: var(--app-space-sm);
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-card {
+    min-height: 130px;
+  }
+
+
+  /* Members */
+
   .member-card {
     align-items: flex-start;
-    padding: var(--app-space-md);
   }
 
   .member-metadata {
     align-items: flex-start;
+
     flex-direction: column;
-    gap: 4px;
+
+    gap: var(--app-space-xs);
   }
 
-  .section-actions {
-    width: 100%;
-    justify-content: space-between;
+  .overview-card__header {
+    align-items: flex-start;
+
+    flex-direction: column;
   }
 }

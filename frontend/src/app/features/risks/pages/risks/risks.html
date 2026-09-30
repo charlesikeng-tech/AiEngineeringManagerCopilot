@@ -1,144 +1,227 @@
-<div class="risks-page">
+<div class="app-page">
   @if (loading()) {
     <div class="state-container">
       <nz-spin nzSimple nzSize="large"></nz-spin>
-      <span>Loading engineering risks...</span>
+
+      <span> Loading engineering risks... </span>
     </div>
   } @else if (error()) {
-    <nz-alert
-      nzType="error"
-      nzShowIcon
-      nzMessage="Unable to load engineering risks"
-      nzDescription="The current risk assessment could not be loaded."
-    ></nz-alert>
+    <div class="state-container">
+      <nz-alert
+        nzType="error"
+        nzShowIcon
+        nzMessage="Unable to load engineering risks"
+        nzDescription="The current risk assessment could not be loaded."
+      ></nz-alert>
+    </div>
   } @else if (data(); as riskData) {
+    <!-- Page header -->
+
     <header class="page-header">
-      <div>
-        <span class="page-eyebrow">ENGINEERING HEALTH</span>
+      <div class="page-header__content">
+        <span class="page-eyebrow"> ENGINEERING </span>
 
         <h1>Engineering Risks</h1>
 
         <p>Current engineering risks identified for the latest reporting period.</p>
       </div>
 
-      <div class="reporting-period">
-        <span class="reporting-period__label">REPORTING PERIOD</span>
+      <div class="risk-page-context">
+        <div class="reporting-period">
+          <span class="reporting-period__label"> REPORTING PERIOD </span>
 
-        <strong>
-          {{ riskData.periodStart | date: 'MMM d, y' }}
-          –
-          {{ riskData.periodEnd | date: 'MMM d, y' }}
-        </strong>
+          <strong>
+            {{ riskData.periodStart | date: 'MMM d, y' }}
+            –
+            {{ riskData.periodEnd | date: 'MMM d, y' }}
+          </strong>
+        </div>
+
+        <a
+          class="risk-navigation-link"
+          [routerLink]="['/reports', riskData.reportId]"
+        >
+          View source report
+          <span aria-hidden="true">→</span>
+        </a>
       </div>
     </header>
 
     @if (risks().length === 0) {
-      <nz-empty
-        nzNotFoundContent="No engineering risks detected for this reporting period."
-      ></nz-empty>
+      <div class="empty-state">
+        <nz-empty
+          nzNotFoundContent="No engineering risks detected for this reporting period."
+        ></nz-empty>
+      </div>
     } @else {
-      <section class="risk-summary">
-        <article class="summary-card summary-card--critical">
-          <div class="summary-card__header">
-            <span class="severity-dot"></span>
-            <span>CRITICAL</span>
-          </div>
+      <!-- Risk overview -->
 
-          <strong>{{ criticalCount() }}</strong>
-          <span>risks</span>
-        </article>
+      <section class="app-section">
+        <div class="overview-grid">
+          <article class="overview-card risk-overview risk-overview--critical">
+            <div class="overview-card__header">
+              <span class="risk-level">
+                <span class="severity-dot"></span>
+                CRITICAL
+              </span>
+            </div>
 
-        <article class="summary-card summary-card--high">
-          <div class="summary-card__header">
-            <span class="severity-dot"></span>
-            <span>HIGH</span>
-          </div>
+            <strong>
+              {{ criticalCount() }}
+            </strong>
 
-          <strong>{{ highCount() }}</strong>
-          <span>risks</span>
-        </article>
+            <p>
+              {{ criticalCount() === 1 ? 'risk' : 'risks' }}
+            </p>
+          </article>
 
-        <article class="summary-card summary-card--medium">
-          <div class="summary-card__header">
-            <span class="severity-dot"></span>
-            <span>MEDIUM</span>
-          </div>
+          <article class="overview-card risk-overview risk-overview--high">
+            <div class="overview-card__header">
+              <span class="risk-level">
+                <span class="severity-dot"></span>
+                HIGH
+              </span>
+            </div>
 
-          <strong>{{ mediumCount() }}</strong>
-          <span>risks</span>
-        </article>
+            <strong>
+              {{ highCount() }}
+            </strong>
 
-        <article class="summary-card summary-card--low">
-          <div class="summary-card__header">
-            <span class="severity-dot"></span>
-            <span>LOW</span>
-          </div>
+            <p>
+              {{ highCount() === 1 ? 'risk' : 'risks' }}
+            </p>
+          </article>
 
-          <strong>{{ lowCount() }}</strong>
-          <span>risks</span>
-        </article>
+          <article class="overview-card risk-overview risk-overview--medium">
+            <div class="overview-card__header">
+              <span class="risk-level">
+                <span class="severity-dot"></span>
+                MEDIUM
+              </span>
+            </div>
+
+            <strong>
+              {{ mediumCount() }}
+            </strong>
+
+            <p>
+              {{ mediumCount() === 1 ? 'risk' : 'risks' }}
+            </p>
+          </article>
+
+          <article class="overview-card risk-overview risk-overview--low">
+            <div class="overview-card__header">
+              <span class="risk-level">
+                <span class="severity-dot"></span>
+                LOW
+              </span>
+            </div>
+
+            <strong>
+              {{ lowCount() }}
+            </strong>
+
+            <p>
+              {{ lowCount() === 1 ? 'risk' : 'risks' }}
+            </p>
+          </article>
+        </div>
       </section>
 
-      <div class="risk-count">
-        <strong>{{ totalCount() }}</strong>
-        active engineering
-        {{ totalCount() === 1 ? 'risk' : 'risks' }}
-      </div>
+      <!-- Active risks -->
 
-      <section class="risks-list">
-        @for (risk of risks(); track risk.id) {
-          <article
-            class="risk-card"
-            [class.risk-card--critical]="risk.severity === 'Critical'"
-            [class.risk-card--high]="risk.severity === 'High'"
-            [class.risk-card--medium]="risk.severity === 'Medium'"
-            [class.risk-card--low]="risk.severity === 'Low'"
-          >
-            <div class="risk-card__header">
-              <div class="risk-card__metadata">
-                <span
-                  class="risk-severity"
-                  [class.risk-severity--critical]="risk.severity === 'Critical'"
-                  [class.risk-severity--high]="risk.severity === 'High'"
-                  [class.risk-severity--medium]="risk.severity === 'Medium'"
-                  [class.risk-severity--low]="risk.severity === 'Low'"
-                >
-                  <span class="severity-dot"></span>
-                  {{ risk.severity | uppercase }}
-                </span>
+      <section class="app-section">
+        <div class="section-header">
+          <div class="section-header__content">
+            <span class="section-eyebrow"> ACTIVE RISKS </span>
 
-                <span class="risk-category">
-                  {{ risk.category }}
-                </span>
+            <h2>Risk Assessment</h2>
+
+            <p>Risks currently affecting engineering health.</p>
+          </div>
+
+          <div class="risk-section-actions">
+            <div class="risk-count">
+              <strong>
+                {{ totalCount() }}
+              </strong>
+
+              <span>
+                active
+                {{ totalCount() === 1 ? 'risk' : 'risks' }}
+              </span>
+            </div>
+
+            <a
+              class="risk-navigation-link risk-navigation-link--primary"
+              routerLink="/actions"
+            >
+              Open action plan
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="risks-list">
+          @for (risk of sortedRisks(); track risk.id) {
+            <article
+              class="app-card risk-card"
+              [class.risk-card--critical]="risk.severity === 'Critical'"
+              [class.risk-card--high]="risk.severity === 'High'"
+              [class.risk-card--medium]="risk.severity === 'Medium'"
+              [class.risk-card--low]="risk.severity === 'Low'"
+            >
+              <div class="risk-card__header">
+                <div class="risk-card__metadata">
+                  <span
+                    class="risk-severity"
+                    [class.risk-severity--critical]="risk.severity === 'Critical'"
+                    [class.risk-severity--high]="risk.severity === 'High'"
+                    [class.risk-severity--medium]="risk.severity === 'Medium'"
+                    [class.risk-severity--low]="risk.severity === 'Low'"
+                  >
+                    <span class="severity-dot"></span>
+
+                    {{ risk.severity | uppercase }}
+                  </span>
+
+                  <span class="risk-category">
+                    {{ risk.category }}
+                  </span>
+                </div>
+
+                @if (risk.metricType) {
+                  <span class="risk-metric">
+                    {{ metricLabel(risk.metricType) }}
+                  </span>
+                }
               </div>
 
-              @if (risk.metricType) {
-                <span class="risk-metric">
-                  {{ metricLabel(risk.metricType) }}
-                </span>
-              }
-            </div>
+              <div class="risk-card__content">
+                <h3>
+                  {{ risk.title }}
+                </h3>
 
-            <div class="risk-card__content">
-              <h2>{{ risk.title }}</h2>
+                <p class="risk-description">
+                  {{ risk.description }}
+                </p>
+              </div>
 
-              <p class="risk-description">
-                {{ risk.description }}
-              </p>
-            </div>
+              <div class="risk-recommendation">
+                <span class="risk-recommendation__label"> RECOMMENDATION </span>
 
-            <div class="risk-recommendation">
-              <span class="risk-recommendation__label"> RECOMMENDATION </span>
-
-              <p>
-                {{ risk.recommendation }}
-              </p>
-            </div>
-          </article>
-        }
+                <p>
+                  {{ risk.recommendation }}
+                </p>
+              </div>
+            </article>
+          }
+        </div>
       </section>
     }
   } @else {
-    <nz-empty nzNotFoundContent="No risk assessment is available for this team."></nz-empty>
+    <div class="empty-state">
+      <nz-empty nzNotFoundContent="No risk assessment is available for this team."></nz-empty>
+    </div>
   }
 </div>

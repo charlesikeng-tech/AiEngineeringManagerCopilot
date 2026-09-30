@@ -1,19 +1,28 @@
-<div class="team-page">
+<div class="app-page">
   @if (loading()) {
     <div class="state-container">
       <nz-spin nzSimple nzSize="large"></nz-spin>
+
       <span>Loading team...</span>
     </div>
   } @else if (error()) {
-    <nz-alert
-      nzType="error"
-      nzShowIcon
-      nzMessage="Unable to load team"
-      nzDescription="The selected team and its members could not be loaded."
-    ></nz-alert>
+    <div class="state-container">
+      <nz-alert
+        nzType="error"
+        nzShowIcon
+        nzMessage="Unable to load team"
+        nzDescription="The selected team and its members could not be loaded."
+      ></nz-alert>
+    </div>
   } @else if (team(); as currentTeam) {
+    <!-- =====================================================
+
+         PAGE HEADER
+
+         \===================================================== -->
+
     <header class="page-header">
-      <div>
+      <div class="page-header__content">
         <span class="page-eyebrow">TEAM MANAGEMENT</span>
 
         <h1>{{ currentTeam.name }}</h1>
@@ -24,55 +33,487 @@
       </div>
 
       <div class="team-summary">
-        <span class="team-summary__label"> TEAM MEMBERS </span>
+        <span class="team-summary__label">TEAM MEMBERS</span>
 
         <strong>{{ members().length }}</strong>
       </div>
     </header>
 
-    <section class="team-overview">
-      <div class="overview-card">
-        <div class="overview-card__header">
-          <span class="overview-card__label"> TEAM </span>
+    <!-- =====================================================
 
-          <button
-            nz-button
-            nzType="default"
-            type="button"
-            [disabled]="updatingTeam()"
-            (click)="openEditTeam()"
-          >
-            Edit team
-          </button>
+         TEAM OVERVIEW
+
+         \===================================================== -->
+
+    <section class="app-section">
+      <div class="team-overview">
+        <!-- Team information -->
+
+        <div class="overview-card">
+          <div class="overview-card__header">
+            <span class="overview-card__label">TEAM</span>
+
+            <div class="overview-card__actions">
+              <button
+                nz-button
+                nzType="default"
+                type="button"
+                [disabled]="updatingTeam() || deletingTeam()"
+                (click)="openEditTeam()"
+              >
+                Edit team
+              </button>
+
+              <button
+                nz-button
+                nzType="text"
+                nzDanger
+                type="button"
+                nz-popconfirm
+                nzPopconfirmTitle="Delete this team permanently?"
+                nzPopconfirmPlacement="topRight"
+                [disabled]="updatingTeam() || deletingTeam()"
+                (nzOnConfirm)="deleteTeam()"
+              >
+                Delete team
+              </button>
+            </div>
+          </div>
+
+          <strong>{{ currentTeam.name }}</strong>
+
+          <p>
+            {{ currentTeam.description || 'No description available.' }}
+          </p>
         </div>
 
-        <strong>{{ currentTeam.name }}</strong>
+        <!-- Members overview -->
 
-        <p>
-          {{ currentTeam.description || 'No description available.' }}
-        </p>
-      </div>
+        <div class="overview-card">
+          <span class="overview-card__label">MEMBERS</span>
 
-      <div class="overview-card">
-        <span class="overview-card__label"> MEMBERS </span>
+          <strong class="member-total">
+            {{ members().length }}
+          </strong>
 
-        <strong>{{ members().length }}</strong>
-
-        <p>People currently assigned to this team.</p>
+          <p>People currently assigned to this team.</p>
+        </div>
       </div>
     </section>
 
-    <section class="members-section">
+    <!-- =====================================================
+
+         DATA SOURCES
+
+         \===================================================== -->
+
+    <section class="app-section">
       <div class="section-header">
-        <div>
-          <span class="section-eyebrow"> PEOPLE </span>
+        <div class="section-header__content">
+          <span class="section-eyebrow">INTEGRATIONS</span>
+
+          <h2>Data Sources</h2>
+
+          <p>
+            Connect the engineering systems used to calculate metrics and generate engineering
+            intelligence.
+          </p>
+        </div>
+      </div>
+
+      <div class="app-card data-sources-card">
+        <!-- =================================================
+
+             GITHUB
+
+             \================================================= -->
+
+        <article class="data-source">
+          <div class="data-source__main">
+            <div class="data-source__icon">
+              <nz-icon nzType="github"></nz-icon>
+            </div>
+
+            <div class="data-source__content">
+              <div class="data-source__heading">
+                <strong>GitHub</strong>
+
+                @if (githubConnectionLoading()) {
+                  <span class="integration-status integration-status--loading"> Loading... </span>
+                } @else if (githubConnection()) {
+                  <span class="integration-status integration-status--connected"> Connected </span>
+                } @else if (githubConnectionError()) {
+                  <span class="integration-status integration-status--error"> Error </span>
+                } @else {
+                  <span class="integration-status integration-status--disconnected">
+                    Not connected
+                  </span>
+                }
+              </div>
+
+              @if (githubConnectionLoading()) {
+                <p>Checking GitHub connection...</p>
+              } @else if (githubConnectionError()) {
+                <p>The GitHub connection status could not be loaded.</p>
+              } @else if (githubConnection(); as connection) {
+                <p>
+                  Repository, pull request, review and deployment data are collected from this
+                  GitHub account.
+                </p>
+
+                <div class="integration-metadata">
+                  <div class="integration-metadata__item">
+                    <span>Account</span>
+
+                    <strong>{{ connection.owner }}</strong>
+                  </div>
+
+                  <div class="integration-metadata__item">
+                    <span>Type</span>
+
+                    <strong>
+                      {{ connection.ownerType === 'User' ? 'Personal account' : 'Organization' }}
+                    </strong>
+                  </div>
+
+                  <div class="integration-metadata__item">
+                    <span>Last sync</span>
+
+                    <strong>
+                      @if (connection.lastSyncAt) {
+                        {{ connection.lastSyncAt | date: 'medium' }}
+                      } @else {
+                        Never
+                      }
+                    </strong>
+                  </div>
+                </div>
+              } @else {
+                <p>
+                  Connect GitHub to collect repositories, pull requests, reviews and deployment
+                  activity.
+                </p>
+              }
+            </div>
+          </div>
+
+          <div class="data-source__actions">
+            @if (githubConnectionLoading()) {
+              <nz-spin nzSimple></nz-spin>
+            } @else if (githubConnectionError()) {
+              <button nz-button nzType="default" type="button" (click)="reloadGitHubConnection()">
+                Retry
+              </button>
+            } @else if (githubConnection()) {
+              <button
+                nz-button
+                nzType="default"
+                type="button"
+                [nzLoading]="githubTesting()"
+                [disabled]="githubSyncing() || githubDisconnecting()"
+                (click)="testGitHubConnection()"
+              >
+                Test connection
+              </button>
+
+              <button
+                nz-button
+                nzType="primary"
+                type="button"
+                [nzLoading]="githubSyncing()"
+                [disabled]="githubTesting() || githubDisconnecting()"
+                (click)="syncGitHub()"
+              >
+                <nz-icon nzType="sync"></nz-icon>
+
+                Sync now
+              </button>
+
+              <button
+                nz-button
+                nzType="text"
+                nzDanger
+                type="button"
+                nz-popconfirm
+                nzPopconfirmTitle="Disconnect GitHub from this team?"
+                nzPopconfirmPlacement="topRight"
+                [disabled]="githubTesting() || githubSyncing() || githubDisconnecting()"
+                (nzOnConfirm)="disconnectGitHub()"
+              >
+                Disconnect
+              </button>
+            } @else {
+              <button nz-button nzType="primary" type="button" (click)="openGitHubConnection()">
+                Connect GitHub
+              </button>
+            }
+          </div>
+        </article>
+
+        <!-- Test result -->
+
+        @if (githubTestResult(); as testResult) {
+          <div
+            class="integration-result"
+            [class.integration-result--success]="testResult.success"
+            [class.integration-result--error]="!testResult.success"
+          >
+            <div class="integration-result__content">
+              <strong>
+                {{ testResult.success ? 'Connection verified' : 'Connection test failed' }}
+              </strong>
+
+              <span>
+                {{ testResult.message }}
+              </span>
+            </div>
+
+            @if (testResult.success && testResult.organization) {
+              <span class="integration-result__meta">
+                {{ testResult.organization }}
+              </span>
+            }
+          </div>
+        }
+
+        <!-- Sync result -->
+
+        @if (githubSyncResult(); as syncResult) {
+          <div class="integration-result integration-result--success">
+            <div class="integration-result__content">
+              <strong>Synchronization completed</strong>
+
+              <span> GitHub data has been refreshed successfully. </span>
+            </div>
+
+            <div class="sync-stats">
+              <div class="sync-stat">
+                <strong>{{ syncResult.synchronized }}</strong>
+
+                <span>Synchronized</span>
+              </div>
+
+              <div class="sync-stat">
+                <strong>{{ syncResult.created }}</strong>
+
+                <span>Created</span>
+              </div>
+
+              <div class="sync-stat">
+                <strong>{{ syncResult.updated }}</strong>
+
+                <span>Updated</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- =====================================================
+
+     ENGINEERING DATA
+
+     \===================================================== -->
+
+    <section class="app-section">
+      <div class="section-header">
+        <div class="section-header__content">
+          <span class="section-eyebrow">ENGINEERING INTELLIGENCE</span>
+
+          <h2>Engineering Data</h2>
+
+          <p>Calculate engineering metrics from the data collected for this team.</p>
+        </div>
+      </div>
+
+      <div class="app-card engineering-data-card">
+        <!-- Period + action -->
+
+        <div class="metrics-toolbar">
+          <form class="metrics-period" [formGroup]="metricsPeriodForm">
+            <div class="metrics-period__field">
+              <label for="metrics-period-start"> Period start </label>
+
+              <input id="metrics-period-start" nz-input type="date" formControlName="periodStart" />
+            </div>
+
+            <div class="metrics-period__field">
+              <label for="metrics-period-end"> Period end </label>
+
+              <input id="metrics-period-end" nz-input type="date" formControlName="periodEnd" />
+            </div>
+          </form>
+
+          <div class="metrics-toolbar__actions">
+            <button
+              nz-button
+              nzType="default"
+              type="button"
+              [nzLoading]="calculatingMetrics()"
+              [disabled]="calculatingMetrics() || generatingReport() || metricsPeriodForm.invalid"
+              (click)="calculateMetrics()"
+            >
+              Calculate metrics
+            </button>
+
+            <button
+              nz-button
+              nzType="primary"
+              type="button"
+              [nzLoading]="generatingReport()"
+              [disabled]="
+                !hasValidCalculatedMetrics() || calculatingMetrics() || generatingReport()
+              "
+              (click)="generateReport()"
+            >
+              Generate report
+            </button>
+          </div>
+
+          @if (reportGenerationError()) {
+            <nz-alert
+              nzType="error"
+              nzShowIcon
+              nzMessage="Unable to generate report"
+              nzDescription="The engineering report could not be generated for the selected period."
+            ></nz-alert>
+          }
+        </div>
+
+        <!-- Reporting period consistency -->
+
+        @if (metrics().length > 0 && !hasValidCalculatedMetrics()) {
+          <nz-alert
+            nzType="info"
+            nzShowIcon
+            nzMessage="Reporting period changed"
+            nzDescription="Recalculate the metrics before generating a report for this period."
+          ></nz-alert>
+        }
+
+        <!-- GitHub warning -->
+
+        @if (!githubConnection()) {
+          <nz-alert
+            nzType="warning"
+            nzShowIcon
+            nzMessage="GitHub is not connected"
+            nzDescription="GitHub-backed metrics will be unavailable until a GitHub data source is configured."
+          ></nz-alert>
+        }
+
+        <!-- Error -->
+
+        @if (metricsError()) {
+          <nz-alert
+            nzType="error"
+            nzShowIcon
+            nzMessage="Unable to calculate metrics"
+            nzDescription="The engineering metrics could not be calculated for the selected period."
+          ></nz-alert>
+        }
+
+        <!-- Empty state -->
+
+        @if (!calculatingMetrics() && !metricsError() && metrics().length === 0) {
+          <div class="metrics-empty">
+            <div class="metrics-empty__icon">
+              <nz-icon nzType="bar-chart"></nz-icon>
+            </div>
+
+            <strong>No metrics calculated yet</strong>
+
+            <p>Select a reporting period and calculate the engineering metrics for this team.</p>
+          </div>
+        }
+
+        <!-- Metrics -->
+
+        @if (metrics().length > 0) {
+          <div class="metrics-summary">
+            <div>
+              <span>REPORTING PERIOD</span>
+
+              <strong>
+                {{ metricsPeriodForm.controls.periodStart.value | date: 'mediumDate' }}
+
+                —
+
+                {{ metricsPeriodForm.controls.periodEnd.value | date: 'mediumDate' }}
+              </strong>
+            </div>
+
+            <div>
+              <span>OBSERVABLE METRICS</span>
+
+              <strong> {{ availableMetricCount() }}/{{ metrics().length }} </strong>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            @for (metricType of metricTypes; track metricType) {
+              @if (metric(metricType); as currentMetric) {
+                <article
+                  class="metric-card"
+                  [class.metric-card--unavailable]="currentMetric.dataStatus !== 'Available'"
+                >
+                  <div class="metric-card__header">
+                    <span class="metric-card__label">
+                      {{ metricLabel(metricType) }}
+                    </span>
+
+                    <span
+                      class="metric-status"
+                      [class.metric-status--available]="currentMetric.dataStatus === 'Available'"
+                      [class.metric-status--no-data]="currentMetric.dataStatus === 'NoData'"
+                      [class.metric-status--not-configured]="
+                        currentMetric.dataStatus === 'SourceNotConfigured'
+                      "
+                    >
+                      {{ metricStatusLabel(currentMetric.dataStatus) }}
+                    </span>
+                  </div>
+
+                  <strong class="metric-card__value">
+                    {{ metricValue(currentMetric) }}
+                  </strong>
+
+                  @if (currentMetric.dataStatus === 'NoData') {
+                    <p>No usable data was observed for this metric during the selected period.</p>
+                  }
+
+                  @if (currentMetric.dataStatus === 'SourceNotConfigured') {
+                    <p>The required data source is not configured.</p>
+                  }
+                </article>
+              }
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- =====================================================
+
+         TEAM MEMBERS
+
+         \===================================================== -->
+
+    <section class="app-section">
+      <div class="section-header">
+        <div class="section-header__content">
+          <span class="section-eyebrow">PEOPLE</span>
 
           <h2>Team Members</h2>
+
+          <p>Manage the people assigned to this engineering team.</p>
         </div>
 
         <div class="section-actions">
           <span class="member-count">
             {{ members().length }}
+
             {{ members().length === 1 ? 'member' : 'members' }}
           </span>
 
@@ -83,77 +524,85 @@
             [disabled]="memberMutationInProgress()"
             (click)="openAddMember()"
           >
-            <nz-icon nzType="plus" />
+            <nz-icon nzType="plus"></nz-icon>
+
             Add member
           </button>
         </div>
       </div>
 
-      @if (members().length === 0) {
-        <nz-empty nzNotFoundContent="No members have been added to this team."></nz-empty>
-      } @else {
-        <div class="members-list">
-          @for (member of members(); track member.id) {
-            <article class="member-card">
-              <div class="member-avatar">
-                {{ member.name.charAt(0).toUpperCase() }}
-              </div>
-
-              <div class="member-main">
-                <div class="member-identity">
-                  <strong>
-                    {{ member.name }}
-                  </strong>
-
-                  <span>
-                    {{ member.email }}
-                  </span>
+      <div class="app-card members-card">
+        @if (members().length === 0) {
+          <div class="empty-state members-empty">
+            <nz-empty nzNotFoundContent="No members have been added to this team."></nz-empty>
+          </div>
+        } @else {
+          <div class="members-list">
+            @for (member of members(); track member.id) {
+              <article class="member-card">
+                <div class="member-avatar">
+                  {{ member.name.charAt(0).toUpperCase() }}
                 </div>
 
-                <div class="member-metadata">
-                  <span class="member-role">
-                    {{ roleLabel(member.role) }}
-                  </span>
+                <div class="member-main">
+                  <div class="member-identity">
+                    <strong>{{ member.name }}</strong>
 
-                  @if (member.providerUserId) {
-                    <span class="provider-id">
-                      Provider ID:
-                      {{ member.providerUserId }}
+                    <span>{{ member.email }}</span>
+                  </div>
+
+                  <div class="member-metadata">
+                    <span class="member-role">
+                      {{ roleLabel(member.role) }}
                     </span>
-                  }
-                </div>
 
-                <div class="member-actions">
-                  <button
-                    nz-button
-                    nzType="text"
-                    type="button"
-                    [disabled]="memberMutationInProgress()"
-                    (click)="openEditMember(member)"
-                  >
-                    Edit
-                  </button>
+                    @if (member.providerUserId) {
+                      <span class="provider-id">
+                        Provider ID:
 
-                  <button
-                    nz-button
-                    nzType="text"
-                    nzDanger
-                    type="button"
-                    nz-popconfirm
-                    nzPopconfirmTitle="Remove this member from the team?"
-                    nzPopconfirmPlacement="topRight"
-                    [disabled]="memberMutationInProgress()"
-                    (nzOnConfirm)="deleteMember(member)"
-                  >
-                    Delete
-                  </button>
+                        {{ member.providerUserId }}
+                      </span>
+                    }
+                  </div>
+
+                  <div class="member-actions">
+                    <button
+                      nz-button
+                      nzType="text"
+                      type="button"
+                      [disabled]="memberMutationInProgress()"
+                      (click)="openEditMember(member)"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      nz-button
+                      nzType="text"
+                      nzDanger
+                      type="button"
+                      nz-popconfirm
+                      nzPopconfirmTitle="Remove this member from the team?"
+                      nzPopconfirmPlacement="topRight"
+                      [disabled]="memberMutationInProgress()"
+                      (nzOnConfirm)="deleteMember(member)"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </article>
-          }
-        </div>
-      }
+              </article>
+            }
+          </div>
+        }
+      </div>
     </section>
+
+    <!-- =====================================================
+
+         EDIT TEAM DRAWER
+
+         \===================================================== -->
 
     <nz-drawer
       nzTitle="Edit team"
@@ -163,7 +612,7 @@
       [nzMaskClosable]="!updatingTeam()"
       (nzOnClose)="closeEditTeam()"
     >
-      <ng-container *nzDrawerContent>
+      <ng-container \*nzDrawerContent>
         <form nz-form nzLayout="vertical" [formGroup]="editTeamForm">
           <nz-form-item>
             <nz-form-label nzRequired> Team name </nz-form-label>
@@ -213,6 +662,12 @@
       </ng-container>
     </nz-drawer>
 
+    <!-- =====================================================
+
+         ADD / EDIT MEMBER DRAWER
+
+         \===================================================== -->
+
     <nz-drawer
       [nzTitle]="editingMember() ? 'Edit team member' : 'Add team member'"
       [nzVisible]="addMemberOpen()"
@@ -221,10 +676,8 @@
       [nzMaskClosable]="!creatingMember()"
       (nzOnClose)="closeAddMember()"
     >
-      <ng-container *nzDrawerContent>
+      <ng-container \*nzDrawerContent>
         <form nz-form nzLayout="vertical" [formGroup]="addMemberForm">
-          <!-- Name -->
-
           <nz-form-item>
             <nz-form-label nzRequired> Name </nz-form-label>
 
@@ -238,8 +691,6 @@
               />
             </nz-form-control>
           </nz-form-item>
-
-          <!-- Email -->
 
           <nz-form-item>
             <nz-form-label nzRequired> Email </nz-form-label>
@@ -255,8 +706,6 @@
             </nz-form-control>
           </nz-form-item>
 
-          <!-- Role -->
-
           <nz-form-item>
             <nz-form-label nzRequired> Role </nz-form-label>
 
@@ -268,8 +717,6 @@
               </nz-select>
             </nz-form-control>
           </nz-form-item>
-
-          <!-- Provider User ID -->
 
           <nz-form-item>
             <nz-form-label> Provider User ID </nz-form-label>
@@ -284,8 +731,6 @@
               />
             </nz-form-control>
           </nz-form-item>
-
-          <!-- Actions -->
 
           <div class="drawer-actions">
             <button
@@ -311,7 +756,118 @@
         </form>
       </ng-container>
     </nz-drawer>
+
+    <!-- =====================================================
+
+         CONNECT GITHUB DRAWER
+
+         \===================================================== -->
+
+    <nz-drawer
+      nzTitle="Connect GitHub"
+      [nzVisible]="githubConnectOpen()"
+      [nzWidth]="480"
+      [nzClosable]="!githubConnecting()"
+      [nzMaskClosable]="!githubConnecting()"
+      (nzOnClose)="closeGitHubConnection()"
+    >
+      <ng-container \*nzDrawerContent>
+        <form nz-form nzLayout="vertical" [formGroup]="githubConnectionForm">
+          <div class="integration-drawer-intro">
+            <strong>GitHub data source</strong>
+
+            <p>
+              Connect a personal GitHub account or an organization to collect engineering activity
+              for this team.
+            </p>
+          </div>
+
+          <!-- Owner type -->
+
+          <nz-form-item>
+            <nz-form-label nzRequired> Account type </nz-form-label>
+
+            <nz-form-control>
+              <nz-select formControlName="ownerType">
+                @for (ownerType of githubOwnerTypes; track ownerType.value) {
+                  <nz-option [nzValue]="ownerType.value" [nzLabel]="ownerType.label"></nz-option>
+                }
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- Owner -->
+
+          <nz-form-item>
+            <nz-form-label nzRequired> GitHub account </nz-form-label>
+
+            <nz-form-control nzErrorTip="Enter a valid GitHub account.">
+              <input
+                nz-input
+                type="text"
+                formControlName="owner"
+                maxlength="200"
+                autocomplete="off"
+                placeholder="e.g. charlesikeng-tech"
+              />
+            </nz-form-control>
+          </nz-form-item>
+
+          <!-- PAT -->
+
+          <nz-form-item>
+            <nz-form-label nzRequired> Personal access token </nz-form-label>
+
+            <nz-form-control nzErrorTip="A GitHub personal access token is required.">
+              <input
+                nz-input
+                type="password"
+                formControlName="accessToken"
+                autocomplete="new-password"
+                placeholder="GitHub personal access token"
+              />
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-alert
+            nzType="info"
+            nzShowIcon
+            nzMessage="Your token is not displayed after the connection is created."
+          ></nz-alert>
+
+          <div class="drawer-actions">
+            <button
+              nz-button
+              type="button"
+              [disabled]="githubConnecting()"
+              (click)="closeGitHubConnection()"
+            >
+              Cancel
+            </button>
+
+            <button
+              nz-button
+              nzType="primary"
+              type="button"
+              [nzLoading]="githubConnecting()"
+              [disabled]="githubConnectionForm.invalid || githubConnecting()"
+              (click)="connectGitHub()"
+            >
+              Connect GitHub
+            </button>
+          </div>
+        </form>
+      </ng-container>
+    </nz-drawer>
   } @else {
-    <nz-empty nzNotFoundContent="No team is currently selected."></nz-empty>
+    <!-- =====================================================
+
+         NO TEAM
+
+         \===================================================== -->
+
+    <div class="empty-state">
+      <nz-empty nzNotFoundContent="No team is currently selected."></nz-empty>
+    </div>
   }
 </div>

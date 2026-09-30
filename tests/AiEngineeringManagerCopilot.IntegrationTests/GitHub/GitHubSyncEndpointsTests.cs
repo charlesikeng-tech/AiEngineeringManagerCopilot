@@ -53,12 +53,14 @@ public sealed class GitHubSyncEndpointsTests
     private async Task CreateGitHubConnectionAsync(
         Guid teamId,
         string organization = "my-company",
+        GitHubOwnerType ownerType = GitHubOwnerType.Organization,
         string accessToken = "secret-token")
     {
         var response = await _client.PostAsJsonAsync(
             $"/teams/{teamId}/github",
             new CreateGitHubConnectionRequest(
                 organization,
+                ownerType,
                 accessToken));
 
         response.StatusCode.Should()
@@ -281,6 +283,7 @@ public sealed class GitHubSyncEndpointsTests
         await CreateGitHubConnectionAsync(
             team.Id,
             "my-company",
+            GitHubOwnerType.Organization,
             accessToken);
 
         var fakeGitHubClient = GetFakeGitHubClient();
@@ -304,7 +307,7 @@ public sealed class GitHubSyncEndpointsTests
         response.StatusCode.Should()
             .Be(HttpStatusCode.OK);
 
-        fakeGitHubClient.ReceivedOrganization
+        fakeGitHubClient.ReceivedOwner
             .Should()
             .Be("my-company");
 
@@ -1903,7 +1906,7 @@ public sealed class GitHubSyncEndpointsTests
         response.StatusCode.Should()
             .Be(HttpStatusCode.NotFound);
 
-        fakeGitHubClient.ReceivedOrganization.Should()
+        fakeGitHubClient.ReceivedOwner.Should()
             .BeNull();
 
         fakeGitHubClient.ReceivedAccessToken.Should()

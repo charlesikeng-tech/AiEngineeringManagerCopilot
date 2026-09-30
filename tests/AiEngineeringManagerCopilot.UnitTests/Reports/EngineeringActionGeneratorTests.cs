@@ -402,6 +402,73 @@ public sealed class EngineeringActionGeneratorTests
         result[0].Priority.Should().Be(
             ActionPriority.Critical);
     }
+    
+    [Fact]
+public void Generate_ShouldRecommendTelemetryValidation_WhenNoDeploymentsWereRecorded()
+{
+    var generator = new EngineeringActionGenerator();
+
+    var insights = new[]
+    {
+        new EngineeringInsight(
+            MetricType.DeploymentFrequency,
+            RiskCategory.Delivery,
+            "No deployments were recorded during the period",
+            "The system recorded 0 successful deployments during the selected period.",
+            "This may indicate a delivery bottleneck or incomplete deployment telemetry. " +
+            "The observed value alone does not establish that no deployments actually occurred.",
+            "Validate deployment telemetry and trace the path from merge to production " +
+            "before concluding that deployment activity is low.")
+    };
+
+    var risks = new[]
+    {
+        new EngineeringRisk
+        {
+            Id = Guid.NewGuid(),
+            TeamId = Guid.NewGuid(),
+            ReportId = Guid.NewGuid(),
+            MetricType = MetricType.DeploymentFrequency,
+            Severity = RiskSeverity.High,
+            Category = RiskCategory.Delivery,
+            Title = "No deployments were recorded during the period",
+            Description =
+                "The system recorded 0 successful deployments during the selected period. " +
+                "This may indicate a delivery-flow issue or incomplete deployment telemetry. " +
+                "The observed value does not establish that no deployments actually occurred.",
+            Recommendation =
+                "Validate deployment telemetry and trace the path from merge to production " +
+                "before investigating delivery constraints.",
+            CreatedAt = DateTimeOffset.UtcNow
+        }
+    };
+
+    var result = generator.Generate(
+        insights,
+        risks);
+
+    result.Should().ContainSingle();
+
+    var action = result.Single();
+
+    action.MetricType.Should().Be(
+        MetricType.DeploymentFrequency);
+
+    action.Priority.Should().Be(
+        ActionPriority.High);
+
+    action.Title.Should().Be(
+        "No deployments were recorded during the period");
+
+    action.Description.Should().Contain(
+        "Validate deployment telemetry");
+
+    action.Description.Should().Contain(
+        "trace the path from merge to production");
+
+    action.Description.Should().NotContain(
+        "Reduce batch size");
+}
 
     private static EngineeringInsight CreateInsight(string title)
     {

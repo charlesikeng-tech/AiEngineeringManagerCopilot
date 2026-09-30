@@ -39,9 +39,13 @@ public sealed class EngineeringDashboardService(
             teamId,
             cancellationToken);
 
-        var metricsByType = metrics.ToDictionary(
-            x => x.MetricType,
-            x => x.Value);
+        var metricsByType = metrics
+            .Where(metric =>
+                metric.DataStatus == MetricDataStatus.Available &&
+                metric.Value.HasValue)
+            .ToDictionary(
+                metric => metric.MetricType,
+                metric => metric.Value!.Value);
 
         decimal? GetMetric(MetricType metricType)
         {
@@ -91,12 +95,15 @@ public sealed class EngineeringDashboardService(
 
             var previousMetrics = previousMetricEntities
                 .GroupBy(x => x.MetricType)
+                .Select(group => group
+                    .OrderByDescending(x => x.CreatedAt)
+                    .First())
+                .Where(metric =>
+                    metric.DataStatus == MetricDataStatus.Available &&
+                    metric.Value.HasValue)
                 .ToDictionary(
-                    group => group.Key,
-                    group => group
-                        .OrderByDescending(x => x.CreatedAt)
-                        .First()
-                        .Value);
+                    metric => metric.MetricType,
+                    metric => metric.Value!.Value);
 
             trends = metricTrendBuilder.Build(
                 metricsByType,
@@ -109,6 +116,7 @@ public sealed class EngineeringDashboardService(
                 x.TeamId,
                 x.MetricType,
                 x.Value,
+                x.DataStatus,
                 x.PeriodStart,
                 x.PeriodEnd,
                 x.CreatedAt))

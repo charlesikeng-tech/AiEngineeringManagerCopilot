@@ -318,12 +318,66 @@ public sealed class MetricsEndpointsTests
         await dbContext.SaveChangesAsync();
     }
     
+    private async Task ConfigureGitHubAsync(Guid teamId)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<AppDbContext>();
+
+        if (await dbContext.GitHubConnections.AnyAsync(x => x.TeamId == teamId))
+        {
+            return;
+        }
+
+        dbContext.GitHubConnections.Add(
+            new GitHubConnection
+            {
+                Id = Guid.NewGuid(),
+                TeamId = teamId,
+                Owner = "test-org",
+                OwnerType = GitHubOwnerType.Organization,
+                AccessTokenEncrypted = "integration-test-token",
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private async Task ConfigureJiraAsync(Guid teamId)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<AppDbContext>();
+
+        if (await dbContext.JiraConnections.AnyAsync(x => x.TeamId == teamId))
+        {
+            return;
+        }
+
+        dbContext.JiraConnections.Add(
+            new JiraConnection
+            {
+                Id = Guid.NewGuid(),
+                TeamId = teamId,
+                BaseUrl = "https://test.atlassian.net",
+                Email = "integration-test@example.com",
+                ApiTokenEncrypted = "integration-test-token",
+                ProjectKey = "REC",
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+
+        await dbContext.SaveChangesAsync();
+    }
+
     private async Task SeedMetricAsync(
         Guid teamId,
         MetricType metricType,
         decimal value)
     {
-        await using var scope = _factory.Services.CreateAsyncScope();
+        await using var scope =
+            _factory.Services.CreateAsyncScope();
 
         var dbContext =
             scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -335,6 +389,7 @@ public sealed class MetricsEndpointsTests
                 TeamId = teamId,
                 MetricType = metricType,
                 Value = value,
+                DataStatus = MetricDataStatus.Available,
                 PeriodStart = new DateOnly(2026, 9, 1),
                 PeriodEnd = new DateOnly(2026, 9, 30),
                 CreatedAt = DateTimeOffset.UtcNow
@@ -347,6 +402,8 @@ public sealed class MetricsEndpointsTests
     public async Task CalculateCycleTime_ShouldReturnMetric()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
 
         await SeedPullRequestsAsync(
             team.Id,
@@ -370,6 +427,7 @@ public sealed class MetricsEndpointsTests
         result!.TeamId.Should().Be(team.Id);
         result.MetricType.Should().Be(MetricType.CycleTime);
         result.Value.Should().Be(7);
+        result.DataStatus.Should().Be(MetricDataStatus.Available);
         result.PeriodStart.Should().Be(
             new DateOnly(2026, 1, 1));
         result.PeriodEnd.Should().Be(
@@ -380,6 +438,8 @@ public sealed class MetricsEndpointsTests
     public async Task CalculateCycleTime_ShouldPersistMetric()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
 
         await SeedPullRequestsAsync(
             team.Id,
@@ -413,6 +473,7 @@ public sealed class MetricsEndpointsTests
 
         metric.Should().NotBeNull();
         metric!.Value.Should().Be(4);
+        metric.DataStatus.Should().Be(MetricDataStatus.Available);
         metric.MetricType.Should()
             .Be(MetricType.CycleTime);
     }
@@ -448,9 +509,11 @@ public sealed class MetricsEndpointsTests
     }
 
     [Fact]
-    public async Task CalculateCycleTime_ShouldReturnZero_WhenNoPullRequestsExist()
+    public async Task CalculateCycleTime_ShouldReturnNoData_WhenNoMergedPullRequestsExist()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
 
         var response = await _client.PostAsync(
             $"/teams/{team.Id}/metrics/cycle-time" +
@@ -465,14 +528,16 @@ public sealed class MetricsEndpointsTests
             await response.Content
                 .ReadApiJsonAsync<EngineeringMetricResponse>();
 
-        result.Should().NotBeNull();
-        result!.Value.Should().Be(0);
+        result!.Value.Should().BeNull();
+        result.DataStatus.Should().Be(MetricDataStatus.NoData);
     }
     
     [Fact]
     public async Task CalculatePRReviewTime_ShouldReturnMetric()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
 
         await SeedPullRequestWithReviewAsync(
             team.Id,
@@ -496,12 +561,15 @@ public sealed class MetricsEndpointsTests
         result.MetricType.Should()
             .Be(MetricType.PRReviewTime);
         result.Value.Should().Be(4);
+        result.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]
-    public async Task CalculatePRReviewTime_ShouldReturnZero_WhenNoReviewExists()
+    public async Task CalculatePRReviewTime_ShouldReturnNoData_WhenNoReviewExists()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
 
         await SeedPullRequestAsync(
             team.Id,
@@ -520,8 +588,8 @@ public sealed class MetricsEndpointsTests
             await response.Content
                 .ReadApiJsonAsync<EngineeringMetricResponse>();
 
-        result.Should().NotBeNull();
-        result!.Value.Should().Be(0);
+        result!.Value.Should().BeNull();
+        result.DataStatus.Should().Be(MetricDataStatus.NoData);
     }
     
     [Fact]
@@ -543,6 +611,8 @@ public sealed class MetricsEndpointsTests
     public async Task CalculateDeploymentFrequency_ShouldReturnMetric()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
         var teamId = team.Id;
 
         await SeedDeploymentAsync(
@@ -573,12 +643,15 @@ public sealed class MetricsEndpointsTests
         result!.MetricType.Should()
             .Be(MetricType.DeploymentFrequency);
         result.Value.Should().Be(2);
+        result.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]
     public async Task CalculateDeploymentFrequency_ShouldIgnoreFailedDeployments()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
         var teamId = team.Id;
 
         await SeedDeploymentAsync(
@@ -607,6 +680,7 @@ public sealed class MetricsEndpointsTests
 
         result.Should().NotBeNull();
         result!.Value.Should().Be(1);
+        result.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]
@@ -629,6 +703,8 @@ public sealed class MetricsEndpointsTests
     public async Task CalculateChangeFailureRate_ShouldReturnMetric()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
         var teamId = team.Id;
 
         await SeedDeploymentAsync(
@@ -664,11 +740,14 @@ public sealed class MetricsEndpointsTests
         result!.MetricType.Should()
             .Be(MetricType.ChangeFailureRate);
         result.Value.Should().Be(66.67m);
+        result.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     [Fact]
-    public async Task CalculateChangeFailureRate_ShouldReturnZero_WhenNoDeploymentsExist()
+    public async Task CalculateChangeFailureRate_ShouldReturnNoData_WhenNoDeploymentsExist()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
         var teamId = team.Id;
 
         var response =
@@ -688,7 +767,8 @@ public sealed class MetricsEndpointsTests
         result.Should().NotBeNull();
         result!.MetricType.Should()
             .Be(MetricType.ChangeFailureRate);
-        result.Value.Should().Be(0m);
+        result!.Value.Should().BeNull();
+        result.DataStatus.Should().Be(MetricDataStatus.NoData);
     }
     
     [Fact]
@@ -712,6 +792,8 @@ public sealed class MetricsEndpointsTests
     {
         var team = await CreateTeamAsync();
 
+        await ConfigureJiraAsync(team.Id);
+
         await SeedJiraWorkItemAsync(
             team.Id,
             isBlocked: false,
@@ -734,12 +816,15 @@ public sealed class MetricsEndpointsTests
         metric.Should().NotBeNull();
         metric!.MetricType.Should().Be(MetricType.LeadTime);
         metric.Value.Should().Be(10);
+        metric.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]
     public async Task CalculateLeadTime_ShouldIgnoreIncompleteWorkItems()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureJiraAsync(team.Id);
 
         // Completed Jira item -> 10h Lead Time
         await SeedJiraWorkItemAsync(
@@ -772,6 +857,7 @@ public sealed class MetricsEndpointsTests
         metric.Should().NotBeNull();
         metric!.MetricType.Should().Be(MetricType.LeadTime);
         metric.Value.Should().Be(10);
+        metric.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]
@@ -792,6 +878,8 @@ public sealed class MetricsEndpointsTests
     {
         var team = await CreateTeamAsync();
 
+        await ConfigureGitHubAsync(team.Id);
+
         await SeedPullRequestAsync(
             team.Id,
             TimeSpan.FromHours(10));
@@ -811,12 +899,15 @@ public sealed class MetricsEndpointsTests
         metric!.TeamId.Should().Be(team.Id);
         metric.MetricType.Should().Be(MetricType.OpenPRs);
         metric.Value.Should().Be(0);
+        metric.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]
     public async Task CalculateOpenPullRequests_ShouldCountOpenPullRequests()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
 
         await SeedPullRequestAsync(
             team.Id,
@@ -841,6 +932,7 @@ public sealed class MetricsEndpointsTests
 
         metric.Should().NotBeNull();
         metric!.Value.Should().Be(2);
+        metric.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]
@@ -860,6 +952,8 @@ public sealed class MetricsEndpointsTests
     public async Task CalculateOpenPullRequests_ShouldUsePeriodEndAsSnapshot()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
 
         // Created before September, still open -> included
         await SeedPullRequestAsync(
@@ -900,12 +994,15 @@ public sealed class MetricsEndpointsTests
         result.Should().NotBeNull();
         result!.MetricType.Should().Be(MetricType.OpenPRs);
         result.Value.Should().Be(2);
+        result.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]
     public async Task CalculateMergedPullRequests_ShouldReturnMetric()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
         var teamId = team.Id;
         
         await SeedPullRequestAsync(
@@ -926,12 +1023,15 @@ public sealed class MetricsEndpointsTests
         result.Should().NotBeNull();
         result!.MetricType.Should().Be(MetricType.MergedPRs);
         result.Value.Should().Be(1);
+        result.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]
     public async Task CalculateMergedPullRequests_ShouldIgnoreUnmergedPullRequests()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureGitHubAsync(team.Id);
         var teamId = team.Id;
 
         await SeedPullRequestAsync(
@@ -952,6 +1052,7 @@ public sealed class MetricsEndpointsTests
         result.Should().NotBeNull();
         result!.MetricType.Should().Be(MetricType.MergedPRs);
         result.Value.Should().Be(0);
+        result.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]
@@ -971,6 +1072,8 @@ public sealed class MetricsEndpointsTests
     public async Task CalculateBlockedItems_ShouldReturnMetric()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureJiraAsync(team.Id);
         var teamId = team.Id;
 
         await SeedJiraWorkItemAsync(
@@ -990,12 +1093,15 @@ public sealed class MetricsEndpointsTests
         result.Should().NotBeNull();
         result!.MetricType.Should().Be(MetricType.BlockedItems);
         result.Value.Should().Be(1);
+        result.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]
     public async Task CalculateBlockedItems_ShouldIgnoreNonBlockedItems()
     {
         var team = await CreateTeamAsync();
+
+        await ConfigureJiraAsync(team.Id);
         var teamId = team.Id;
 
         await SeedJiraWorkItemAsync(
@@ -1015,6 +1121,7 @@ public sealed class MetricsEndpointsTests
         result.Should().NotBeNull();
         result!.MetricType.Should().Be(MetricType.BlockedItems);
         result.Value.Should().Be(0);
+        result.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]
@@ -1099,6 +1206,8 @@ public sealed class MetricsEndpointsTests
     {
         var team = await CreateTeamAsync();
 
+        await ConfigureGitHubAsync(team.Id);
+
         // Created in August, merged in September -> included
         await SeedPullRequestAsync(
             team.Id,
@@ -1137,6 +1246,7 @@ public sealed class MetricsEndpointsTests
             .Be(MetricType.MergedPRs);
 
         result.Value.Should().Be(1);
+        result.DataStatus.Should().Be(MetricDataStatus.Available);
     }
     
     [Fact]

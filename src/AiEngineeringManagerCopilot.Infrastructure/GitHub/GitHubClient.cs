@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.GitHub;
+using AiEngineeringManagerCopilot.Domain.Enums;
 
 namespace AiEngineeringManagerCopilot.Infrastructure.GitHub;
 
@@ -17,32 +18,29 @@ public sealed class GitHubClient(
     
     private static readonly JsonSerializerOptions JsonOptions =
         new(JsonSerializerDefaults.Web);
-
-    public async Task<GitHubOrganization?> GetOrganizationAsync(
-        string organization,
+    
+    public async Task<GitHubOwner?> GetOwnerAsync(
+        string owner,
+        GitHubOwnerType ownerType,
         string accessToken,
         CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(
-            HttpMethod.Get,
-            $"orgs/{Uri.EscapeDataString(organization)}");
+        var relativeUrl = ownerType switch
+        {
+            GitHubOwnerType.User =>
+                $"users/{Uri.EscapeDataString(owner)}",
 
-        request.Headers.Authorization =
-            new AuthenticationHeaderValue(
-                "Bearer",
-                accessToken);
+            GitHubOwnerType.Organization =>
+                $"orgs/{Uri.EscapeDataString(owner)}",
 
-        request.Headers.UserAgent.ParseAdd(
-            "AiEngineeringManagerCopilot/1.0");
-
-        request.Headers.Accept.Add(
-            new MediaTypeWithQualityHeaderValue(
-                "application/vnd.github+json"));
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(ownerType),
+                ownerType,
+                "Unsupported GitHub owner type.")
+        };
 
         using var response = await SendWithRetryAsync(
-            () => CreateRequest(
-                $"orgs/{Uri.EscapeDataString(organization)}",
-                accessToken),
+            () => CreateRequest(relativeUrl, accessToken),
             cancellationToken);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
@@ -53,26 +51,60 @@ public sealed class GitHubClient(
         response.EnsureSuccessStatusCode();
 
         await using var stream =
-            await response.Content.ReadAsStreamAsync(
-                cancellationToken);
+            await response.Content.ReadAsStreamAsync(cancellationToken);
 
-        var githubOrganization =
-            await JsonSerializer.DeserializeAsync<GitHubOrganizationDto>(
-                stream,
-                JsonOptions,
-                cancellationToken);
+        var dto = await JsonSerializer.DeserializeAsync<GitHubOwnerDto>(
+            stream,
+            JsonOptions,
+            cancellationToken);
 
-        if (githubOrganization is null)
+        if (dto is null)
         {
             throw new InvalidOperationException(
-                "GitHub returned an empty organization response.");
+                "GitHub returned an empty owner response.");
         }
 
-        return new GitHubOrganization(
-            githubOrganization.Id,
-            githubOrganization.Login,
-            githubOrganization.Name ?? string.Empty,
-            githubOrganization.HtmlUrl);
+        return new GitHubOwner(
+            dto.Id,
+            dto.Login,
+            dto.Name ?? string.Empty,
+            dto.HtmlUrl);
+    }
+
+    public async Task<IReadOnlyList<GitHubRepository>> GetRepositoriesAsync(
+        string owner,
+        GitHubOwnerType ownerType,
+        string accessToken,
+        CancellationToken cancellationToken)
+    {
+        var relativeUrl = ownerType switch
+        {
+            GitHubOwnerType.User =>
+                $"users/{Uri.EscapeDataString(owner)}/repos",
+
+            GitHubOwnerType.Organization =>
+                $"orgs/{Uri.EscapeDataString(owner)}/repos",
+
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(ownerType),
+                ownerType,
+                "Unsupported GitHub owner type.")
+        };
+
+        var repositories =
+            await GetAllPagesAsync<GitHubRepositoryDto>(
+                relativeUrl,
+                accessToken,
+                cancellationToken);
+
+        return repositories
+            .Select(x => new GitHubRepository(
+                x.Id,
+                x.Name,
+                x.FullName,
+                x.HtmlUrl,
+                x.DefaultBranch))
+            .ToList();
     }
 
     public async Task<IReadOnlyList<GitHubRepository>>
@@ -447,5 +479,12 @@ public sealed class GitHubClient(
         string State,
         [property: JsonPropertyName("created_at")]
         DateTimeOffset CreatedAt);
+    
+    private sealed record GitHubOwnerDto(
+        long Id,
+        string Login,
+        string? Name,
+        [property: JsonPropertyName("html_url")]
+        string HtmlUrl);
 }
 

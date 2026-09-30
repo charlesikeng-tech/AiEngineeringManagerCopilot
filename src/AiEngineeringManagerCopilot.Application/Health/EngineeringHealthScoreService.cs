@@ -108,16 +108,23 @@ public sealed class EngineeringHealthScoreService(
         DateOnly periodEnd,
         CancellationToken cancellationToken)
     {
-        var metrics = await metricRepository.GetByTeamAndPeriodAsync(
+        var metric = await metricRepository.GetByTeamAndPeriodAsync(
             teamId,
             metricType,
             periodStart,
             periodEnd,
             cancellationToken);
 
-        return metrics
-            .OrderByDescending(x => x.CreatedAt)
-            .Select(x => (decimal?)x.Value)
-            .FirstOrDefault();
+        if (metric is null)
+        {
+            return null;
+        }
+
+        if (metric.DataStatus != MetricDataStatus.Available)
+        {
+            return null;
+        }
+
+        return metric.Value;
     }
 }

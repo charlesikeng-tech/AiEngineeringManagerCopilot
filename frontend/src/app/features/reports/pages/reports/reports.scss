@@ -1,215 +1,376 @@
-:host {
-  display: block;
-}
+/* =========================================================
+   REPORTS
+   Shared layout/card/section styles live in styles.scss.
+   ========================================================= */
 
-.reports-page {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
 
-  width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
-}
+/* ---------------------------------------------------------
+   Header summary
+   --------------------------------------------------------- */
 
-.page-header {
-  padding: 4px 0 8px;
+.report-summary {
+  min-width: 140px;
 
-  h1 {
-    margin: 0;
+  padding: var(--app-space-md);
 
-    color: var(--app-text-primary);
-    font-size: 24px;
-    font-weight: 650;
-    letter-spacing: -0.025em;
-    line-height: 1.25;
-  }
+  background: var(--app-surface);
 
-  p {
-    margin: 6px 0 0;
-
-    color: var(--app-text-secondary);
-    font-size: 14px;
-  }
-}
-
-.history-card {
   border: 1px solid var(--app-border);
   border-radius: var(--app-radius-lg);
+
   box-shadow: var(--app-shadow-sm);
 
-  ::ng-deep .ant-card-body {
-    padding: 0;
-  }
-}
+  strong {
+    display: block;
 
-.section-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-
-  padding: 22px 24px;
-
-  border-bottom: 1px solid var(--app-border);
-
-  h2 {
-    margin: 0;
+    margin-top: var(--app-space-xs);
 
     color: var(--app-text-primary);
-    font-size: 16px;
+
+    font-size: 24px;
     font-weight: 600;
-  }
-
-  p {
-    margin: 4px 0 0;
-
-    color: var(--app-text-secondary);
-    font-size: 13px;
+    line-height: 1;
   }
 }
 
-.report-count {
+.report-summary__label {
   color: var(--app-text-tertiary);
-  font-size: 12px;
-  font-weight: 500;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+
+/* ---------------------------------------------------------
+   Loading / Error
+   --------------------------------------------------------- */
+
+.reports-loading {
+  padding:
+    var(--app-space-md) 0;
+}
+
+.reports-error {
+  padding: var(--app-space-md);
+
+  color: var(--app-danger);
+
+  background:
+    rgb(240 68 56 / 5%);
+
+  border:
+    1px solid rgb(240 68 56 / 15%);
+
+  border-radius:
+    var(--app-radius-md);
+}
+
+
+/* ---------------------------------------------------------
+   Report list
+   --------------------------------------------------------- */
+
+.report-list {
+  display: flex;
+  flex-direction: column;
+
+  border-top:
+    1px solid var(--app-border);
 }
 
 .report-row {
   display: grid;
+
   grid-template-columns:
-    minmax(180px, 1.5fr) 100px minmax(140px, 1fr) 120px auto;
+    minmax(180px, 1.5fr) 100px minmax(140px, 1fr) 100px 120px;
+
   align-items: center;
-  gap: 24px;
 
-  min-height: 88px;
-  padding: 16px 24px;
+  gap: var(--app-space-lg);
 
-  border-bottom: 1px solid var(--app-border);
+  min-height: 84px;
+
+  padding:
+    var(--app-space-md) 0;
+
+  border-bottom:
+    1px solid var(--app-border);
+
+  transition:
+    background 160ms ease;
 
   &:last-child {
     border-bottom: 0;
   }
 
   &:hover {
-    background: var(--app-surface-secondary);
+    background:
+      var(--app-surface-secondary);
   }
 }
 
-.report-period,
-.coverage {
+
+/* ---------------------------------------------------------
+   Period
+   --------------------------------------------------------- */
+
+.report-period {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+
+  gap: 2px;
 }
 
 .report-month {
   color: var(--app-text-primary);
+
   font-size: 14px;
   font-weight: 600;
 }
 
-.report-dates,
-.coverage span {
-  color: var(--app-text-tertiary);
+.report-dates {
+  color: var(--app-text-secondary);
+
   font-size: 12px;
 }
+
+
+/* ---------------------------------------------------------
+   Score
+   --------------------------------------------------------- */
 
 .report-score {
   display: flex;
   align-items: baseline;
-  gap: 2px;
 
   strong {
     color: var(--app-text-primary);
+
     font-size: 20px;
-    font-weight: 650;
+    font-weight: 600;
   }
 
   span {
+    margin-left: 2px;
+
     color: var(--app-text-tertiary);
-    font-size: 12px;
+
+    font-size: 11px;
   }
 }
+
+
+/* ---------------------------------------------------------
+   Health
+   --------------------------------------------------------- */
 
 .health-status {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+
+  width: fit-content;
+
+  gap: 7px;
 
   color: var(--app-text-secondary);
+
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .health-status-dot {
   width: 7px;
   height: 7px;
-  flex: 0 0 7px;
 
   border-radius: 50%;
-  background: currentColor;
+
+  background:
+    var(--app-text-tertiary);
 }
 
 .health-status--healthy {
-  color: var(--app-success);
+  .health-status-dot {
+    background:
+      var(--app-success);
+  }
 }
 
 .health-status--attention {
-  color: var(--app-warning);
+  .health-status-dot {
+    background:
+      var(--app-warning);
+  }
 }
 
 .health-status--critical {
-  color: var(--app-danger);
-}
-
-.coverage {
-  strong {
-    color: var(--app-text-primary);
-    font-size: 13px;
-    font-weight: 600;
+  .health-status-dot {
+    background:
+      var(--app-danger);
   }
 }
 
+
+/* ---------------------------------------------------------
+   Coverage
+   --------------------------------------------------------- */
+
+.coverage {
+  display: flex;
+  flex-direction: column;
+
+  strong {
+    color: var(--app-text-primary);
+
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  span {
+    color: var(--app-text-tertiary);
+
+    font-size: 11px;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   Action
+   --------------------------------------------------------- */
+
 .view-report {
+  justify-self: end;
+
   color: var(--app-primary);
+
   font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
+  font-weight: 500;
+
+  text-decoration: none;
+
+  transition:
+    opacity 160ms ease;
+
+  &:hover {
+    opacity: 0.75;
+  }
 }
 
-.state-message,
-.empty-state {
-  padding: 48px 24px;
-}
 
-.state-message--error {
-  color: var(--app-danger);
-}
+/* ---------------------------------------------------------
+   Responsive
+   --------------------------------------------------------- */
 
 @media (max-width: 900px) {
   .report-row {
-    grid-template-columns: 1fr auto;
-    gap: 12px 24px;
-  }
+    grid-template-columns:
+      minmax(160px, 1fr) 80px minmax(130px, 1fr);
 
-  .report-score,
-  .health-status,
-  .coverage {
-    justify-self: start;
-  }
+    .coverage {
+      display: none;
+    }
 
-  .view-report {
-    justify-self: end;
+    .view-report {
+      justify-self: start;
+    }
   }
 }
 
-@media (max-width: 575px) {
-  .report-row {
-    grid-template-columns: 1fr;
+@media (max-width: 640px) {
+  .report-summary {
+    width: 100%;
   }
 
-  .view-report {
-    justify-self: start;
+  .report-row {
+    grid-template-columns:
+      1fr auto;
+
+    gap:
+      var(--app-space-sm) var(--app-space-md);
+
+    padding:
+      var(--app-space-md) 0;
+
+    .health-status {
+      grid-column: 1;
+    }
+
+    .coverage {
+      display: none;
+    }
+
+    .view-report {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+
+      align-self: center;
+    }
+  }
+}
+
+
+/* =========================================================
+   REPORT HISTORY DELTAS
+   ========================================================= */
+
+.report-score,
+.coverage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.report-value {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.report-delta,
+.coverage-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  min-height: 18px;
+
+  color: var(--app-text-tertiary);
+
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.report-delta--up {
+  color: var(--app-success);
+}
+
+.report-delta--down {
+  color: var(--app-danger);
+}
+
+.report-delta--flat {
+  color: var(--app-text-tertiary);
+}
+
+/*
+ * Coverage deltas are intentionally neutral.
+ * More/less coverage describes observability completeness,
+ * not better/worse engineering performance.
+ */
+.coverage-delta--up,
+.coverage-delta--down,
+.coverage-delta--flat {
+  color: var(--app-text-secondary);
+}
+
+@media (max-width: 768px) {
+  .report-delta,
+  .coverage-delta {
+    white-space: normal;
   }
 }

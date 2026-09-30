@@ -9,8 +9,14 @@ public sealed record AIAnalysisContext(
     DateOnly PeriodStart,
     DateOnly PeriodEnd,
     int OverallScore,
+    decimal DataCoverage,
     string ExecutiveSummary,
-    IReadOnlyDictionary<MetricType, decimal> Metrics,
+    IReadOnlyList<AIAnalysisMetricContext> Metrics,
     IReadOnlyList<EngineeringInsight> Insights,
     IReadOnlyList<EngineeringRisk> Risks,
     IReadOnlyList<MetricTrendResult> Trends);
+
+public sealed record AIAnalysisMetricContext(
+    MetricType MetricType,
+    decimal? Value,
+    MetricDataStatus DataStatus);

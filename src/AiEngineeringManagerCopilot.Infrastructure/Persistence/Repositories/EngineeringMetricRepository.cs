@@ -18,22 +18,21 @@ public sealed class EngineeringMetricRepository(
             cancellationToken);
     }
 
-    public async Task<IReadOnlyList<EngineeringMetric>>
-        GetByTeamAndPeriodAsync(
-            Guid teamId,
-            MetricType metricType,
-            DateOnly periodStart,
-            DateOnly periodEnd,
-            CancellationToken cancellationToken)
+    public async Task<EngineeringMetric?> GetByTeamAndPeriodAsync(
+        Guid teamId,
+        MetricType metricType,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        CancellationToken cancellationToken)
     {
         return await dbContext.EngineeringMetrics
-            .Where(x =>
-                x.TeamId == teamId &&
-                x.MetricType == metricType &&
-                x.PeriodStart == periodStart &&
-                x.PeriodEnd == periodEnd)
-            .OrderBy(x => x.PeriodStart)
-            .ToListAsync(cancellationToken);
+            .SingleOrDefaultAsync(
+                x =>
+                    x.TeamId == teamId &&
+                    x.MetricType == metricType &&
+                    x.PeriodStart == periodStart &&
+                    x.PeriodEnd == periodEnd,
+                cancellationToken);
     }
 
     public async Task<IReadOnlyList<EngineeringMetric>> GetLatestByTeamAsync(

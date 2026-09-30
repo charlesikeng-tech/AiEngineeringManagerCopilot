@@ -39,7 +39,10 @@ public sealed class AIAnalysisService(
             throw new KeyNotFoundException(
                 $"Report '{reportId}' was not found.");
         }
-        
+
+        // Idempotence:
+        // if an analysis already exists for this report,
+        // return the persisted result without calling the LLM again.
         var existingAnalysis = await analysisRepository.GetByReportIdAsync(
             reportId,
             cancellationToken);
@@ -60,7 +63,7 @@ public sealed class AIAnalysisService(
                 await analysisEvidenceRepository.GetByAnalysisIdAsync(
                     existingAnalysis.Id,
                     cancellationToken);
-            
+
             return new AIAnalysisResult(
                 existingAnalysis.Summary,
                 existingInsights
@@ -83,20 +86,30 @@ public sealed class AIAnalysisService(
                         x.Value,
                         x.Reason,
                         x.Confidence))
-                .ToList());
+                    .ToList());
         }
 
-        var metrics = await GetMetricsAsync(
+        // Metrics that can safely participate in calculations,
+        // trends and evidence validation.
+        var metrics = await GetAvailableMetricsAsync(
             teamId,
             report.PeriodStart,
             report.PeriodEnd,
             cancellationToken);
-        
+
+        // Complete metric context for the LLM.
+        // This includes Available, NoData and SourceNotConfigured.
+        var metricContext = await GetMetricContextAsync(
+            teamId,
+            report.PeriodStart,
+            report.PeriodEnd,
+            cancellationToken);
+
         var previousPeriod = previousPeriodCalculator.Calculate(
             report.PeriodStart,
             report.PeriodEnd);
 
-        var previousMetrics = await GetMetricsAsync(
+        var previousMetrics = await GetAvailableMetricsAsync(
             teamId,
             previousPeriod.Start,
             previousPeriod.End,
@@ -128,8 +141,9 @@ public sealed class AIAnalysisService(
             report.PeriodStart,
             report.PeriodEnd,
             report.OverallScore,
+            report.DataCoverage,
             report.ExecutiveSummary,
-            metrics,
+            metricContext,
             analysisInsights,
             risks,
             trends);
@@ -139,7 +153,9 @@ public sealed class AIAnalysisService(
         var result = await llmProvider.AnalyzeAsync(
             prompt,
             cancellationToken);
-        
+
+        // The LLM sees the complete metric context,
+        // but only Available metrics can be accepted as evidence.
         evidenceValidator.Validate(
             result.SafeEvidence,
             metrics);
@@ -179,14 +195,7 @@ public sealed class AIAnalysisService(
                 Priority = x.Priority
             })
             .ToList();
-        
-        if (persistedActions.Count > 0)
-        {
-            await analysisActionRepository.AddRangeAsync(
-                persistedActions,
-                cancellationToken);
-        }
-        
+
         var persistedEvidence = result.SafeEvidence
             .Select(x =>
             {
@@ -212,14 +221,14 @@ public sealed class AIAnalysisService(
                 persistedInsights,
                 cancellationToken);
         }
-        
+
         if (persistedActions.Count > 0)
         {
             await analysisActionRepository.AddRangeAsync(
                 persistedActions,
                 cancellationToken);
         }
-        
+
         if (persistedEvidence.Count > 0)
         {
             await analysisEvidenceRepository.AddRangeAsync(
@@ -301,29 +310,86 @@ public sealed class AIAnalysisService(
                 .ToList());
     }
 
-    private async Task<IReadOnlyDictionary<MetricType, decimal>> GetMetricsAsync(
-        Guid teamId,
-        DateOnly periodStart,
-        DateOnly periodEnd,
-        CancellationToken cancellationToken)
+    /// <summary>
+    /// Returns only metrics that contain an actual observable value.
+    ///
+    /// These metrics are used for deterministic calculations,
+    /// trends and evidence validation.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<MetricType, decimal>>
+        GetAvailableMetricsAsync(
+            Guid teamId,
+            DateOnly periodStart,
+            DateOnly periodEnd,
+            CancellationToken cancellationToken)
     {
         var metrics = new Dictionary<MetricType, decimal>();
 
         foreach (var metricType in Enum.GetValues<MetricType>())
         {
-            var values = await metricRepository.GetByTeamAndPeriodAsync(
+            var metric = await metricRepository.GetByTeamAndPeriodAsync(
                 teamId,
                 metricType,
                 periodStart,
                 periodEnd,
                 cancellationToken);
 
-            var metric = values.FirstOrDefault();
-
-            if (metric is not null)
+            if (metric is null)
             {
-                metrics[metricType] = metric.Value;
+                continue;
             }
+
+            if (metric.DataStatus != MetricDataStatus.Available)
+            {
+                continue;
+            }
+
+            if (!metric.Value.HasValue)
+            {
+                continue;
+            }
+
+            metrics[metricType] = metric.Value.Value;
+        }
+
+        return metrics;
+    }
+
+    /// <summary>
+    /// Returns the complete metric state for the AI context.
+    ///
+    /// Unlike GetAvailableMetricsAsync, this method intentionally keeps
+    /// NoData and SourceNotConfigured metrics so that the LLM understands
+    /// which engineering dimensions are not observable.
+    /// </summary>
+    private async Task<IReadOnlyList<AIAnalysisMetricContext>>
+        GetMetricContextAsync(
+            Guid teamId,
+            DateOnly periodStart,
+            DateOnly periodEnd,
+            CancellationToken cancellationToken)
+    {
+        var metrics = new List<AIAnalysisMetricContext>();
+
+        foreach (var metricType in Enum.GetValues<MetricType>())
+        {
+            var metric = await metricRepository.GetByTeamAndPeriodAsync(
+                teamId,
+                metricType,
+                periodStart,
+                periodEnd,
+                cancellationToken);
+
+            if (metric is null)
+            {
+                continue;
+            }
+
+            metrics.Add(
+                new AIAnalysisMetricContext(
+                    metric.MetricType,
+                    metric.Value,
+                    metric.DataStatus));
         }
 
         return metrics;

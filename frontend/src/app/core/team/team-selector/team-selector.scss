@@ -1,34 +1,121 @@
-:host {
-  display: block;
-}
+/* =========================================================
+   TEAM SELECTOR
+   Global workspace context selector.
+   ========================================================= */
 
 .team-selector {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+
+  min-width: 210px;
+
+  gap: 10px;
 }
 
-.team-label {
+
+/* ---------------------------------------------------------
+   Icon
+   --------------------------------------------------------- */
+
+.team-selector__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
+  flex: 0 0 32px;
+
+  color: var(--app-primary);
+
+  background: var(--app-primary-soft);
+
+  border-radius: 8px;
+
+  font-size: 14px;
+}
+
+
+/* ---------------------------------------------------------
+   Content
+   --------------------------------------------------------- */
+
+.team-selector__content {
+  display: flex;
+
+  min-width: 0;
+
+  flex: 1;
+  flex-direction: column;
+
+  gap: 0;
+}
+
+.team-selector__label {
+  padding-left: 11px;
+
+  color: var(--app-text-tertiary);
+
+  font-size: 8px;
+  font-weight: 700;
+
+  line-height: 1;
+
+  letter-spacing: 0.1em;
+}
+
+
+/* ---------------------------------------------------------
+   Select
+   --------------------------------------------------------- */
+
+.team-selector__select {
+  width: 170px;
+}
+
+:host ::ng-deep .team-selector__select .ant-select-selector {
+  height: 26px !important;
+
+  padding: 0 11px !important;
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+}
+
+:host ::ng-deep .team-selector__select .ant-select-selection-item,
+:host ::ng-deep .team-selector__select .ant-select-selection-placeholder {
+  color: var(--app-text-primary);
+
+  font-size: 12px;
+  font-weight: 600;
+
+  line-height: 26px !important;
+}
+
+:host ::ng-deep .team-selector__select .ant-select-arrow {
   color: var(--app-text-tertiary);
 
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
-.team-select {
-  min-width: 200px;
 
-  ::ng-deep .ant-select-selector {
-    border-color: var(--app-border) !important;
-    border-radius: 8px !important;
-    box-shadow: none !important;
+/* ---------------------------------------------------------
+   Responsive
+   --------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .team-selector {
+    min-width: 0;
   }
 
-  ::ng-deep .ant-select-selection-item {
-    color: var(--app-text-primary);
-    font-size: 13px;
-    font-weight: 500;
+  .team-selector__icon,
+  .team-selector__label {
+    display: none;
+  }
+
+  .team-selector__select {
+    width: 150px;
   }
 }
