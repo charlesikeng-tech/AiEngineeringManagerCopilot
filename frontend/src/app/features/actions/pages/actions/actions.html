@@ -26,19 +26,25 @@
         <p>Track and manage the actions identified from the latest engineering report.</p>
       </div>
 
-      <div class="reporting-period">
-        <span class="reporting-period__label"> REPORTING PERIOD </span>
+      <div class="page-context">
+        <div class="reporting-period">
+          <span class="reporting-period__label"> REPORTING PERIOD </span>
 
-        <strong>
-          {{ actionData.periodStart | date: 'MMM d, y' }}
-          –
-          {{ actionData.periodEnd | date: 'MMM d, y' }}
-        </strong>
+          <strong>
+            {{ actionData.periodStart | date: 'MMM d, y' }}
+            –
+            {{ actionData.periodEnd | date: 'MMM d, y' }}
+          </strong>
+        </div>
+
+        <a
+          class="app-button app-button--secondary"
+          [routerLink]="['/reports', actionData.reportId]"
+        >
+          View source report
+          <span aria-hidden="true">→</span>
+        </a>
       </div>
-
-      <a class="source-report-link" [routerLink]="['/reports', actionData.reportId]">
-        View source report <span aria-hidden="true">→</span>
-      </a>
     </header>
 
     @if (actions().length === 0) {
@@ -133,7 +139,8 @@
 
             @if (overdueCount() > 0) {
               <span class="overdue-summary">
-                {{ overdueCount() }} {{ overdueCount() === 1 ? 'overdue action' : 'overdue actions' }}
+                {{ overdueCount() }}
+                {{ overdueCount() === 1 ? 'overdue action' : 'overdue actions' }}
               </span>
             }
           </div>
@@ -235,9 +242,12 @@
                   <div class="field-label-row">
                     <span class="field-label"> DUE DATE </span>
                     @if (dueLabel(action); as label) {
-                      <span class="due-state"
+                      <span
+                        class="due-state"
                         [class.due-state--overdue]="dueState(action) === 'overdue'"
-                        [class.due-state--soon]="dueState(action) === 'soon'">{{ label }}</span>
+                        [class.due-state--soon]="dueState(action) === 'soon'"
+                        >{{ label }}</span
+                      >
                     }
                   </div>
 

@@ -8,42 +8,6 @@
    Reporting period
    --------------------------------------------------------- */
 
-.reporting-period {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-
-  gap: 3px;
-
-  padding: var(--app-space-md);
-
-  background: var(--app-surface);
-
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-lg);
-
-  box-shadow: var(--app-shadow-sm);
-
-  strong {
-    color: var(--app-text-primary);
-
-    font-size: 13px;
-    font-weight: 600;
-
-    white-space: nowrap;
-  }
-}
-
-.reporting-period__label {
-  color: var(--app-text-tertiary);
-
-  font-size: 10px;
-  font-weight: 600;
-
-  letter-spacing: 0.06em;
-}
-
-
 /* ---------------------------------------------------------
    Action overview
    --------------------------------------------------------- */
@@ -442,14 +406,73 @@
 
 
 /* Action plan enhancements */
-.source-report-link { display:inline-flex; align-items:center; gap:6px; width:fit-content; color:var(--app-primary); font-size:12px; font-weight:600; text-decoration:none; transition:transform 160ms ease; &:hover { transform:translateX(2px); } }
-.overdue-summary { display:inline-flex; margin-top:var(--app-space-sm); padding:5px 9px; color:var(--app-danger); background:#fff1f0; border:1px solid #fecdca; border-radius:999px; font-size:11px; font-weight:700; }
-.field-label-row { display:flex; align-items:center; justify-content:space-between; gap:var(--app-space-sm); }
-.due-state { padding:3px 7px; border-radius:999px; font-size:10px; font-weight:700; white-space:nowrap; }
-.due-state--overdue { color:var(--app-danger); background:#fff1f0; }
-.due-state--soon { color:var(--app-warning); background:#fffaeb; }
-.action-field--overdue nz-date-picker { border-color:#fecdca; }
-.action-field--due-soon nz-date-picker { border-color:#fedf89; }
-.action-card { transition:box-shadow 160ms ease, transform 160ms ease; &:hover { transform:translateY(-1px); box-shadow:var(--app-shadow-md); } }
-@media (prefers-reduced-motion: reduce) { .source-report-link, .action-card { transition:none; } .source-report-link:hover, .action-card:hover { transform:none; } }
-@media (max-width:768px) { .source-report-link { align-self:flex-start; } .field-label-row { align-items:flex-start; flex-direction:column; } }
+.overdue-summary {
+  display: inline-flex;
+  margin-top: var(--app-space-sm);
+  padding: 5px 9px;
+  color: var(--app-danger);
+  background: #fff1f0;
+  border: 1px solid #fecdca;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+}
+
+.due-state {
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.due-state--overdue {
+  color: var(--app-danger);
+  background: #fff1f0;
+}
+
+.due-state--soon {
+  color: var(--app-warning);
+  background: #fffaeb;
+}
+
+.action-field--overdue nz-date-picker {
+  border-color: #fecdca;
+}
+
+.action-field--due-soon nz-date-picker {
+  border-color: #fedf89;
+}
+
+.action-card {
+  transition: box-shadow 160ms ease, transform 160ms ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--app-shadow-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-card {
+    transition: none;
+  }
+
+  .action-card:hover {
+    transform: none;
+  }
+}
+
+@media (max-width:768px) {
+  .field-label-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

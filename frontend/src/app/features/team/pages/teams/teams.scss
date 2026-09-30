@@ -8,30 +8,7 @@
    Team summary
    --------------------------------------------------------- */
 
-.team-summary {
-  min-width: 130px;
 
-  padding: var(--app-space-md);
-
-  background: var(--app-surface);
-
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-lg);
-
-  box-shadow: var(--app-shadow-sm);
-
-  strong {
-    display: block;
-
-    margin-top: var(--app-space-xs);
-
-    color: var(--app-text-primary);
-
-    font-size: 24px;
-    font-weight: 600;
-    line-height: 1;
-  }
-}
 
 .team-summary__label {
   color: var(--app-text-tertiary);

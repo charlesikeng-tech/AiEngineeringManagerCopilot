@@ -1,7 +1,7 @@
 <div class="app-page">
   <!-- Back navigation -->
 
-  <a routerLink="/reports" class="back-link"> ← Back to reports </a>
+  <a routerLink="/reports" class="app-button app-button--ghost app-button--compact back-link"> ← Back to reports </a>
 
   @if (loading()) {
     <div class="app-card loading-state">
@@ -157,7 +157,7 @@
           @if (analysis()) {
             <button
               type="button"
-              class="ai-action-button ai-action-button--secondary"
+              class="app-button app-button--secondary app-button--compact"
               [disabled]="analysisLoading() || analysisGenerating()"
               (click)="refreshAnalysis()"
             >
@@ -166,7 +166,7 @@
 
             <button
               type="button"
-              class="ai-action-button"
+              class="app-button app-button--primary app-button--compact"
               [disabled]="analysisLoading() || analysisGenerating()"
               (click)="generateAnalysis()"
             >
@@ -411,7 +411,7 @@
 
             <button
               type="button"
-              class="ai-action-button"
+              class="app-button app-button--primary app-button--compact"
               [disabled]="analysisGenerating()"
               (click)="generateAnalysis()"
             >
@@ -425,7 +425,7 @@
 
             <button
               type="button"
-              class="ai-action-button"
+              class="app-button app-button--primary app-button--compact"
               [disabled]="analysisGenerating()"
               (click)="generateAnalysis()"
             >

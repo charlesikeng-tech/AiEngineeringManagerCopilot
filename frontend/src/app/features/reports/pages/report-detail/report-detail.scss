@@ -2175,72 +2175,9 @@
 
 /* Primary / secondary AI actions */
 
-.ai-action-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 
-  min-height: 36px;
 
-  padding: 0 14px;
 
-  color: #fff;
-
-  background: var(--app-ai);
-
-  border: 1px solid var(--app-ai);
-  border-radius: var(--app-radius-md);
-
-  box-shadow: var(--app-shadow-sm);
-
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    opacity 160ms ease,
-    background 160ms ease,
-    border-color 160ms ease;
-
-  &:hover:not(:disabled) {
-    transform: translateY(-1px);
-
-    box-shadow: var(--app-shadow-md);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--app-ai);
-    outline-offset: 2px;
-  }
-
-  &:disabled {
-    opacity: 0.55;
-
-    box-shadow: none;
-
-    cursor: not-allowed;
-  }
-}
-
-.ai-action-button--secondary {
-  color: var(--app-ai);
-
-  background: var(--app-surface);
-
-  border-color: #ddd6fe;
-
-  &:hover:not(:disabled) {
-    background: #f5f3ff;
-  }
-}
 
 /* Analysis states */
 

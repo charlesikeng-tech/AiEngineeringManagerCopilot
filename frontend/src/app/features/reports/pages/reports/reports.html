@@ -11,10 +11,10 @@
     </div>
 
     @if (!loading() && reports().length > 0) {
-      <div class="report-summary">
-        <span class="report-summary__label"> REPORTS </span>
+      <div class="page-summary">
+        <span class="page-summary__label"> REPORTS </span>
 
-        <strong>
+        <strong class="page-summary__value">
           {{ reports().length }}
         </strong>
       </div>
@@ -138,7 +138,7 @@
 
               <!-- Action -->
 
-              <a class="view-report" [routerLink]="['/reports', report.id]">
+              <a class="app-button app-button--secondary app-button--compact" [routerLink]="['/reports', report.id]">
                 View report
                 <span aria-hidden="true">→</span>
               </a>
