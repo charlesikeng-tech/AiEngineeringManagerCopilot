@@ -57,32 +57,47 @@ public sealed class BlockedItemsCalculatorTests
     }
 
     [Fact]
-    public void Calculate_ShouldIgnoreItemsOutsidePeriod()
+    public void Calculate_ShouldCountBlockedItemsRegardlessOfCreationDate()
     {
-        var workItems = new List<JiraWorkItem>
+        // Arrange
+        var workItems = new[]
         {
-            CreateWorkItem(
-                isBlocked: true,
-                new DateTimeOffset(
-                    2025, 12, 31, 10, 0, 0, TimeSpan.Zero)),
-
-            CreateWorkItem(
-                isBlocked: true,
-                new DateTimeOffset(
-                    2026, 1, 10, 10, 0, 0, TimeSpan.Zero)),
-
-            CreateWorkItem(
-                isBlocked: true,
-                new DateTimeOffset(
-                    2026, 2, 1, 10, 0, 0, TimeSpan.Zero))
+            new JiraWorkItem
+            {
+                CreatedAt = new DateTimeOffset(
+                    2026, 8, 15, 10, 0, 0, TimeSpan.Zero),
+                IsBlocked = true
+            },
+            new JiraWorkItem
+            {
+                CreatedAt = new DateTimeOffset(
+                    2026, 9, 15, 10, 0, 0, TimeSpan.Zero),
+                IsBlocked = true
+            },
+            new JiraWorkItem
+            {
+                CreatedAt = new DateTimeOffset(
+                    2026, 10, 15, 10, 0, 0, TimeSpan.Zero),
+                IsBlocked = true
+            },
+            new JiraWorkItem
+            {
+                CreatedAt = new DateTimeOffset(
+                    2026, 9, 20, 10, 0, 0, TimeSpan.Zero),
+                IsBlocked = false
+            }
         };
 
-        var result = _calculator.Calculate(
-            workItems,
-            new DateOnly(2026, 1, 1),
-            new DateOnly(2026, 1, 31));
+        var sut = new BlockedItemsCalculator();
 
-        result.ItemsCount.Should().Be(1);
+        // Act
+        var result = sut.Calculate(
+            workItems,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        // Assert
+        result.ItemsCount.Should().Be(3);
     }
 
     [Fact]
@@ -118,6 +133,54 @@ public sealed class BlockedItemsCalculatorTests
             .Throw<ArgumentException>()
             .WithMessage(
                 "periodStart must be before or equal to periodEnd.");
+    }
+    
+    [Fact]
+    public void Calculate_ShouldCountBlockedItemCreatedBeforePeriod()
+    {
+        var workItems = new[]
+        {
+            new JiraWorkItem
+            {
+                CreatedAt = new DateTimeOffset(
+                    2026, 8, 15, 10, 0, 0, TimeSpan.Zero),
+                IsBlocked = true
+            }
+        };
+
+        var result = _calculator.Calculate(
+            workItems,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        Assert.Equal(1, result.ItemsCount);
+    }
+    
+    [Fact]
+    public void Calculate_ShouldIgnoreItemsThatAreNotBlocked()
+    {
+        var workItems = new[]
+        {
+            new JiraWorkItem
+            {
+                CreatedAt = DateTimeOffset.UtcNow,
+                IsBlocked = true
+            },
+            new JiraWorkItem
+            {
+                CreatedAt = DateTimeOffset.UtcNow,
+                IsBlocked = false
+            }
+        };
+
+        var sut = new BlockedItemsCalculator();
+
+        var result = sut.Calculate(
+            workItems,
+            new DateOnly(2026, 9, 1),
+            new DateOnly(2026, 9, 30));
+
+        result.ItemsCount.Should().Be(1);
     }
 
     private static JiraWorkItem CreateWorkItem(

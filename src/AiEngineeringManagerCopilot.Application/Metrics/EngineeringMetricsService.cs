@@ -380,6 +380,18 @@ public sealed class EngineeringMetricsService(
                 from,
                 to,
                 cancellationToken);
+        
+        if (workItems.Count == 0)
+        {
+            return await SaveMetricAsync(
+                teamId,
+                MetricType.LeadTime,
+                null,
+                MetricDataStatus.NoData,
+                periodStart,
+                periodEnd,
+                cancellationToken);
+        }
 
         var result = leadTimeCalculator.Calculate(
             workItems,
@@ -517,19 +529,9 @@ public sealed class EngineeringMetricsService(
                 cancellationToken);
         }
 
-        var from = new DateTimeOffset(
-            periodStart.ToDateTime(TimeOnly.MinValue),
-            TimeSpan.Zero);
-
-        var to = new DateTimeOffset(
-            periodEnd.ToDateTime(TimeOnly.MaxValue),
-            TimeSpan.Zero);
-
         var workItems =
-            await jiraWorkItemRepository.GetByTeamAndPeriodAsync(
+            await jiraWorkItemRepository.GetByTeamAsync(
                 teamId,
-                from,
-                to,
                 cancellationToken);
 
         var result = blockedItemsCalculator.Calculate(

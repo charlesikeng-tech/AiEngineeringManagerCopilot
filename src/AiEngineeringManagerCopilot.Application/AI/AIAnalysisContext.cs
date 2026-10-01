@@ -19,4 +19,7 @@ public sealed record AIAnalysisContext(
 public sealed record AIAnalysisMetricContext(
     MetricType MetricType,
     decimal? Value,
-    MetricDataStatus DataStatus);
+    MetricDataStatus DataStatus,
+    string? Unit = null,
+    MetricTemporalSemantics? TemporalSemantics = null,
+    string? Description = null);

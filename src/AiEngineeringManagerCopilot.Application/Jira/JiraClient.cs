@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -13,7 +14,7 @@ public sealed class JiraClient(
 {
     private readonly IJiraRetryDelay _retryDelay =
         retryDelay ?? new JiraRetryDelay();
-    
+
     public async Task<JiraCurrentUser?> GetCurrentUserAsync(
         string baseUrl,
         string email,
@@ -77,12 +78,13 @@ public sealed class JiraClient(
 
         do
         {
-            var jql = $"project = \"{projectKey}\" ORDER BY created ASC";
+            var jql =
+                $"project = \"{projectKey}\" ORDER BY created ASC";
 
             var query =
                 $"jql={Uri.EscapeDataString(jql)}" +
                 "&maxResults=100" +
-                "&fields=summary,status,assignee,created";
+                "&fields=summary,status,assignee,created,resolutiondate";
 
             if (!string.IsNullOrWhiteSpace(nextPageToken))
             {
@@ -122,6 +124,14 @@ public sealed class JiraClient(
 
             foreach (var issue in searchResult.Issues)
             {
+                var createdAt =
+                    ParseJiraDate(issue.Fields.Created);
+
+                var doneAt =
+                    string.IsNullOrWhiteSpace(issue.Fields.ResolutionDate)
+                        ? (DateTimeOffset?)null
+                        : ParseJiraDate(issue.Fields.ResolutionDate);
+
                 issues.Add(
                     new JiraIssue(
                         issue.Id,
@@ -129,8 +139,8 @@ public sealed class JiraClient(
                         issue.Fields.Summary,
                         issue.Fields.Status.Name,
                         issue.Fields.Assignee?.AccountId,
-                        issue.Fields.Created,
-                        issue.Fields.ResolutionDate,
+                        createdAt.UtcDateTime,
+                        doneAt?.UtcDateTime,
                         IsBlocked(issue.Fields.Status.Name)));
             }
 
@@ -193,7 +203,7 @@ public sealed class JiraClient(
         throw new InvalidOperationException(
             "Unexpected retry state.");
     }
-    
+
     private static TimeSpan GetRetryDelay(
         HttpResponseMessage response)
     {
@@ -215,7 +225,7 @@ public sealed class JiraClient(
 
         return TimeSpan.FromSeconds(1);
     }
-    
+
     private sealed record JiraCurrentUserDto(
         [property: JsonPropertyName("accountId")]
         string AccountId,
@@ -225,7 +235,7 @@ public sealed class JiraClient(
 
         [property: JsonPropertyName("emailAddress")]
         string? EmailAddress);
-    
+
     private sealed record JiraSearchResponseDto(
         [property: JsonPropertyName("issues")]
         IReadOnlyList<JiraIssueDto> Issues,
@@ -257,11 +267,10 @@ public sealed class JiraClient(
         JiraAssigneeDto? Assignee,
 
         [property: JsonPropertyName("created")]
-        DateTimeOffset Created,
+        string Created,
 
         [property: JsonPropertyName("resolutiondate")]
-        DateTimeOffset? ResolutionDate);
-    
+        string? ResolutionDate);
 
     private sealed record JiraStatusDto(
         [property: JsonPropertyName("name")]
@@ -270,7 +279,7 @@ public sealed class JiraClient(
     private sealed record JiraAssigneeDto(
         [property: JsonPropertyName("accountId")]
         string AccountId);
-    
+
     private static void SetAuthentication(
         HttpRequestMessage request,
         string email,
@@ -289,12 +298,53 @@ public sealed class JiraClient(
             new MediaTypeWithQualityHeaderValue(
                 "application/json"));
     }
-    
+
     private static bool IsBlocked(string status)
     {
         return string.Equals(
             status,
             "Blocked",
             StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static DateTimeOffset ParseJiraDate(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new FormatException(
+                "Jira date value cannot be empty.");
+        }
+
+        // Standard ISO-8601 representations, including UTC "Z"
+        // and offsets such as "+02:00".
+        if (DateTimeOffset.TryParse(
+                value,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.RoundtripKind,
+                out var standardResult))
+        {
+            return standardResult;
+        }
+
+        // Jira Cloud can return offsets without a colon:
+        // 2026-09-30T19:35:37.520+0200
+        var jiraFormats = new[]
+        {
+            "yyyy-MM-dd'T'HH:mm:ss.FFFFFFFzzzz",
+            "yyyy-MM-dd'T'HH:mm:ss.FFFFFFFzzz"
+        };
+
+        if (DateTimeOffset.TryParseExact(
+                value,
+                jiraFormats,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out var jiraResult))
+        {
+            return jiraResult;
+        }
+
+        throw new FormatException(
+            $"Unsupported Jira date format: '{value}'.");
     }
 }

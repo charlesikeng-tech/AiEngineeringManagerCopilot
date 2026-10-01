@@ -7,7 +7,6 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { TeamContext } from '../../../../core/team/team-context';
-import { TeamSelector } from '../../../../core/team/team-selector/team-selector';
 import { AiAnalysis } from '../../components/ai-analysis/ai-analysis';
 import { DashboardKpis } from '../../components/dashboard-kpis/dashboard-kpis';
 import { DashboardRisks } from '../../components/dashboard-risks/dashboard-risks';
@@ -33,7 +32,6 @@ import { DashboardStore } from '../../state/dashboard-store';
     NzGridModule,
     NzSkeletonModule,
     NzTagModule,
-    TeamSelector,
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',

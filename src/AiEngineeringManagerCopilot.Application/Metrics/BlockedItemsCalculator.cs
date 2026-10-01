@@ -16,12 +16,7 @@ public sealed class BlockedItemsCalculator
                 "periodStart must be before or equal to periodEnd.");
         }
 
-        var count = workItems.Count(x =>
-            x.IsBlocked &&
-            DateOnly.FromDateTime(
-                x.CreatedAt.UtcDateTime) >= periodStart &&
-            DateOnly.FromDateTime(
-                x.CreatedAt.UtcDateTime) <= periodEnd);
+        var count = workItems.Count(x => x.IsBlocked);
 
         return new BlockedItemsResult(count);
     }

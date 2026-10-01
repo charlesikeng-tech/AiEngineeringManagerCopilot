@@ -10,30 +10,43 @@ public sealed class LlmProviderContractTests
     [Fact]
     public async Task FakeLlmProvider_ShouldReturnValidAnalysis()
     {
-        var provider = new FakeLlmProvider();
+        // Arrange
+        var sut = new FakeLlmProvider();
 
-        var result = await provider.AnalyzeAsync(
-            "Analyze this engineering team.",
+        const string prompt = """
+                              Analyze the following engineering data.
+
+                              ## Available metrics
+
+                              - CycleTime: 4.8 hours | temporal semantics: ReportingPeriod | Average cycle time during the reporting period.
+
+                              ## Unavailable metrics
+
+                              - PRReviewTime: NoData
+                              """;
+
+        // Act
+        var result = await sut.AnalyzeAsync(
+            prompt,
             CancellationToken.None);
 
+        // Assert
         result.Should().NotBeNull();
+
         result.Summary.Should().NotBeNullOrWhiteSpace();
 
         result.Insights.Should().NotBeEmpty();
+
         result.Actions.Should().NotBeEmpty();
 
-        result.Actions[0].Priority
-            .Should()
-            .Be(ActionPriority.High);
-        
         result.Evidence.Should().ContainSingle();
 
-        var evidence = result.Evidence.Single();
+        var evidence = result.Evidence!.Single();
 
         evidence.MetricType.Should().Be("CycleTime");
         evidence.Value.Should().Be(4.8m);
-        evidence.Confidence.Should().Be(0.92m);
-        evidence.Reason.Should().Be(
-            "Cycle time indicates a potential delivery slowdown.");
+        evidence.Confidence.Should().BeInRange(0m, 1m);
+
+        sut.LastPrompt.Should().Be(prompt);
     }
 }

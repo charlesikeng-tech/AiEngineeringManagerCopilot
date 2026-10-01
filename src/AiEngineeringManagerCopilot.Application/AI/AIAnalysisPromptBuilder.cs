@@ -15,8 +15,10 @@ public sealed class AIAnalysisPromptBuilder
                     x.Value.HasValue)
                 .Select(x =>
                     $"- {x.MetricType}: " +
-                    $"{x.Value!.Value.ToString("0.##", CultureInfo.InvariantCulture)}"));
-
+                    $"{x.Value!.Value.ToString("0.##", CultureInfo.InvariantCulture)} " +
+                    $"{x.Unit} | " +
+                    $"temporal semantics: {x.TemporalSemantics} | " +
+                    $"{x.Description}"));
         var unavailableMetrics = string.Join(
             Environment.NewLine,
             context.Metrics
@@ -148,6 +150,21 @@ public sealed class AIAnalysisPromptBuilder
 
             A metric marked Available with value 0 is an observed zero value.
             Do not reinterpret it as missing data.
+            
+            Metric definitions, units, and temporal semantics provided with a metric
+            are authoritative.
+            
+            A CurrentSnapshot metric describes the state observed when the metric
+            was calculated. It must not be described as having occurred during the
+            reporting period unless additional evidence explicitly supports that
+            conclusion.
+            
+            A ReportingPeriod metric describes observations associated with the
+            selected reporting period.
+            
+            Do not infer historical state or duration from a CurrentSnapshot metric.
+            
+            Do not invent or reinterpret metric units when a unit is provided.
 
             Do not infer team-wide engineering performance from unavailable
             metrics.
@@ -202,5 +219,24 @@ public sealed class AIAnalysisPromptBuilder
 
             Provide practical and actionable recommendations.
             """;
+    }
+    
+    private static string FormatMetric(AIAnalysisMetricContext metric)
+    {
+        var value = metric.Value!.Value.ToString(
+            "0.##",
+            CultureInfo.InvariantCulture);
+
+        if (string.IsNullOrWhiteSpace(metric.Unit) ||
+            metric.TemporalSemantics is null ||
+            string.IsNullOrWhiteSpace(metric.Description))
+        {
+            return $"- {metric.MetricType}: {value}";
+        }
+
+        return
+            $"- {metric.MetricType}: {value} {metric.Unit} | " +
+            $"temporal semantics: {metric.TemporalSemantics} | " +
+            metric.Description;
     }
 }

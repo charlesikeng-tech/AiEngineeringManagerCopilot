@@ -104,4 +104,80 @@ public sealed class AIAnalysisPromptBuilderTests
         prompt.Should().Contain(
             "Do not invent metrics, metric values, targets, units, benchmarks");
     }
+    
+    [Fact]
+    public void Build_ShouldDescribeBlockedItemsAsCurrentSnapshot()
+    {
+        // Arrange
+        var context = new AIAnalysisContext(
+            PeriodStart: new DateOnly(2026, 9, 1),
+            PeriodEnd: new DateOnly(2026, 9, 30),
+            OverallScore: 79,
+            DataCoverage: 70m,
+            ExecutiveSummary: "Engineering health is Healthy.",
+            Metrics:
+            [
+                new AIAnalysisMetricContext(
+                    MetricType.BlockedItems,
+                    2m,
+                    MetricDataStatus.Available,
+                    "items",
+                    MetricTemporalSemantics.CurrentSnapshot,
+                    "Number of Jira work items whose current status is Blocked.")
+            ],
+            Insights: [],
+            Risks: [],
+            Trends: []);
+
+        var sut = new AIAnalysisPromptBuilder();
+
+        // Act
+        var prompt = sut.Build(context);
+
+        // Assert
+        prompt.Should().Contain("BlockedItems: 2 items");
+        prompt.Should().Contain("CurrentSnapshot");
+        prompt.Should().Contain(
+            "Number of Jira work items whose current status is Blocked.");
+
+        prompt.Should().Contain(
+            "Do not infer historical state or duration from a CurrentSnapshot metric");
+    }
+    
+    [Fact]
+    public void Build_ShouldIncludeLeadTimeUnitAndTemporalSemantics()
+    {
+        // Arrange
+        var context = new AIAnalysisContext(
+            PeriodStart: new DateOnly(2026, 9, 1),
+            PeriodEnd: new DateOnly(2026, 9, 30),
+            OverallScore: 79,
+            DataCoverage: 70m,
+            ExecutiveSummary: "Engineering health is Healthy.",
+            Metrics:
+            [
+                new AIAnalysisMetricContext(
+                    MetricType.LeadTime,
+                    0.03m,
+                    MetricDataStatus.Available,
+                    "hours",
+                    MetricTemporalSemantics.ReportingPeriod,
+                    "Average time from Jira issue creation to resolution " +
+                    "for issues completed during the reporting period.")
+            ],
+            Insights: [],
+            Risks: [],
+            Trends: []);
+
+        var sut = new AIAnalysisPromptBuilder();
+
+        // Act
+        var prompt = sut.Build(context);
+
+        // Assert
+        prompt.Should().Contain("LeadTime: 0.03 hours");
+        prompt.Should().Contain("ReportingPeriod");
+        prompt.Should().Contain(
+            "Average time from Jira issue creation to resolution");
+    }
 }

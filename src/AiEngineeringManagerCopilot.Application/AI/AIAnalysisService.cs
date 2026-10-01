@@ -385,11 +385,16 @@ public sealed class AIAnalysisService(
                 continue;
             }
 
+            var definition = MetricDefinitions.Find(metric.MetricType);
+
             metrics.Add(
                 new AIAnalysisMetricContext(
                     metric.MetricType,
                     metric.Value,
-                    metric.DataStatus));
+                    metric.DataStatus,
+                    definition?.Unit,
+                    definition?.TemporalSemantics,
+                    definition?.Description));
         }
 
         return metrics;

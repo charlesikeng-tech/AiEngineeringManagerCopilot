@@ -15,9 +15,7 @@ public sealed class FakeLlmProvider : ILlmProvider
     {
         LastPrompt = prompt;
 
-        var cycleTime = ExtractMetricValue(
-            prompt,
-            "CycleTime");
+        var evidence = TryExtractAvailableMetric(prompt);
 
         var result = new LlmAnalysisResult(
             Summary:
@@ -42,35 +40,100 @@ public sealed class FakeLlmProvider : ILlmProvider
                         "Identify and address the main causes of delivery delays.",
                     Priority: ActionPriority.High)
             ],
-            Evidence:
-            [
-                new LlmEvidenceResult(
-                    MetricType: "CycleTime",
-                    Value: cycleTime,
-                    Reason:
-                        "Cycle time indicates a potential delivery slowdown.",
-                    Confidence: 0.92m)
-            ]);
+            Evidence: evidence is null
+                ? []
+                :
+                [
+                    new LlmEvidenceResult(
+                        MetricType: evidence.Value.MetricType,
+                        Value: evidence.Value.Value,
+                        Reason: BuildEvidenceReason(
+                            evidence.Value.MetricType),
+                        Confidence: 0.92m)
+                ]);
 
         return Task.FromResult(result);
     }
 
-    private static decimal ExtractMetricValue(
-        string prompt,
-        string metricType)
+    private static (string MetricType, decimal Value)?
+        TryExtractAvailableMetric(string prompt)
     {
+        var availableSection =
+            ExtractAvailableMetricsSection(prompt);
+
+        if (string.IsNullOrWhiteSpace(availableSection))
+        {
+            return null;
+        }
+
         var match = Regex.Match(
-            prompt,
-            $@"^- {Regex.Escape(metricType)}:\s*(-?\d+(?:\.\d+)?)\s*$",
+            availableSection,
+            @"^-\s+(?<metric>[A-Za-z0-9_]+):\s*" +
+            @"(?<value>-?\d+(?:\.\d+)?)",
             RegexOptions.Multiline);
 
         if (!match.Success)
         {
-            return 4.8m;
+            return null;
         }
 
-        return decimal.Parse(
-            match.Groups[1].Value,
-            CultureInfo.InvariantCulture);
+        if (!decimal.TryParse(
+                match.Groups["value"].Value,
+                NumberStyles.Number,
+                CultureInfo.InvariantCulture,
+                out var value))
+        {
+            return null;
+        }
+
+        return (
+            match.Groups["metric"].Value,
+            value);
+    }
+
+    private static string BuildEvidenceReason(
+        string metricType)
+    {
+        return metricType switch
+        {
+            "CycleTime" =>
+                "Cycle time indicates a potential delivery slowdown.",
+
+            _ =>
+                "The available engineering metric supports the analysis."
+        };
+    }
+
+    private static string? ExtractAvailableMetricsSection(
+        string prompt)
+    {
+        const string startMarker =
+            "## Available metrics";
+
+        const string endMarker =
+            "## Unavailable metrics";
+
+        var startIndex = prompt.IndexOf(
+            startMarker,
+            StringComparison.Ordinal);
+
+        if (startIndex < 0)
+        {
+            return null;
+        }
+
+        startIndex += startMarker.Length;
+
+        var endIndex = prompt.IndexOf(
+            endMarker,
+            startIndex,
+            StringComparison.Ordinal);
+
+        if (endIndex < 0)
+        {
+            return prompt[startIndex..];
+        }
+
+        return prompt[startIndex..endIndex];
     }
 }
