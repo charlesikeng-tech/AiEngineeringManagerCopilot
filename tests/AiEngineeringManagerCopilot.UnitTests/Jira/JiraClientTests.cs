@@ -842,6 +842,40 @@ public sealed class JiraClientTests
             .Be(TimeSpan.FromSeconds(1));
     }
     
+    [Fact]
+    public async Task GetIssuesAsync_WhenCancelled_ShouldNotRetry()
+    {
+        using var cancellationTokenSource =
+            new CancellationTokenSource();
+
+        cancellationTokenSource.Cancel();
+
+        var handler = new CancellationHandler();
+
+        using var httpClient = new HttpClient(handler);
+
+        var retryDelay = new FakeJiraRetryDelay();
+
+        var client = new JiraClient(
+            httpClient,
+            retryDelay);
+
+        var act = async () =>
+            await client.GetIssuesAsync(
+                "https://example.atlassian.net",
+                "charles@example.com",
+                "token",
+                "TEST",
+                cancellationTokenSource.Token);
+
+        await act.Should()
+            .ThrowAsync<OperationCanceledException>();
+
+        handler.RequestCount.Should().Be(1);
+
+        retryDelay.Delays.Should().BeEmpty();
+    }
+    
     
     private sealed class AlwaysNetworkFailureHandler
         : HttpMessageHandler
@@ -949,6 +983,22 @@ public sealed class JiraClientTests
             Delays.Add(delay);
 
             return Task.CompletedTask;
+        }
+    }
+    
+    private sealed class CancellationHandler
+        : HttpMessageHandler
+    {
+        public int RequestCount { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            RequestCount++;
+
+            throw new OperationCanceledException(
+                cancellationToken);
         }
     }
 }

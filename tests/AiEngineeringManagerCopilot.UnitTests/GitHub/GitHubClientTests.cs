@@ -395,7 +395,8 @@ public sealed class GitHubClientTests
         private readonly string? _responseBody;
         private readonly Func<HttpRequestMessage, string>? _responseFactory;
         private readonly Queue<HttpResponseMessage>? _responses;
-
+        private readonly Queue<Func<HttpResponseMessage>>? _operations;
+        
         public HttpRequestMessage? LastRequest { get; private set; }
 
         public List<HttpRequestMessage> Requests { get; } = [];
@@ -422,6 +423,13 @@ public sealed class GitHubClientTests
             _responses =
                 new Queue<HttpResponseMessage>(responses);
         }
+        
+        public FakeHttpMessageHandler(
+            params Func<HttpResponseMessage>[] operations)
+        {
+            _operations =
+                new Queue<Func<HttpResponseMessage>>(operations);
+        }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -429,6 +437,18 @@ public sealed class GitHubClientTests
         {
             LastRequest = request;
             Requests.Add(request);
+            
+            if (_operations is not null)
+            {
+                if (_operations.Count == 0)
+                {
+                    throw new InvalidOperationException(
+                        "No fake HTTP operation configured.");
+                }
+
+                return Task.FromResult(
+                    _operations.Dequeue().Invoke());
+            }
 
             if (_responses is not null)
             {
@@ -1541,4 +1561,162 @@ public sealed class GitHubClientTests
 
         handler.Requests.Should().HaveCount(2);
     }
+    
+    [Fact]
+public async Task GetOrganizationAsync_WhenNetworkFailure_ShouldRetry()
+{
+    var handler = new FakeHttpMessageHandler(
+        () => throw new HttpRequestException(
+            "Temporary network failure."),
+        () => new HttpResponseMessage(
+            HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                """
+                {
+                    "id": 123456,
+                    "login": "my-company",
+                    "name": "My Company",
+                    "html_url": "https://github.com/my-company"
+                }
+                """)
+        });
+
+    using var httpClient = new HttpClient(handler)
+    {
+        BaseAddress = new Uri(
+            "https://api.github.com/")
+    };
+
+    var retryDelay = new FakeRetryDelay();
+
+    var client = new GitHubClient(
+        httpClient,
+        retryDelay);
+
+    var result = await client.GetOwnerAsync(
+        "my-company",
+        GitHubOwnerType.Organization,
+        "secret-token",
+        CancellationToken.None);
+
+    result.Should().NotBeNull();
+    result!.Login.Should().Be("my-company");
+
+    handler.Requests.Should().HaveCount(2);
+
+    retryDelay.Delays
+        .Should()
+        .ContainSingle()
+        .Which
+        .Should()
+        .Be(TimeSpan.FromSeconds(1));
+}
+
+[Fact]
+public async Task GetOrganizationAsync_WhenNetworkFailurePersists_ShouldStopAfterMaxAttempts()
+{
+    var handler = new FakeHttpMessageHandler(
+        () => throw new HttpRequestException(
+            "Network failure 1."),
+        () => throw new HttpRequestException(
+            "Network failure 2."));
+
+    using var httpClient = new HttpClient(handler)
+    {
+        BaseAddress = new Uri(
+            "https://api.github.com/")
+    };
+
+    var retryDelay = new FakeRetryDelay();
+
+    var client = new GitHubClient(
+        httpClient,
+        retryDelay);
+
+    var act = async () =>
+        await client.GetOwnerAsync(
+            "my-company",
+            GitHubOwnerType.Organization,
+            "secret-token",
+            CancellationToken.None);
+
+    await act.Should()
+        .ThrowAsync<HttpRequestException>();
+
+    handler.Requests.Should().HaveCount(2);
+
+    retryDelay.Delays.Should().ContainSingle();
+}
+
+[Fact]
+public async Task GetOrganizationAsync_WhenUnauthorized_ShouldNotRetry()
+{
+    var handler = new FakeHttpMessageHandler(
+        new HttpResponseMessage(
+            HttpStatusCode.Unauthorized));
+
+    using var httpClient = new HttpClient(handler)
+    {
+        BaseAddress = new Uri(
+            "https://api.github.com/")
+    };
+
+    var retryDelay = new FakeRetryDelay();
+
+    var client = new GitHubClient(
+        httpClient,
+        retryDelay);
+
+    var act = async () =>
+        await client.GetOwnerAsync(
+            "my-company",
+            GitHubOwnerType.Organization,
+            "secret-token",
+            CancellationToken.None);
+
+    await act.Should()
+        .ThrowAsync<HttpRequestException>();
+
+    handler.Requests.Should().ContainSingle();
+    retryDelay.Delays.Should().BeEmpty();
+}
+
+[Fact]
+public async Task GetOrganizationAsync_WhenCancelled_ShouldNotRetry()
+{
+    using var cancellationTokenSource =
+        new CancellationTokenSource();
+
+    cancellationTokenSource.Cancel();
+
+    var handler = new FakeHttpMessageHandler(
+        () => throw new OperationCanceledException(
+            cancellationTokenSource.Token));
+
+    using var httpClient = new HttpClient(handler)
+    {
+        BaseAddress = new Uri(
+            "https://api.github.com/")
+    };
+
+    var retryDelay = new FakeRetryDelay();
+
+    var client = new GitHubClient(
+        httpClient,
+        retryDelay);
+
+    var act = async () =>
+        await client.GetOwnerAsync(
+            "my-company",
+            GitHubOwnerType.Organization,
+            "secret-token",
+            cancellationTokenSource.Token);
+
+    await act.Should()
+        .ThrowAsync<OperationCanceledException>();
+
+    handler.Requests.Should().ContainSingle();
+    retryDelay.Delays.Should().BeEmpty();
+}
 }

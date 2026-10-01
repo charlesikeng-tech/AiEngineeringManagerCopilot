@@ -1,9 +1,10 @@
+#pragma warning disable OPENAI001
+
 using System.Text;
 using System.Text.Json.Serialization;
 using AiEngineeringManagerCopilot.Api.Authentication;
 using AiEngineeringManagerCopilot.Api.Endpoints;
 using AiEngineeringManagerCopilot.Api.Middleware;
-using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.Actions;
 using AiEngineeringManagerCopilot.Application.AI;
@@ -24,11 +25,13 @@ using AiEngineeringManagerCopilot.Infrastructure.AI;
 using AiEngineeringManagerCopilot.Infrastructure.Authentication;
 using AiEngineeringManagerCopilot.Infrastructure.Development;
 using AiEngineeringManagerCopilot.Infrastructure.GitHub;
+using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence.Repositories;
 using AiEngineeringManagerCopilot.Infrastructure.Security;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
@@ -47,9 +50,9 @@ builder.Services.AddDataProtection();
 
 builder.Services.AddProblemDetails();
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// OpenAPI / Swagger
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
 {
     const string schemeName = "Bearer";
@@ -77,6 +80,22 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddHttpContextAccessor();
+
+// -----------------------------------------------------------------------------
+// JWT
+// -----------------------------------------------------------------------------
+
+builder.Services
+    .AddOptions<JwtOptions>()
+    .Bind(
+        builder.Configuration.GetSection(
+            JwtOptions.SectionName))
+    .ValidateOnStart();
+
+builder.Services.AddSingleton<
+    IValidateOptions<JwtOptions>,
+    JwtOptionsValidator>();
+
 var jwtOptions = builder.Configuration
                      .GetSection(JwtOptions.SectionName)
                      .Get<JwtOptions>()
@@ -111,6 +130,10 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+// -----------------------------------------------------------------------------
+// Development
+// -----------------------------------------------------------------------------
+
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddScoped<DevelopmentDataInitializer>();
@@ -119,24 +142,31 @@ if (builder.Environment.IsDevelopment())
     builder.Services.AddSingleton<DevelopmentJwtTokenGenerator>();
 }
 
+// -----------------------------------------------------------------------------
+// Current user
+// -----------------------------------------------------------------------------
+
 if (builder.Environment.IsEnvironment("Test"))
 {
-    builder.Services.AddScoped<ICurrentUser, DevelopmentCurrentUser>();
+    builder.Services.AddScoped<
+        ICurrentUser,
+        DevelopmentCurrentUser>();
 }
 else
 {
-    builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+    builder.Services.AddScoped<
+        ICurrentUser,
+        HttpCurrentUser>();
 }
 
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddSingleton(jwtOptions);
-    builder.Services.AddSingleton<DevelopmentJwtTokenGenerator>();
-}
+// -----------------------------------------------------------------------------
+// Persistence
+// -----------------------------------------------------------------------------
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("Default");
+    var connectionString =
+        builder.Configuration.GetConnectionString("Default");
 
     if (string.IsNullOrWhiteSpace(connectionString))
     {
@@ -147,92 +177,318 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString);
 });
 
-builder.Services.AddScoped<ITeamRepository, TeamRepository>();
-builder.Services.AddScoped<ITeamMemberRepository, TeamMemberRepository>();
-builder.Services.AddScoped<IGitHubConnectionRepository, GitHubConnectionRepository>();
-builder.Services.AddScoped<IRepositoryRepository, RepositoryRepository>();
-builder.Services.AddScoped<IJiraConnectionRepository, JiraConnectionRepository>();
-builder.Services.AddScoped<IJiraWorkItemRepository, JiraWorkItemRepository>();
-builder.Services.AddScoped<IEngineeringMetricRepository, EngineeringMetricRepository>();
-builder.Services.AddScoped<IPullRequestRepository, PullRequestRepository>();
-builder.Services.AddScoped<IPullRequestReviewRepository, PullRequestReviewRepository>();
-builder.Services.AddScoped<IDeploymentRepository, DeploymentRepository>();
-builder.Services.AddScoped<IEngineeringReportRepository, EngineeringReportRepository>();
-builder.Services.AddScoped<IEngineeringReportInsightRepository, EngineeringReportInsightRepository>();
-builder.Services.AddScoped<IEngineeringActionRepository, EngineeringActionRepository>();
-builder.Services.AddScoped<IEngineeringRiskRepository, EngineeringRiskRepository>();
-builder.Services.AddScoped<IAIAnalysisRepository, AIAnalysisRepository>();
-builder.Services.AddScoped<IAIAnalysisInsightRepository, AIAnalysisInsightRepository>();
-builder.Services.AddScoped<IAIAnalysisActionRepository, AIAnalysisActionRepository>();
+// -----------------------------------------------------------------------------
+// Repositories
+// -----------------------------------------------------------------------------
 
-builder.Services.AddScoped<IValidator<CreateTeamRequest>, CreateTeamRequestValidator>();
-builder.Services.AddScoped<IValidator<UpdateTeamRequest>, UpdateTeamRequestValidator>();
-builder.Services.AddScoped<IValidator<CreateTeamMemberRequest>, CreateTeamMemberRequestValidator>();
-builder.Services.AddScoped<IValidator<UpdateTeamMemberRequest>, UpdateTeamMemberRequestValidator>();
+builder.Services.AddScoped<
+    ITeamRepository,
+    TeamRepository>();
 
-builder.Services.AddScoped<ITeamService, TeamService>();
-builder.Services.AddScoped<ITeamMemberService, TeamMemberService>();
-builder.Services.AddScoped<IGitHubConnectionService, GitHubConnectionService>();
-builder.Services.AddScoped<IGitHubSyncService, GitHubSyncService>();
-builder.Services.AddScoped<IJiraConnectionService, JiraConnectionService>();
-builder.Services.AddScoped<IJiraSyncService, JiraSyncService>();
-builder.Services.AddScoped<IEngineeringMetricsService, EngineeringMetricsService>();
-builder.Services.AddScoped<IEngineeringHealthScoreService, EngineeringHealthScoreService>();
-builder.Services.AddScoped<IEngineeringReportService, EngineeringReportService>();
-builder.Services.AddScoped<IEngineeringDashboardService, EngineeringDashboardService>();
-builder.Services.AddScoped<IEngineeringRiskService, EngineeringRiskService>();
-builder.Services.AddScoped<IEngineeringActionService, EngineeringActionService>();
+builder.Services.AddScoped<
+    ITeamMemberRepository,
+    TeamMemberRepository>();
 
-builder.Services.AddScoped<ICycleTimeCalculator, CycleTimeCalculator>();
-builder.Services.AddScoped<IPRReviewTimeCalculator, PRReviewTimeCalculator>();
-builder.Services.AddScoped<IDeploymentFrequencyCalculator, DeploymentFrequencyCalculator>();
-builder.Services.AddScoped<IChangeFailureRateCalculator, ChangeFailureRateCalculator>();
-builder.Services.AddScoped<ILeadTimeCalculator, LeadTimeCalculator>();
-builder.Services.AddScoped<IOpenPullRequestsCalculator, OpenPullRequestsCalculator>();
-builder.Services.AddScoped<IMergedPullRequestsCalculator, MergedPullRequestsCalculator>();
-builder.Services.AddScoped<IBlockedItemsCalculator, BlockedItemsCalculator>();
-builder.Services.AddScoped<IEngineeringHealthScoreCalculator, EngineeringHealthScoreCalculator>();
-builder.Services.AddScoped<IEngineeringInsightGenerator, EngineeringInsightGenerator>();
-builder.Services.AddScoped<IEngineeringActionGenerator, EngineeringActionGenerator>();
-builder.Services.AddScoped< IEngineeringMetricScoreCalculator, EngineeringMetricScoreCalculator>();
+builder.Services.AddScoped<
+    IGitHubConnectionRepository,
+    GitHubConnectionRepository>();
 
-builder.Services.AddScoped<IEngineeringRiskDetector, EngineeringRiskDetector>();
+builder.Services.AddScoped<
+    IRepositoryRepository,
+    RepositoryRepository>();
 
-builder.Services.AddScoped<ISecretProtector, DataProtectionSecretProtector>();
-builder.Services.AddSingleton<PreviousPeriodCalculator>();
-builder.Services.AddSingleton<MetricTrendCalculator>();
-builder.Services.AddSingleton<MetricTrendBuilder>();
+builder.Services.AddScoped<
+    IJiraConnectionRepository,
+    JiraConnectionRepository>();
 
-builder.Services.AddSingleton<EngineeringTrendSignalDetector>();
-builder.Services.AddSingleton<EngineeringTrendInsightGenerator>();
-builder.Services.AddSingleton<EngineeringTrendInsightService>();
+builder.Services.AddScoped<
+    IJiraWorkItemRepository,
+    JiraWorkItemRepository>();
 
-var llmProvider = builder.Configuration["Llm:Provider"];
+builder.Services.AddScoped<
+    IEngineeringMetricRepository,
+    EngineeringMetricRepository>();
 
-if (string.Equals(llmProvider, "OpenAI", StringComparison.OrdinalIgnoreCase))
-{
-    builder.Services.AddScoped<ILlmProvider, OpenAILlmProvider>();
-}
-else
-{
-    builder.Services.AddSingleton<ILlmProvider, FakeLlmProvider>();
-}
-builder.Services.AddScoped< IAIAnalysisService, AIAnalysisService>();
-builder.Services.AddScoped<AIAnalysisPromptBuilder>();
-builder.Services.AddScoped<AIEvidenceValidator>();
-builder.Services.AddScoped<IAIAnalysisActionRepository, AIAnalysisActionRepository>();
-builder.Services.AddScoped<IAIAnalysisEvidenceRepository, AIAnalysisEvidenceRepository>();
+builder.Services.AddScoped<
+    IPullRequestRepository,
+    PullRequestRepository>();
+
+builder.Services.AddScoped<
+    IPullRequestReviewRepository,
+    PullRequestReviewRepository>();
+
+builder.Services.AddScoped<
+    IDeploymentRepository,
+    DeploymentRepository>();
+
+builder.Services.AddScoped<
+    IEngineeringReportRepository,
+    EngineeringReportRepository>();
+
+builder.Services.AddScoped<
+    IEngineeringReportInsightRepository,
+    EngineeringReportInsightRepository>();
+
+builder.Services.AddScoped<
+    IEngineeringActionRepository,
+    EngineeringActionRepository>();
+
+builder.Services.AddScoped<
+    IEngineeringRiskRepository,
+    EngineeringRiskRepository>();
+
+builder.Services.AddScoped<
+    IAIAnalysisRepository,
+    AIAnalysisRepository>();
+
+builder.Services.AddScoped<
+    IAIAnalysisInsightRepository,
+    AIAnalysisInsightRepository>();
+
+builder.Services.AddScoped<
+    IAIAnalysisActionRepository,
+    AIAnalysisActionRepository>();
+
+builder.Services.AddScoped<
+    IAIAnalysisEvidenceRepository,
+    AIAnalysisEvidenceRepository>();
+
+// -----------------------------------------------------------------------------
+// Validators
+// -----------------------------------------------------------------------------
+
+builder.Services.AddScoped<
+    IValidator<CreateTeamRequest>,
+    CreateTeamRequestValidator>();
+
+builder.Services.AddScoped<
+    IValidator<UpdateTeamRequest>,
+    UpdateTeamRequestValidator>();
+
+builder.Services.AddScoped<
+    IValidator<CreateTeamMemberRequest>,
+    CreateTeamMemberRequestValidator>();
+
+builder.Services.AddScoped<
+    IValidator<UpdateTeamMemberRequest>,
+    UpdateTeamMemberRequestValidator>();
+
+// -----------------------------------------------------------------------------
+// Application services
+// -----------------------------------------------------------------------------
+
+builder.Services.AddScoped<
+    ITeamService,
+    TeamService>();
+
+builder.Services.AddScoped<
+    ITeamMemberService,
+    TeamMemberService>();
+
+builder.Services.AddScoped<
+    IGitHubConnectionService,
+    GitHubConnectionService>();
+
+builder.Services.AddScoped<
+    IGitHubSyncService,
+    GitHubSyncService>();
+
+builder.Services.AddScoped<
+    IJiraConnectionService,
+    JiraConnectionService>();
+
+builder.Services.AddScoped<
+    IJiraSyncService,
+    JiraSyncService>();
+
+builder.Services.AddScoped<
+    IEngineeringMetricsService,
+    EngineeringMetricsService>();
+
+builder.Services.AddScoped<
+    IEngineeringHealthScoreService,
+    EngineeringHealthScoreService>();
+
+builder.Services.AddScoped<
+    IEngineeringReportService,
+    EngineeringReportService>();
+
+builder.Services.AddScoped<
+    IEngineeringDashboardService,
+    EngineeringDashboardService>();
+
+builder.Services.AddScoped<
+    IEngineeringRiskService,
+    EngineeringRiskService>();
+
+builder.Services.AddScoped<
+    IEngineeringActionService,
+    EngineeringActionService>();
+
+// -----------------------------------------------------------------------------
+// Metrics
+// -----------------------------------------------------------------------------
+
+builder.Services.AddScoped<
+    ICycleTimeCalculator,
+    CycleTimeCalculator>();
+
+builder.Services.AddScoped<
+    IPRReviewTimeCalculator,
+    PRReviewTimeCalculator>();
+
+builder.Services.AddScoped<
+    IDeploymentFrequencyCalculator,
+    DeploymentFrequencyCalculator>();
+
+builder.Services.AddScoped<
+    IChangeFailureRateCalculator,
+    ChangeFailureRateCalculator>();
+
+builder.Services.AddScoped<
+    ILeadTimeCalculator,
+    LeadTimeCalculator>();
+
+builder.Services.AddScoped<
+    IOpenPullRequestsCalculator,
+    OpenPullRequestsCalculator>();
+
+builder.Services.AddScoped<
+    IMergedPullRequestsCalculator,
+    MergedPullRequestsCalculator>();
+
+builder.Services.AddScoped<
+    IBlockedItemsCalculator,
+    BlockedItemsCalculator>();
+
+builder.Services.AddScoped<
+    IEngineeringHealthScoreCalculator,
+    EngineeringHealthScoreCalculator>();
+
+builder.Services.AddScoped<
+    IEngineeringInsightGenerator,
+    EngineeringInsightGenerator>();
+
+builder.Services.AddScoped<
+    IEngineeringActionGenerator,
+    EngineeringActionGenerator>();
+
+builder.Services.AddScoped<
+    IEngineeringMetricScoreCalculator,
+    EngineeringMetricScoreCalculator>();
+
+builder.Services.AddScoped<
+    IEngineeringRiskDetector,
+    EngineeringRiskDetector>();
+
+// -----------------------------------------------------------------------------
+// Infrastructure services
+// -----------------------------------------------------------------------------
+
+builder.Services.AddScoped<
+    ISecretProtector,
+    DataProtectionSecretProtector>();
+
+builder.Services.AddSingleton<
+    PreviousPeriodCalculator>();
+
+builder.Services.AddSingleton<
+    MetricTrendCalculator>();
+
+builder.Services.AddSingleton<
+    MetricTrendBuilder>();
+
+builder.Services.AddSingleton<
+    EngineeringTrendSignalDetector>();
+
+builder.Services.AddSingleton<
+    EngineeringTrendInsightGenerator>();
+
+builder.Services.AddSingleton<
+    EngineeringTrendInsightService>();
+
+// -----------------------------------------------------------------------------
+// LLM / AI
+// -----------------------------------------------------------------------------
+
 builder.Services
     .AddOptions<LlmOptions>()
-    .Bind(builder.Configuration.GetSection("Llm"));
+    .Bind(
+        builder.Configuration.GetSection(
+            LlmOptions.SectionName))
+    .ValidateOnStart();
+
+builder.Services.AddSingleton<
+    IValidateOptions<LlmOptions>,
+    LlmOptionsValidator>();
+
 builder.Services.AddSingleton<
     ILlmAnalysisParser,
     LlmAnalysisJsonParser>();
 
-builder.Services.AddSingleton<IRetryDelay, RetryDelay>();
-builder.Services.AddScoped<IGitHubBackgroundSyncRunner, GitHubBackgroundSyncRunner>();
-builder.Services.AddScoped<IJiraBackgroundSyncRunner, JiraBackgroundSyncRunner>();
-builder.Services.AddSingleton<IBackgroundJobDelay, BackgroundJobDelay>();
+var llmProvider =
+    builder.Configuration[
+        $"{LlmOptions.SectionName}:Provider"];
+
+if (string.Equals(
+        llmProvider,
+        "OpenAI",
+        StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddSingleton(sp =>
+    {
+        var options = sp
+            .GetRequiredService<IOptions<LlmOptions>>()
+            .Value;
+
+        return new OpenAI.Responses.ResponsesClient(
+            options.ApiKey);
+    });
+
+    builder.Services.AddSingleton<
+        IOpenAIResponsesClient,
+        OpenAIResponsesClient>();
+
+    builder.Services.AddScoped<
+        ILlmProvider,
+        OpenAILlmProvider>();
+}
+else
+{
+    builder.Services.AddSingleton<
+        ILlmProvider,
+        FakeLlmProvider>();
+}
+
+builder.Services.AddScoped<
+    IAIAnalysisService,
+    AIAnalysisService>();
+
+builder.Services.AddScoped<
+    AIAnalysisPromptBuilder>();
+
+builder.Services.AddScoped<
+    AIEvidenceValidator>();
+
+// -----------------------------------------------------------------------------
+// Background jobs
+// -----------------------------------------------------------------------------
+
+builder.Services.AddSingleton<
+    IRetryDelay,
+    RetryDelay>();
+
+builder.Services.AddScoped<
+    IGitHubBackgroundSyncRunner,
+    GitHubBackgroundSyncRunner>();
+
+builder.Services.AddScoped<
+    IJiraBackgroundSyncRunner,
+    JiraBackgroundSyncRunner>();
+
+builder.Services.AddSingleton<
+    IBackgroundJobDelay,
+    BackgroundJobDelay>();
 
 if (!builder.Environment.IsEnvironment("Test"))
 {
@@ -242,7 +498,14 @@ if (!builder.Environment.IsEnvironment("Test"))
     builder.Services.AddHostedService<
         JiraSyncBackgroundService>();
 }
-builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(
+
+// -----------------------------------------------------------------------------
+// HTTP clients
+// -----------------------------------------------------------------------------
+
+builder.Services.AddHttpClient<
+    IGitHubClient,
+    GitHubClient>(
     client =>
     {
         client.BaseAddress =
@@ -252,38 +515,66 @@ builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(
             TimeSpan.FromSeconds(30);
     });
 
+builder.Services.AddHttpClient<
+    IJiraClient,
+    JiraClient>();
 
-builder.Services.AddHttpClient<IJiraClient, JiraClient>();
+// -----------------------------------------------------------------------------
+// CORS
+// -----------------------------------------------------------------------------
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("Frontend", policy =>
-    {
-        policy
-            .WithOrigins("http://localhost:4200")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
+    options.AddPolicy(
+        "Frontend",
+        policy =>
+        {
+            policy
+                .WithOrigins(
+                    "http://localhost:4200")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
 });
+
+// -----------------------------------------------------------------------------
+// Application
+// -----------------------------------------------------------------------------
 
 var app = builder.Build();
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<
+    ExceptionHandlingMiddleware>();
+
+// -----------------------------------------------------------------------------
+// Development initialization
+// -----------------------------------------------------------------------------
 
 if (app.Environment.IsDevelopment())
 {
-    using var scope = app.Services.CreateScope();
+    using var scope =
+        app.Services.CreateScope();
 
-    var initializer = scope.ServiceProvider
-        .GetRequiredService<DevelopmentDataInitializer>();
+    var initializer =
+        scope.ServiceProvider
+            .GetRequiredService<
+                DevelopmentDataInitializer>();
 
     await initializer.InitializeAsync();
 }
+
+// -----------------------------------------------------------------------------
+// Middleware
+// -----------------------------------------------------------------------------
 
 app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// -----------------------------------------------------------------------------
+// Endpoints
+// -----------------------------------------------------------------------------
 
 app.MapTeamEndpoints();
 app.MapTeamMemberEndpoints();
@@ -297,17 +588,23 @@ app.MapEngineeringDashboardEndpoints();
 app.MapEngineeringRiskEndpoints();
 app.MapEngineeringActionEndpoints();
 
+// -----------------------------------------------------------------------------
+// Development endpoints
+// -----------------------------------------------------------------------------
+
 if (app.Environment.IsDevelopment())
 {
     app.MapPost(
             "/dev/token",
             (
-                DevelopmentJwtTokenGenerator tokenGenerator) =>
+                DevelopmentJwtTokenGenerator
+                    tokenGenerator) =>
             {
                 var userId = Guid.Parse(
                     "11111111-1111-1111-1111-111111111111");
 
-                var token = tokenGenerator.Generate(userId);
+                var token =
+                    tokenGenerator.Generate(userId);
 
                 return Results.Ok(new
                 {
@@ -319,15 +616,23 @@ if (app.Environment.IsDevelopment())
         .AllowAnonymous();
 }
 
-// Configure the HTTP request pipeline.
+// -----------------------------------------------------------------------------
+// Swagger
+// -----------------------------------------------------------------------------
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.MapGet("/health", () =>
-    Results.Ok(new
+// -----------------------------------------------------------------------------
+// Health
+// -----------------------------------------------------------------------------
+
+app.MapGet(
+    "/health",
+    () => Results.Ok(new
     {
         status = "Healthy"
     }));

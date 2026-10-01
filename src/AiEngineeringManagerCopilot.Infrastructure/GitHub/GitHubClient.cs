@@ -292,23 +292,33 @@ public sealed class GitHubClient(
         {
             using var request = requestFactory();
 
-            var response = await httpClient.SendAsync(
-                request,
-                cancellationToken);
-
-            if (!ShouldRetry(response) ||
-                attempt == maxAttempts)
+            try
             {
-                return response;
-            }
-            
-            var delay = GetRetryDelay(response);
+                var response = await httpClient.SendAsync(
+                    request,
+                    cancellationToken);
 
-            await _retryDelay.DelayAsync(
-                delay,
-                cancellationToken);
-            
-            response.Dispose();
+                if (!ShouldRetry(response) ||
+                    attempt == maxAttempts)
+                {
+                    return response;
+                }
+
+                var delay = GetRetryDelay(response);
+
+                response.Dispose();
+
+                await _retryDelay.DelayAsync(
+                    delay,
+                    cancellationToken);
+            }
+            catch (HttpRequestException)
+                when (attempt < maxAttempts)
+            {
+                await _retryDelay.DelayAsync(
+                    TimeSpan.FromSeconds(1),
+                    cancellationToken);
+            }
         }
 
         throw new InvalidOperationException(
