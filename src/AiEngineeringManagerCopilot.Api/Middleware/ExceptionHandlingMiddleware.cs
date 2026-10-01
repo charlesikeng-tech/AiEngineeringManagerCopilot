@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AiEngineeringManagerCopilot.Application.Common;
 
 namespace AiEngineeringManagerCopilot.Api.Middleware;
@@ -24,6 +25,14 @@ public sealed class ExceptionHandlingMiddleware(
                 context,
                 exception);
         }
+        catch (OperationCanceledException)
+            when (context.RequestAborted.IsCancellationRequested)
+        {
+            logger.LogDebug(
+                "Request cancelled by client for {Method} {Path}",
+                context.Request.Method,
+                context.Request.Path);
+        }
         catch (Exception exception)
         {
             logger.LogError(
@@ -36,14 +45,13 @@ public sealed class ExceptionHandlingMiddleware(
         }
     }
 
-    private static async Task HandleValidationExceptionAsync(
+    private static Task HandleValidationExceptionAsync(
         HttpContext context,
         ValidationException exception)
     {
-        context.Response.StatusCode =
-            StatusCodes.Status400BadRequest;
-
-        await context.Response.WriteAsJsonAsync(
+        return WriteProblemAsync(
+            context,
+            StatusCodes.Status400BadRequest,
             new
             {
                 type = "https://api.ai-engineering-manager/errors/validation",
@@ -55,14 +63,13 @@ public sealed class ExceptionHandlingMiddleware(
             });
     }
 
-    private static async Task HandleConflictExceptionAsync(
+    private static Task HandleConflictExceptionAsync(
         HttpContext context,
         ConflictException exception)
     {
-        context.Response.StatusCode =
-            StatusCodes.Status409Conflict;
-
-        await context.Response.WriteAsJsonAsync(
+        return WriteProblemAsync(
+            context,
+            StatusCodes.Status409Conflict,
             new
             {
                 type = "https://api.ai-engineering-manager/errors/conflict",
@@ -73,13 +80,12 @@ public sealed class ExceptionHandlingMiddleware(
             });
     }
 
-    private static async Task HandleUnexpectedExceptionAsync(
+    private static Task HandleUnexpectedExceptionAsync(
         HttpContext context)
     {
-        context.Response.StatusCode =
-            StatusCodes.Status500InternalServerError;
-
-        await context.Response.WriteAsJsonAsync(
+        return WriteProblemAsync(
+            context,
+            StatusCodes.Status500InternalServerError,
             new
             {
                 type = "https://api.ai-engineering-manager/errors/internal",
@@ -88,5 +94,18 @@ public sealed class ExceptionHandlingMiddleware(
                 detail = "An unexpected error occurred.",
                 traceId = context.TraceIdentifier
             });
+    }
+    
+    private static async Task WriteProblemAsync<T>(
+        HttpContext context,
+        int statusCode,
+        T problem)
+    {
+        context.Response.StatusCode = statusCode;
+        context.Response.ContentType = "application/problem+json";
+
+        await JsonSerializer.SerializeAsync(
+            context.Response.Body,
+            problem);
     }
 }

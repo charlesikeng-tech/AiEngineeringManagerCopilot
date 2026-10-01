@@ -1,11 +1,13 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace AiEngineeringManagerCopilot.Application.BackgroundJobs;
 
 public sealed class GitHubSyncBackgroundService(
     IServiceScopeFactory scopeFactory,
-    IBackgroundJobDelay delay)
+    IBackgroundJobDelay delay,
+    ILogger<GitHubSyncBackgroundService> logger)
     : BackgroundService
 {
     private static readonly TimeSpan SyncInterval =
@@ -29,12 +31,34 @@ public sealed class GitHubSyncBackgroundService(
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await RunOnceAsync(
-                stoppingToken);
+            try
+            {
+                await RunOnceAsync(
+                    stoppingToken);
+            }
+            catch (OperationCanceledException)
+                when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(
+                    exception,
+                    "GitHub background synchronization failed.");
+            }
 
-            await delay.DelayAsync(
-                SyncInterval,
-                stoppingToken);
+            try
+            {
+                await delay.DelayAsync(
+                    SyncInterval,
+                    stoppingToken);
+            }
+            catch (OperationCanceledException)
+                when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
         }
     }
 }
