@@ -594,51 +594,35 @@ public sealed class EngineeringMetricsService(
         DateOnly periodEnd,
         CancellationToken cancellationToken)
     {
-        var metric =
-            await metricRepository.GetByTeamAndPeriodAsync(
-                teamId,
-                metricType,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-
-        if (metric is null)
+        var now = DateTimeOffset.UtcNow;
+        
+        var metric = new EngineeringMetric
         {
-            metric = new EngineeringMetric
-            {
-                Id = Guid.NewGuid(),
-                TeamId = teamId,
-                MetricType = metricType,
-                Value = value,
-                DataStatus = dataStatus,
-                PeriodStart = periodStart,
-                PeriodEnd = periodEnd,
-                CreatedAt = DateTimeOffset.UtcNow
-            };
+            Id = Guid.NewGuid(),
+            TeamId = teamId,
+            MetricType = metricType,
+            Value = value,
+            DataStatus = dataStatus,
+            PeriodStart = periodStart,
+            PeriodEnd = periodEnd,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
 
-            await metricRepository.AddAsync(
+        var persistedMetric =
+            await metricRepository.UpsertAsync(
                 metric,
                 cancellationToken);
-        }
-        else
-        {
-            metric.Value = value;
-            metric.DataStatus = dataStatus;
-            metric.CreatedAt = DateTimeOffset.UtcNow;
-        }
-
-        await metricRepository.SaveChangesAsync(
-            cancellationToken);
 
         return new EngineeringMetricResponse(
-            metric.Id,
-            metric.TeamId,
-            metric.MetricType,
-            metric.Value,
-            metric.DataStatus,
-            metric.PeriodStart,
-            metric.PeriodEnd,
-            metric.CreatedAt);
+            persistedMetric.Id,
+            persistedMetric.TeamId,
+            persistedMetric.MetricType,
+            persistedMetric.Value,
+            persistedMetric.DataStatus,
+            persistedMetric.PeriodStart,
+            persistedMetric.PeriodEnd,
+            persistedMetric.CreatedAt);
     }
 
     private static void AddIfNotNull(

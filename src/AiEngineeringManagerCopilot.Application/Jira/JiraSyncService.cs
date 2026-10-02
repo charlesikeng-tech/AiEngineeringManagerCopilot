@@ -42,17 +42,16 @@ public sealed class JiraSyncService(
 
         foreach (var issue in issues)
         {
-            var workItem =
+            var existingWorkItem =
                 await jiraWorkItemRepository.GetByExternalIdAsync(
                     teamId,
                     issue.Id,
                     cancellationToken);
 
-            if (workItem is null)
-            {
-                workItem = new JiraWorkItem
+            await jiraWorkItemRepository.UpsertAsync(
+                new JiraWorkItem
                 {
-                    Id = Guid.NewGuid(),
+                    Id = existingWorkItem?.Id ?? Guid.NewGuid(),
                     TeamId = teamId,
                     ExternalId = issue.Id,
                     Key = issue.Key,
@@ -63,27 +62,17 @@ public sealed class JiraSyncService(
                     CreatedAt = issue.CreatedAt,
                     DoneAt = issue.DoneAt,
                     IsBlocked = issue.IsBlocked
-                };
+                },
+                cancellationToken);
 
-                await jiraWorkItemRepository.AddAsync(
-                    workItem,
-                    cancellationToken);
-
+            if (existingWorkItem is null)
+            {
                 created++;
-
-                continue;
             }
-
-            workItem.Key = issue.Key;
-            workItem.Summary = issue.Summary;
-            workItem.Status = issue.Status;
-            workItem.AssigneeExternalId =
-                issue.AssigneeAccountId;
-            workItem.CreatedAt = issue.CreatedAt;
-            workItem.DoneAt = issue.DoneAt;
-            workItem.IsBlocked = issue.IsBlocked;
-
-            updated++;
+            else
+            {
+                updated++;
+            }
         }
 
         connection.LastSyncAt =

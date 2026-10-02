@@ -72,4 +72,42 @@ public sealed class DeploymentRepository(
                     x.ExternalId == externalId,
                 cancellationToken);
     }
+
+    public async Task<Deployment> UpsertAsync(
+        Deployment deployment,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+             INSERT INTO deployments
+                 ("Id",
+                  "RepositoryId",
+                  "ExternalId",
+                  "Environment",
+                  "Status",
+                  "DeployedAt")
+             VALUES
+                 ({deployment.Id},
+                  {deployment.RepositoryId},
+                  {deployment.ExternalId},
+                  {deployment.Environment},
+                  {deployment.Status},
+                  {deployment.DeployedAt})
+             ON CONFLICT
+                 ("RepositoryId", "ExternalId")
+             DO UPDATE SET
+                 "Environment" = EXCLUDED."Environment",
+                 "Status" = EXCLUDED."Status",
+                 "DeployedAt" = EXCLUDED."DeployedAt";
+             """,
+            cancellationToken);
+
+        return await dbContext.Deployments
+            .AsNoTracking()
+            .SingleAsync(
+                x =>
+                    x.RepositoryId == deployment.RepositoryId &&
+                    x.ExternalId == deployment.ExternalId,
+                cancellationToken);
+    }
 }

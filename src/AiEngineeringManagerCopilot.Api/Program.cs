@@ -2,6 +2,7 @@
 
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using AiEngineeringManagerCopilot.Api.Authentication;
 using AiEngineeringManagerCopilot.Api.Endpoints;
 using AiEngineeringManagerCopilot.Api.Middleware;
@@ -30,7 +31,9 @@ using AiEngineeringManagerCopilot.Infrastructure.Persistence.Repositories;
 using AiEngineeringManagerCopilot.Infrastructure.Security;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -49,6 +52,12 @@ builder.Services.AddValidatorsFromAssemblyContaining<
 builder.Services.AddDataProtection();
 
 builder.Services.AddProblemDetails();
+builder.Services
+    .AddHealthChecks()
+    .AddDbContextCheck<AppDbContext>(
+        name: "database",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: ["ready"]);
 
 // OpenAPI / Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -129,6 +138,43 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+// -----------------------------------------------------------------------------
+// Rate limiting
+// -----------------------------------------------------------------------------
+
+const string aiAnalysisRateLimitPolicy = "AIAnalysis";
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode =
+        StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy(
+        aiAnalysisRateLimitPolicy,
+        httpContext =>
+        {
+            var userId =
+                httpContext.User.FindFirst(
+                        System.Security.Claims.ClaimTypes.NameIdentifier)
+                    ?.Value;
+
+            var partitionKey =
+                string.IsNullOrWhiteSpace(userId)
+                    ? "anonymous"
+                    : userId;
+
+            return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey,
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                    AutoReplenishment = true
+                });
+        });
+});
 
 // -----------------------------------------------------------------------------
 // Development
@@ -523,15 +569,26 @@ builder.Services.AddHttpClient<
 // CORS
 // -----------------------------------------------------------------------------
 
+const string frontendCorsPolicy = "Frontend";
+
+var allowedOrigins =
+    builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>()
+    ?? [];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(
-        "Frontend",
+        frontendCorsPolicy,
         policy =>
         {
+            if (allowedOrigins.Length > 0)
+            {
+                policy.WithOrigins(allowedOrigins);
+            }
+
             policy
-                .WithOrigins(
-                    "http://localhost:4200")
                 .AllowAnyHeader()
                 .AllowAnyMethod();
         });
@@ -567,10 +624,13 @@ if (app.Environment.IsDevelopment())
 // Middleware
 // -----------------------------------------------------------------------------
 
-app.UseCors("Frontend");
+app.UseCors(frontendCorsPolicy);
 
 app.UseAuthentication();
+
 app.UseAuthorization();
+
+
 
 // -----------------------------------------------------------------------------
 // Endpoints
@@ -630,12 +690,22 @@ if (app.Environment.IsDevelopment())
 // Health
 // -----------------------------------------------------------------------------
 
-app.MapGet(
-    "/health",
-    () => Results.Ok(new
-    {
-        status = "Healthy"
-    }));
+app.MapHealthChecks(
+        "/health/live",
+        new HealthCheckOptions
+        {
+            Predicate = _ => false
+        })
+    .AllowAnonymous();
+
+app.MapHealthChecks(
+        "/health/ready",
+        new HealthCheckOptions
+        {
+            Predicate = registration =>
+                registration.Tags.Contains("ready")
+        })
+    .AllowAnonymous();
 
 app.Run();
 

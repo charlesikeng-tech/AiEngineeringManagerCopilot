@@ -15,7 +15,6 @@
   background: var(--app-bg);
 }
 
-
 /* =========================================================
    SIDEBAR
    ========================================================= */
@@ -34,7 +33,6 @@
 
   background: #001529;
 }
-
 
 /* ---------------------------------------------------------
    Brand
@@ -120,7 +118,6 @@
   text-overflow: ellipsis;
 }
 
-
 /* =========================================================
    NAVIGATION
    ========================================================= */
@@ -196,10 +193,17 @@
   font-size: 14px;
 }
 
-
 /* ---------------------------------------------------------
    Collapsed navigation
    --------------------------------------------------------- */
+
+:host ::ng-deep .sidebar.ant-layout-sider-collapsed .navigation-menu {
+  width: 100%;
+}
+
+:host ::ng-deep .sidebar.ant-layout-sider-collapsed .navigation-menu.ant-menu-inline-collapsed {
+  width: 100%;
+}
 
 :host ::ng-deep .sidebar.ant-layout-sider-collapsed .navigation-menu .ant-menu-item {
   display: flex;
@@ -207,17 +211,68 @@
   justify-content: center;
 
   width: 48px;
+  height: 40px;
 
-  margin-right: auto;
-  margin-left: auto;
+  margin: 2px auto;
 
   padding: 0 !important;
+
+  overflow: visible;
+
+  line-height: 40px;
 }
 
-:host ::ng-deep .sidebar.ant-layout-sider-collapsed .navigation-menu .ant-menu-item .anticon {
-  margin: 0;
+/*
+ * Keep NG-ZORRO icons visible and perfectly centered.
+ */
+:host ::ng-deep .sidebar.ant-layout-sider-collapsed .navigation-menu .ant-menu-item nz-icon {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+
+  width: 20px;
+  height: 20px;
+
+  margin: 0 !important;
+
+  flex: 0 0 20px;
+
+  color: inherit;
 
   font-size: 16px;
+
+  line-height: 1;
+}
+
+/*
+ * Depending on the NG-ZORRO version, nz-icon renders an .anticon
+ * element. Keep this element centered too.
+ */
+:host ::ng-deep .sidebar.ant-layout-sider-collapsed .navigation-menu .ant-menu-item .anticon {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+
+  width: 20px;
+  height: 20px;
+
+  margin: 0 !important;
+
+  flex: 0 0 20px;
+
+  color: inherit;
+
+  font-size: 16px;
+
+  line-height: 1;
+}
+
+/*
+ * Hide only our explicit navigation label.
+ * Do not target generic spans because NG-ZORRO icons may use them.
+ */
+:host ::ng-deep .sidebar.ant-layout-sider-collapsed .navigation-item-label {
+  display: none !important;
 }
 
 .sidebar.ant-layout-sider-collapsed {
@@ -243,7 +298,6 @@
     }
   }
 }
-
 
 /* =========================================================
    SIDEBAR FOOTER
@@ -284,7 +338,6 @@
   line-height: 14px;
 }
 
-
 /* =========================================================
    WORKSPACE
    ========================================================= */
@@ -301,7 +354,6 @@
 :host ::ng-deep .sidebar.ant-layout-sider-collapsed+.workspace {
   margin-left: 72px;
 }
-
 
 /* =========================================================
    TOPBAR
@@ -351,7 +403,6 @@
   gap: 18px;
 }
 
-
 /* ---------------------------------------------------------
    Sidebar toggle
    --------------------------------------------------------- */
@@ -378,7 +429,6 @@
 
   background: var(--app-surface-hover);
 }
-
 
 /* ---------------------------------------------------------
    Product context
@@ -411,7 +461,6 @@
   line-height: 14px;
 }
 
-
 /* ---------------------------------------------------------
    Active team context
    --------------------------------------------------------- */
@@ -443,7 +492,6 @@
   min-width: 220px;
 }
 
-
 /* ---------------------------------------------------------
    Topbar divider
    --------------------------------------------------------- */
@@ -454,7 +502,6 @@
 
   background: var(--app-border);
 }
-
 
 /* ---------------------------------------------------------
    Environment
@@ -483,7 +530,6 @@
   border-radius: 50%;
 }
 
-
 /* =========================================================
    CONTENT
    ========================================================= */
@@ -497,12 +543,12 @@
   background: var(--app-bg);
 }
 
-
 /* =========================================================
    RESPONSIVE
    ========================================================= */
 
 @media (max-width: 900px) {
+
   .product-subtitle,
   .topbar-team-context__label {
     display: none;

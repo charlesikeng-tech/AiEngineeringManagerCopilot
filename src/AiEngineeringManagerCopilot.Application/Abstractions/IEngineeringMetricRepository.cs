@@ -5,6 +5,10 @@ namespace AiEngineeringManagerCopilot.Application.Abstractions;
 
 public interface IEngineeringMetricRepository
 {
+    Task<EngineeringMetric> UpsertAsync(
+        EngineeringMetric metric,
+        CancellationToken cancellationToken);
+    
     Task AddAsync(
         EngineeringMetric metric,
         CancellationToken cancellationToken);

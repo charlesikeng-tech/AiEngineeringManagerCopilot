@@ -27,7 +27,10 @@ public interface IPullRequestRepository
             DateOnly date,
             CancellationToken cancellationToken);
     
-
+    Task<PullRequest> UpsertAsync(
+        PullRequest pullRequest,
+        CancellationToken cancellationToken);
+    
     Task AddAsync(
         PullRequest pullRequest,
         CancellationToken cancellationToken);

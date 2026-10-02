@@ -9,6 +9,8 @@ using AiEngineeringManagerCopilot.Domain.Enums;
 namespace AiEngineeringManagerCopilot.Application.AI;
 
 public sealed class AIAnalysisService(
+    ITeamRepository teamRepository,
+    ICurrentUser currentUser,
     IEngineeringReportRepository reportRepository,
     IEngineeringMetricRepository metricRepository,
     IEngineeringReportInsightRepository insightRepository,
@@ -29,6 +31,17 @@ public sealed class AIAnalysisService(
         Guid reportId,
         CancellationToken cancellationToken)
     {
+        var team = await teamRepository.GetByIdAsync(
+            teamId,
+            currentUser.UserId,
+            cancellationToken);
+
+        if (team is null)
+        {
+            throw new KeyNotFoundException(
+                $"Report '{reportId}' was not found.");
+        }
+        
         var report = await reportRepository.GetByIdAsync(
             reportId,
             teamId,
@@ -251,6 +264,16 @@ public sealed class AIAnalysisService(
         Guid reportId,
         CancellationToken cancellationToken)
     {
+        var team = await teamRepository.GetByIdAsync(
+            teamId,
+            currentUser.UserId,
+            cancellationToken);
+
+        if (team is null)
+        {
+            return null;
+        }
+        
         var report = await reportRepository.GetByIdAsync(
             reportId,
             teamId,

@@ -35,7 +35,13 @@
           <span class="navigation-label"> WORKSPACE </span>
         }
 
-        <ul nz-menu nzTheme="dark" nzMode="inline" class="navigation-menu">
+        <ul
+          nz-menu
+          nzTheme="dark"
+          nzMode="inline"
+          class="navigation-menu"
+          [nzInlineCollapsed]="isCollapsed()"
+        >
           <li
             nz-menu-item
             routerLink="/dashboard"
@@ -46,25 +52,25 @@
           >
             <nz-icon nzType="dashboard" />
 
-            <span> Overview </span>
+            <span class="navigation-item-label">Overview</span>
           </li>
 
           <li nz-menu-item routerLink="/reports" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="file-text" />
 
-            <span> Reports </span>
+            <span class="navigation-item-label">Reports</span>
           </li>
 
           <li nz-menu-item routerLink="/risks" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="warning" />
 
-            <span> Risks </span>
+            <span class="navigation-item-label">Risks</span>
           </li>
 
           <li nz-menu-item routerLink="/actions" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="check-square" />
 
-            <span> Actions </span>
+            <span class="navigation-item-label">Actions</span>
           </li>
         </ul>
       </div>
@@ -76,11 +82,17 @@
           <span class="navigation-label"> MANAGEMENT </span>
         }
 
-        <ul nz-menu nzTheme="dark" nzMode="inline" class="navigation-menu">
+        <ul
+          nz-menu
+          nzTheme="dark"
+          nzMode="inline"
+          class="navigation-menu"
+          [nzInlineCollapsed]="isCollapsed()"
+        >
           <li nz-menu-item routerLink="/team" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="team" />
 
-            <span> Teams </span>
+            <span class="navigation-item-label">Teams</span>
           </li>
         </ul>
       </div>

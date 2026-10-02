@@ -11,15 +11,29 @@ public sealed class HttpCurrentUser(
     {
         get
         {
-            var value = httpContextAccessor
-                .HttpContext?
-                .User
-                .FindFirst(ClaimTypes.NameIdentifier)
-                ?.Value;
+            var httpContext = httpContextAccessor.HttpContext
+                              ?? throw new InvalidOperationException(
+                                  "No active HTTP context is available.");
 
-            return Guid.TryParse(value, out var userId)
-                ? userId
-                : Guid.Empty;
+            var user = httpContext.User;
+
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                throw new InvalidOperationException(
+                    "The current user is not authenticated.");
+            }
+
+            var value = user.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (!Guid.TryParse(value, out var userId) ||
+                userId == Guid.Empty)
+            {
+                throw new InvalidOperationException(
+                    "The authenticated user does not have a valid user identifier.");
+            }
+
+            return userId;
         }
     }
 }

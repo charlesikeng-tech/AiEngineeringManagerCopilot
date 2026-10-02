@@ -39,7 +39,11 @@ public class CustomWebApplicationFactory
         builder.UseSetting(
             "ConnectionStrings:Default",
             "Host=localhost;Port=5433;Database=ai_engineering_manager_test;Username=postgres;Password=postgres");
-
+        
+        builder.UseSetting(
+            "Cors:AllowedOrigins:0",
+            "http://localhost:4200");
+        
         builder.ConfigureServices(services =>
         {
             lock (DatabaseInitializationLock)

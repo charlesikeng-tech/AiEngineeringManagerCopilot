@@ -100,6 +100,31 @@ public sealed class EngineeringHealthScoreServiceTests
                     CreatedAt = DateTimeOffset.UtcNow
                 });
         }
+
+        public Task<EngineeringMetric> UpsertAsync(
+            EngineeringMetric metric,
+            CancellationToken cancellationToken)
+        {
+            var existing = _metrics.SingleOrDefault(x =>
+                x.TeamId == metric.TeamId &&
+                x.MetricType == metric.MetricType &&
+                x.PeriodStart == metric.PeriodStart &&
+                x.PeriodEnd == metric.PeriodEnd);
+
+            if (existing is null)
+            {
+                _metrics.Add(metric);
+
+                return Task.FromResult(metric);
+            }
+
+            existing.Value = metric.Value;
+            existing.DataStatus = metric.DataStatus;
+            existing.UpdatedAt = metric.UpdatedAt;
+
+            return Task.FromResult(existing);
+        }
+
         public Task AddAsync(
             EngineeringMetric metric,
             CancellationToken cancellationToken)

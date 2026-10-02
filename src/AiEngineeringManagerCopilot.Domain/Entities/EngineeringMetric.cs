@@ -19,4 +19,6 @@ public sealed class EngineeringMetric
     public DateOnly PeriodEnd { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset UpdatedAt { get; set; }
 }

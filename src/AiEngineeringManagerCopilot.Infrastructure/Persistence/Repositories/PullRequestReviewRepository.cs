@@ -38,6 +38,44 @@ public sealed class PullRequestReviewRepository(
                 cancellationToken);
     }
 
+    public async Task<PullRequestReview> UpsertAsync(
+        PullRequestReview review,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+             INSERT INTO pull_request_reviews
+                 ("Id",
+                  "ExternalId",
+                  "PullRequestId",
+                  "ReviewerExternalId",
+                  "SubmittedAt",
+                  "State")
+             VALUES
+                 ({review.Id},
+                  {review.ExternalId},
+                  {review.PullRequestId},
+                  {review.ReviewerExternalId},
+                  {review.SubmittedAt},
+                  {review.State.ToString()})
+             ON CONFLICT
+                 ("PullRequestId", "ExternalId")
+             DO UPDATE SET
+                 "ReviewerExternalId" = EXCLUDED."ReviewerExternalId",
+                 "SubmittedAt" = EXCLUDED."SubmittedAt",
+                 "State" = EXCLUDED."State";
+             """,
+            cancellationToken);
+
+        return await dbContext.PullRequestReviews
+            .AsNoTracking()
+            .SingleAsync(
+                x =>
+                    x.PullRequestId == review.PullRequestId &&
+                    x.ExternalId == review.ExternalId,
+                cancellationToken);
+    }
+
     public async Task AddAsync(
         PullRequestReview review,
         CancellationToken cancellationToken)

@@ -41,6 +41,9 @@ public sealed class EngineeringMetricConfiguration
 
         builder.Property(x => x.CreatedAt)
             .IsRequired();
+        
+        builder.Property(x => x.UpdatedAt)
+            .IsRequired();
 
         builder.HasIndex(x => x.TeamId);
 

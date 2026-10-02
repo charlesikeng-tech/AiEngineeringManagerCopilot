@@ -645,246 +645,287 @@ public sealed class GitHubSyncEndpointsTests
     
     [Fact]
     public async Task GitHubSync_ShouldFeedPRReviewTimeMetric()
-{
-    // Arrange
-    var team = await CreateTeamAsync();
+    {
+        // Arrange
+        var team = await CreateTeamAsync();
 
-    await CreateGitHubConnectionAsync(team.Id);
+        await CreateGitHubConnectionAsync(team.Id);
 
-    var fakeGitHubClient = GetFakeGitHubClient();
+        var fakeGitHubClient = GetFakeGitHubClient();
 
-    fakeGitHubClient.Repositories =
-    [
-        new GitHubRepository(
-            1001,
-            "backend",
-            "my-company/backend",
-            "https://github.com/my-company/backend",
-            "main")
-    ];
+        fakeGitHubClient.Repositories =
+        [
+            new GitHubRepository(
+                1001,
+                "backend",
+                "my-company/backend",
+                "https://github.com/my-company/backend",
+                "main")
+        ];
 
-    var createdAt = new DateTimeOffset(
-        2026, 9, 1, 10, 0, 0,
-        TimeSpan.Zero);
+        var createdAt = new DateTimeOffset(
+            2026, 9, 1, 10, 0, 0,
+            TimeSpan.Zero);
 
-    var reviewedAt = new DateTimeOffset(
-        2026, 9, 2, 14, 0, 0,
-        TimeSpan.Zero);
+        var reviewedAt = new DateTimeOffset(
+            2026, 9, 2, 14, 0, 0,
+            TimeSpan.Zero);
 
-    var mergedAt = new DateTimeOffset(
-        2026, 9, 3, 10, 0, 0,
-        TimeSpan.Zero);
+        var mergedAt = new DateTimeOffset(
+            2026, 9, 3, 10, 0, 0,
+            TimeSpan.Zero);
 
-    fakeGitHubClient.PullRequestsByRepository["backend"] =
-    [
-        new GitHubPullRequest(
-            5001,
-            42,
-            "Add recommendation endpoint",
-            "12345",
-            "closed",
-            createdAt,
-            mergedAt,
-            mergedAt)
-    ];
+        fakeGitHubClient.PullRequestsByRepository["backend"] =
+        [
+            new GitHubPullRequest(
+                5001,
+                42,
+                "Add recommendation endpoint",
+                "12345",
+                "closed",
+                createdAt,
+                mergedAt,
+                mergedAt)
+        ];
 
-    fakeGitHubClient.ReviewsByPullRequestNumber[42] =
-    [
-        new GitHubPullRequestReview(
-            7001,
-            "67890",
-            "APPROVED",
-            reviewedAt)
-    ];
+        fakeGitHubClient.ReviewsByPullRequestNumber[42] =
+        [
+            new GitHubPullRequestReview(
+                7001,
+                "67890",
+                "APPROVED",
+                reviewedAt)
+        ];
 
-    // Act - synchronize GitHub data
-    var syncResponse = await _client.PostAsync(
-        $"/teams/{team.Id}/github/sync",
-        null);
+        // Act - synchronize GitHub data
+        var syncResponse = await _client.PostAsync(
+            $"/teams/{team.Id}/github/sync",
+            null);
 
-    syncResponse.StatusCode.Should()
-        .Be(HttpStatusCode.OK);
+        syncResponse.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
 
-    // Act - calculate PR Review Time
-    var metricResponse = await _client.PostAsync(
-        $"/teams/{team.Id}/metrics/pr-review-time" +
-        "?periodStart=2026-09-01" +
-        "&periodEnd=2026-09-30",
-        null);
+        // Act - calculate PR Review Time
+        var metricResponse = await _client.PostAsync(
+            $"/teams/{team.Id}/metrics/pr-review-time" +
+            "?periodStart=2026-09-01" +
+            "&periodEnd=2026-09-30",
+            null);
 
-    // Assert
-    metricResponse.StatusCode.Should()
-        .Be(HttpStatusCode.OK);
+        // Assert
+        metricResponse.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
 
-    var metric = await metricResponse.Content
-        .ReadApiJsonAsync<EngineeringMetricResponse>();
+        var metric = await metricResponse.Content
+            .ReadApiJsonAsync<EngineeringMetricResponse>();
 
-    metric.Should().NotBeNull();
+        metric.Should().NotBeNull();
 
-    metric!.TeamId.Should()
-        .Be(team.Id);
+        metric!.TeamId.Should()
+            .Be(team.Id);
 
-    metric.MetricType.Should()
-        .Be(MetricType.PRReviewTime);
+        metric.MetricType.Should()
+            .Be(MetricType.PRReviewTime);
 
-    metric.Value.Should()
-        .Be(28m);
+        metric.Value.Should()
+            .Be(28m);
 
-    metric.PeriodStart.Should()
-        .Be(new DateOnly(2026, 9, 1));
+        metric.PeriodStart.Should()
+            .Be(new DateOnly(2026, 9, 1));
 
-    metric.PeriodEnd.Should()
-        .Be(new DateOnly(2026, 9, 30));
-}
+        metric.PeriodEnd.Should()
+            .Be(new DateOnly(2026, 9, 30));
+    }
     
     [Fact]
     public async Task SyncGitHubDeployments_ShouldCreateAndUpdateWithoutDuplicates()
-{
-    // Arrange
-    var team = await CreateTeamAsync();
-
-    await CreateGitHubConnectionAsync(team.Id);
-
-    var fakeGitHubClient = GetFakeGitHubClient();
-    fakeGitHubClient.Reset();
-
-    fakeGitHubClient.Repositories =
-    [
-        new GitHubRepository(
-            1001,
-            "backend",
-            "my-company/backend",
-            "https://github.com/my-company/backend",
-            "main")
-    ];
-
-    var deployedAt = new DateTimeOffset(
-        2026, 9, 10, 14, 0, 0,
-        TimeSpan.Zero);
-
-    fakeGitHubClient.DeploymentsByRepository["backend"] =
-    [
-        new GitHubDeployment(
-            8001,
-            "production",
-            deployedAt)
-    ];
-
-    fakeGitHubClient.DeploymentStatusesByDeploymentId[8001] =
-    [
-        new GitHubDeploymentStatus(
-            9001,
-            "in_progress",
-            new DateTimeOffset(
-                2026, 9, 10, 14, 5, 0,
-                TimeSpan.Zero))
-    ];
-
-    // Act - first sync
-    var firstResponse = await _client.PostAsync(
-        $"/teams/{team.Id}/github/sync",
-        null);
-
-    firstResponse.StatusCode.Should()
-        .Be(HttpStatusCode.OK);
-
-    Guid deploymentId;
-
-    // Assert - deployment created
-    using (var scope = _factory.Services.CreateScope())
     {
-        var dbContext =
-            scope.ServiceProvider
-                .GetRequiredService<AppDbContext>();
+        // Arrange
+        var team = await CreateTeamAsync();
 
-        var repository = await dbContext.Repositories
-            .SingleAsync(x =>
-                x.TeamId == team.Id &&
-                x.ExternalId == 1001);
+        await CreateGitHubConnectionAsync(team.Id);
 
-        var deployments = await dbContext.Deployments
-            .Where(x =>
-                x.RepositoryId == repository.Id &&
-                x.ExternalId == 8001)
-            .ToListAsync();
+        var fakeGitHubClient = GetFakeGitHubClient();
+        fakeGitHubClient.Reset();
 
-        deployments.Should().HaveCount(1);
+        fakeGitHubClient.Repositories =
+        [
+            new GitHubRepository(
+                1001,
+                "backend",
+                "my-company/backend",
+                "https://github.com/my-company/backend",
+                "main")
+        ];
 
-        var deployment = deployments.Single();
-
-        deploymentId = deployment.Id;
-
-        deployment.Environment.Should()
-            .Be("production");
-
-        deployment.Status.Should()
-            .Be("in_progress");
-
-        deployment.DeployedAt.Should()
-            .Be(deployedAt);
-    }
-
-    // GitHub now reports the same deployment as successful.
-    fakeGitHubClient.DeploymentStatusesByDeploymentId[8001] =
-    [
-        new GitHubDeploymentStatus(
-            9001,
-            "in_progress",
+        var deploymentCreatedAt =
             new DateTimeOffset(
-                2026, 9, 10, 14, 5, 0,
-                TimeSpan.Zero)),
+                2026,
+                9,
+                10,
+                14,
+                0,
+                0,
+                TimeSpan.Zero);
 
-        new GitHubDeploymentStatus(
-            9002,
-            "success",
+        var inProgressAt =
             new DateTimeOffset(
-                2026, 9, 10, 14, 10, 0,
-                TimeSpan.Zero))
-    ];
+                2026,
+                9,
+                10,
+                14,
+                5,
+                0,
+                TimeSpan.Zero);
 
-    // Act - second sync
-    var secondResponse = await _client.PostAsync(
-        $"/teams/{team.Id}/github/sync",
-        null);
+        var succeededAt =
+            new DateTimeOffset(
+                2026,
+                9,
+                10,
+                14,
+                10,
+                0,
+                TimeSpan.Zero);
 
-    secondResponse.StatusCode.Should()
-        .Be(HttpStatusCode.OK);
+        fakeGitHubClient.DeploymentsByRepository["backend"] =
+        [
+            new GitHubDeployment(
+                8001,
+                "production",
+                deploymentCreatedAt)
+        ];
 
-    // Assert - same deployment updated, no duplicate.
-    using (var scope = _factory.Services.CreateScope())
-    {
-        var dbContext =
-            scope.ServiceProvider
-                .GetRequiredService<AppDbContext>();
+        fakeGitHubClient.DeploymentStatusesByDeploymentId[8001] =
+        [
+            new GitHubDeploymentStatus(
+                9001,
+                "in_progress",
+                inProgressAt)
+        ];
 
-        var repository = await dbContext.Repositories
-            .SingleAsync(x =>
-                x.TeamId == team.Id &&
-                x.ExternalId == 1001);
+        // Act - first sync
+        var firstResponse =
+            await _client.PostAsync(
+                $"/teams/{team.Id}/github/sync",
+                null);
 
-        var deployments = await dbContext.Deployments
-            .Where(x =>
-                x.RepositoryId == repository.Id &&
-                x.ExternalId == 8001)
-            .ToListAsync();
+        // Assert - first sync
+        firstResponse.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
 
-        deployments.Should().HaveCount(1);
+        Guid deploymentId;
 
-        var deployment = deployments.Single();
+        using (var scope =
+               _factory.Services.CreateScope())
+        {
+            var dbContext =
+                scope.ServiceProvider
+                    .GetRequiredService<AppDbContext>();
 
-        deployment.Id.Should()
-            .Be(deploymentId);
+            var repository =
+                await dbContext.Repositories
+                    .SingleAsync(
+                        x =>
+                            x.TeamId == team.Id &&
+                            x.ExternalId == 1001);
 
-        deployment.Environment.Should()
-            .Be("production");
+            var deployments =
+                await dbContext.Deployments
+                    .AsNoTracking()
+                    .Where(
+                        x =>
+                            x.RepositoryId == repository.Id &&
+                            x.ExternalId == 8001)
+                    .ToListAsync();
 
-        deployment.Status.Should()
-            .Be("success");
+            deployments.Should()
+                .ContainSingle();
 
-        deployment.DeployedAt.Should()
-            .Be(deployedAt);
+            var deployment =
+                deployments.Single();
+
+            deploymentId = deployment.Id;
+
+            deployment.Environment.Should()
+                .Be("production");
+
+            deployment.Status.Should()
+                .Be("in_progress");
+
+            deployment.DeployedAt.Should()
+                .Be(inProgressAt);
+        }
+
+        // GitHub now reports the same deployment
+        // with a newer successful status.
+        fakeGitHubClient.DeploymentStatusesByDeploymentId[8001] =
+        [
+            new GitHubDeploymentStatus(
+                9001,
+                "in_progress",
+                inProgressAt),
+
+            new GitHubDeploymentStatus(
+                9002,
+                "success",
+                succeededAt)
+        ];
+
+        // Act - second sync
+        var secondResponse =
+            await _client.PostAsync(
+                $"/teams/{team.Id}/github/sync",
+                null);
+
+        // Assert - second sync
+        secondResponse.StatusCode.Should()
+            .Be(HttpStatusCode.OK);
+
+        using (var scope =
+               _factory.Services.CreateScope())
+        {
+            var dbContext =
+                scope.ServiceProvider
+                    .GetRequiredService<AppDbContext>();
+
+            var repository =
+                await dbContext.Repositories
+                    .SingleAsync(
+                        x =>
+                            x.TeamId == team.Id &&
+                            x.ExternalId == 1001);
+
+            var deployments =
+                await dbContext.Deployments
+                    .AsNoTracking()
+                    .Where(
+                        x =>
+                            x.RepositoryId == repository.Id &&
+                            x.ExternalId == 8001)
+                    .ToListAsync();
+
+            deployments.Should()
+                .ContainSingle();
+
+            var deployment =
+                deployments.Single();
+
+            // Critical invariant:
+            // the UPSERT must preserve the persisted Id.
+            deployment.Id.Should()
+                .Be(deploymentId);
+
+            deployment.Environment.Should()
+                .Be("production");
+
+            deployment.Status.Should()
+                .Be("success");
+
+            deployment.DeployedAt.Should()
+                .Be(succeededAt);
+        }
     }
-}
     
     [Fact]
     public async Task GitHubSync_ShouldFeedDeploymentFrequencyMetric()
@@ -1757,7 +1798,7 @@ public sealed class GitHubSyncEndpointsTests
     }
     
     [Fact]
-    public async Task GitHubSync_WhenDeploymentStatusFails_ShouldContinueWithOtherDeployments()
+    public async Task GitHubSync_WhenDeploymentStatusFails_ShouldPersistDeploymentWithUnknownStatusAndContinue()
     {
         // Arrange
         var team = await CreateTeamAsync();
@@ -1777,13 +1818,25 @@ public sealed class GitHubSyncEndpointsTests
                 "main")
         ];
 
-        var firstDeploymentAt = new DateTimeOffset(
-            2026, 9, 20, 10, 0, 0,
-            TimeSpan.Zero);
+        var firstDeploymentAt =
+            new DateTimeOffset(
+                2026,
+                9,
+                20,
+                10,
+                0,
+                0,
+                TimeSpan.Zero);
 
-        var secondDeploymentAt = new DateTimeOffset(
-            2026, 9, 20, 11, 0, 0,
-            TimeSpan.Zero);
+        var secondDeploymentAt =
+            new DateTimeOffset(
+                2026,
+                9,
+                20,
+                11,
+                0,
+                0,
+                TimeSpan.Zero);
 
         fakeGitHubClient.DeploymentsByRepository["backend"] =
         [
@@ -1798,11 +1851,14 @@ public sealed class GitHubSyncEndpointsTests
                 secondDeploymentAt)
         ];
 
+        // The status request for the first deployment fails.
+        // The deployment must still be persisted with an unknown status.
         fakeGitHubClient
             .DeploymentStatusExceptionsByDeploymentId[8001] =
             new HttpRequestException(
                 "GitHub deployment statuses unavailable");
 
+        // The second deployment has a valid GitHub status.
         fakeGitHubClient
             .DeploymentStatusesByDeploymentId[8002] =
         [
@@ -1829,28 +1885,56 @@ public sealed class GitHubSyncEndpointsTests
                 .GetRequiredService<AppDbContext>();
 
         var repository =
-            await dbContext.Repositories.SingleAsync(
-                x =>
-                    x.TeamId == team.Id &&
-                    x.ExternalId == 1001);
+            await dbContext.Repositories
+                .SingleAsync(
+                    x =>
+                        x.TeamId == team.Id &&
+                        x.ExternalId == 1001);
 
         var deployments =
             await dbContext.Deployments
+                .AsNoTracking()
                 .Where(x =>
                     x.RepositoryId == repository.Id)
+                .OrderBy(x => x.ExternalId)
                 .ToListAsync();
 
-        deployments.Should().ContainSingle();
+        deployments.Should().HaveCount(2);
 
-        deployments.Single()
-            .ExternalId.Should()
-            .Be(8002);
+        // Deployment whose status request failed.
+        var deploymentWithoutStatus =
+            deployments.Single(
+                x => x.ExternalId == 8001L);
 
-        deployments.Single()
-            .Status.Should()
+        deploymentWithoutStatus.Environment
+            .Should()
+            .Be("production");
+
+        deploymentWithoutStatus.Status
+            .Should()
+            .Be("unknown");
+
+        deploymentWithoutStatus.DeployedAt
+            .Should()
+            .Be(firstDeploymentAt);
+
+        // Deployment whose status was successfully retrieved.
+        var successfulDeployment =
+            deployments.Single(
+                x => x.ExternalId == 8002L);
+
+        successfulDeployment.Environment
+            .Should()
+            .Be("production");
+
+        successfulDeployment.Status
+            .Should()
             .Be("success");
-    } 
-    
+
+        successfulDeployment.DeployedAt
+            .Should()
+            .Be(secondDeploymentAt.AddMinutes(5));
+    }
     [Fact]
     public async Task SyncGitHubRepositories_ShouldReturn404_WhenTeamBelongsToAnotherUser()
     {

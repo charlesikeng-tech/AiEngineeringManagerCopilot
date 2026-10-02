@@ -8,29 +8,29 @@ public static class AIAnalysisEndpoints
         this IEndpointRouteBuilder app)
     {
         app.MapPost(
-            "/teams/{teamId:guid}/reports/{reportId:guid}/analyze",
-            async (
-                Guid teamId,
-                Guid reportId,
-                IAIAnalysisService service,
-                CancellationToken cancellationToken) =>
-            {
-                try
+                "/teams/{teamId:guid}/reports/{reportId:guid}/analyze",
+                async (
+                    Guid teamId,
+                    Guid reportId,
+                    IAIAnalysisService service,
+                    CancellationToken cancellationToken) =>
                 {
-                    var result = await service.AnalyzeAsync(
-                        teamId,
-                        reportId,
-                        cancellationToken);
+                    try
+                    {
+                        var result = await service.AnalyzeAsync(
+                            teamId,
+                            reportId,
+                            cancellationToken);
 
-                    return Results.Ok(result);
-                }
-                catch (KeyNotFoundException)
-                {
-                    return Results.NotFound();
-                }
-            })
+                        return Results.Ok(result);
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        return Results.NotFound();
+                    }
+                })
             .RequireAuthorization();
-        
+
         app.MapGet(
                 "/teams/{teamId:guid}/reports/{reportId:guid}/analysis",
                 async (

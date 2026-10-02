@@ -14,6 +14,7 @@ public sealed class JiraWorkItemRepository(
         CancellationToken cancellationToken)
     {
         return dbContext.JiraWorkItems
+            .AsNoTracking()
             .SingleOrDefaultAsync(
                 x =>
                     x.TeamId == teamId &&
@@ -36,8 +37,59 @@ public sealed class JiraWorkItemRepository(
         CancellationToken cancellationToken)
     {
         return dbContext.JiraWorkItems
-            .AddAsync(workItem, cancellationToken)
+            .AddAsync(
+                workItem,
+                cancellationToken)
             .AsTask();
+    }
+
+    public async Task<JiraWorkItem> UpsertAsync(
+        JiraWorkItem workItem,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+             INSERT INTO jira_work_items
+                 ("Id",
+                  "TeamId",
+                  "ExternalId",
+                  "Key",
+                  "Summary",
+                  "Status",
+                  "AssigneeExternalId",
+                  "CreatedAt",
+                  "DoneAt",
+                  "IsBlocked")
+             VALUES
+                 ({workItem.Id},
+                  {workItem.TeamId},
+                  {workItem.ExternalId},
+                  {workItem.Key},
+                  {workItem.Summary},
+                  {workItem.Status},
+                  {workItem.AssigneeExternalId},
+                  {workItem.CreatedAt},
+                  {workItem.DoneAt},
+                  {workItem.IsBlocked})
+             ON CONFLICT ("TeamId", "ExternalId")
+             DO UPDATE SET
+                 "Key" = EXCLUDED."Key",
+                 "Summary" = EXCLUDED."Summary",
+                 "Status" = EXCLUDED."Status",
+                 "AssigneeExternalId" = EXCLUDED."AssigneeExternalId",
+                 "CreatedAt" = EXCLUDED."CreatedAt",
+                 "DoneAt" = EXCLUDED."DoneAt",
+                 "IsBlocked" = EXCLUDED."IsBlocked";
+             """,
+            cancellationToken);
+
+        return await dbContext.JiraWorkItems
+            .AsNoTracking()
+            .SingleAsync(
+                x =>
+                    x.TeamId == workItem.TeamId &&
+                    x.ExternalId == workItem.ExternalId,
+                cancellationToken);
     }
 
     public Task SaveChangesAsync(

@@ -21,4 +21,8 @@ public interface IDeploymentRepository
         Guid repositoryId,
         long externalId,
         CancellationToken cancellationToken);
+    
+    Task<Deployment> UpsertAsync(
+        Deployment deployment,
+        CancellationToken cancellationToken);
 }

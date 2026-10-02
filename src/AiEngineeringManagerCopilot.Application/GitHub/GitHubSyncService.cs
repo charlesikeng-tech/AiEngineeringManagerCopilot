@@ -44,43 +44,36 @@ public sealed class GitHubSyncService(
 
         foreach (var githubRepository in repositories)
         {
-            var repository =
+            var existingRepository =
                 await repositoryRepository.GetByExternalIdAsync(
                     teamId,
                     githubRepository.Id,
                     cancellationToken);
 
-            if (repository is null)
+            var repository = new Repository
             {
-                repository = new Repository
-                {
-                    Id = Guid.NewGuid(),
-                    TeamId = teamId,
-                    ExternalId = githubRepository.Id,
-                    Name = githubRepository.Name,
-                    FullName = githubRepository.FullName,
-                    Url = githubRepository.HtmlUrl,
-                    DefaultBranch = githubRepository.DefaultBranch,
-                    IsActive = true
-                };
+                Id = existingRepository?.Id ?? Guid.NewGuid(),
+                TeamId = teamId,
+                ExternalId = githubRepository.Id,
+                Name = githubRepository.Name,
+                FullName = githubRepository.FullName,
+                Url = githubRepository.HtmlUrl,
+                DefaultBranch = githubRepository.DefaultBranch,
+                IsActive = true
+            };
 
-                await repositoryRepository.AddAsync(
-                    repository,
-                    cancellationToken);
+            await repositoryRepository.UpsertAsync(
+                repository,
+                cancellationToken);
 
+            if (existingRepository is null)
+            {
                 created++;
-
-                continue;
             }
-
-            repository.Name = githubRepository.Name;
-            repository.FullName = githubRepository.FullName;
-            repository.Url = githubRepository.HtmlUrl;
-            repository.DefaultBranch =
-                githubRepository.DefaultBranch;
-            repository.IsActive = true;
-
-            updated++;
+            else
+            {
+                updated++;
+            }
         }
 
         connection.LastSyncAt = DateTimeOffset.UtcNow;
@@ -113,52 +106,26 @@ public sealed class GitHubSyncService(
 
             foreach (var githubPullRequest in pullRequests)
             {
+
                 var pullRequest =
-                    await pullRequestRepository.GetByExternalIdAsync(
-                        repository.Id,
-                        githubPullRequest.Id,
+                    await pullRequestRepository.UpsertAsync(
+                        new PullRequest
+                        {
+                            Id = Guid.NewGuid(),
+                            RepositoryId = repository.Id,
+                            ExternalId = githubPullRequest.Id,
+                            AuthorExternalId =
+                                githubPullRequest.AuthorExternalId,
+                            Title = githubPullRequest.Title,
+                            State = MapPullRequestState(
+                                githubPullRequest),
+                            CreatedAt = githubPullRequest.CreatedAt,
+                            MergedAt = githubPullRequest.MergedAt,
+                            ClosedAt = githubPullRequest.ClosedAt,
+                            IsBlocked = false
+                        },
                         cancellationToken);
-
-                if (pullRequest is null)
-                {
-                    pullRequest = new PullRequest
-                    {
-                        Id = Guid.NewGuid(),
-                        RepositoryId = repository.Id,
-                        ExternalId = githubPullRequest.Id,
-                        AuthorExternalId =
-                            githubPullRequest.AuthorExternalId,
-                        Title = githubPullRequest.Title,
-                        State = MapPullRequestState(
-                            githubPullRequest),
-                        CreatedAt = githubPullRequest.CreatedAt,
-                        MergedAt = githubPullRequest.MergedAt,
-                        ClosedAt = githubPullRequest.ClosedAt,
-                        IsBlocked = false
-                    };
-
-                    await pullRequestRepository.AddAsync(
-                        pullRequest,
-                        cancellationToken);
-                }
-                else
-                {
-                    pullRequest.AuthorExternalId =
-                        githubPullRequest.AuthorExternalId;
-
-                    pullRequest.Title =
-                        githubPullRequest.Title;
-
-                    pullRequest.State =
-                        MapPullRequestState(githubPullRequest);
-
-                    pullRequest.MergedAt =
-                        githubPullRequest.MergedAt;
-
-                    pullRequest.ClosedAt =
-                        githubPullRequest.ClosedAt;
-                }
-
+                
                 IReadOnlyList<GitHubPullRequestReview> reviews;
 
                 try
@@ -178,54 +145,29 @@ public sealed class GitHubSyncService(
 
                 foreach (var githubReview in reviews)
                 {
-                    var review =
-                        await pullRequestReviewRepository
-                            .GetByExternalIdAsync(
-                                pullRequest.Id,
-                                githubReview.Id,
-                                cancellationToken);
-
-                    if (review is null)
-                    {
-                        review = new PullRequestReview
+                    await pullRequestReviewRepository.UpsertAsync(
+                        new PullRequestReview
                         {
                             Id = Guid.NewGuid(),
                             ExternalId = githubReview.Id,
                             PullRequestId = pullRequest.Id,
                             ReviewerExternalId =
                                 githubReview.ReviewerExternalId,
-                            SubmittedAt =
-                                githubReview.SubmittedAt,
+                            SubmittedAt = githubReview.SubmittedAt,
                             State = MapPullRequestReviewState(
                                 githubReview.State)
-                        };
-
-                        await pullRequestReviewRepository.AddAsync(
-                            review,
-                            cancellationToken);
-
-                        continue;
-                    }
-
-                    review.ReviewerExternalId =
-                        githubReview.ReviewerExternalId;
-
-                    review.SubmittedAt =
-                        githubReview.SubmittedAt;
-
-                    review.State =
-                        MapPullRequestReviewState(
-                            githubReview.State);
+                        },
+                        cancellationToken);
                 }
             }
 
             // Deployments belong to the repository,
             // not to a Pull Request.
-            IReadOnlyList<GitHubDeployment> githubDeployments;
+            IReadOnlyList<GitHubDeployment> deployments;
 
             try
             {
-                githubDeployments =
+                deployments =
                     await gitHubClient.GetDeploymentsAsync(
                         accessToken,
                         connection.Owner,
@@ -234,10 +176,10 @@ public sealed class GitHubSyncService(
             }
             catch (HttpRequestException)
             {
-                githubDeployments = [];
+                deployments = [];
             }
 
-            foreach (var githubDeployment in githubDeployments)
+            foreach (var githubDeployment in deployments)
             {
                 IReadOnlyList<GitHubDeploymentStatus> statuses;
 
@@ -253,51 +195,26 @@ public sealed class GitHubSyncService(
                 }
                 catch (HttpRequestException)
                 {
-                    continue;
+                    statuses = [];
                 }
 
                 var latestStatus = statuses
                     .OrderByDescending(x => x.CreatedAt)
                     .FirstOrDefault();
 
-                if (latestStatus is null)
-                {
-                    continue;
-                }
-
-                var deployment =
-                    await deploymentRepository.GetByExternalIdAsync(
-                        repository.Id,
-                        githubDeployment.Id,
-                        cancellationToken);
-
-                if (deployment is null)
-                {
-                    deployment = new Deployment
+                await deploymentRepository.UpsertAsync(
+                    new Deployment
                     {
                         Id = Guid.NewGuid(),
                         RepositoryId = repository.Id,
                         ExternalId = githubDeployment.Id,
                         Environment = githubDeployment.Environment,
-                        Status = latestStatus.State,
-                        DeployedAt = githubDeployment.CreatedAt
-                    };
-
-                    await deploymentRepository.AddAsync(
-                        deployment,
-                        cancellationToken);
-
-                    continue;
-                }
-
-                deployment.Environment =
-                    githubDeployment.Environment;
-
-                deployment.Status =
-                    latestStatus.State;
-
-                deployment.DeployedAt =
-                    githubDeployment.CreatedAt;
+                        Status = latestStatus?.State ?? "unknown",
+                        DeployedAt =
+                            latestStatus?.CreatedAt ??
+                            githubDeployment.CreatedAt
+                    },
+                    cancellationToken);
             }
         }
 

@@ -9,6 +9,52 @@ public sealed class EngineeringMetricRepository(
     AppDbContext dbContext)
     : IEngineeringMetricRepository
 {
+    public async Task<EngineeringMetric> UpsertAsync(
+        EngineeringMetric metric,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+             INSERT INTO engineering_metrics
+                 ("Id",
+                  "TeamId",
+                  "MetricType",
+                  "Value",
+                  "DataStatus",
+                  "PeriodStart",
+                  "PeriodEnd",
+                  "CreatedAt",
+                  "UpdatedAt")
+             VALUES
+                 ({metric.Id},
+                  {metric.TeamId},
+                  {metric.MetricType.ToString()},
+                  {metric.Value},
+                  {metric.DataStatus.ToString()},
+                  {metric.PeriodStart},
+                  {metric.PeriodEnd},
+                  {metric.CreatedAt},
+                  {metric.UpdatedAt})
+             ON CONFLICT
+                 ("TeamId", "MetricType", "PeriodStart", "PeriodEnd")
+             DO UPDATE SET
+                 "Value" = EXCLUDED."Value",
+                 "DataStatus" = EXCLUDED."DataStatus",
+                 "UpdatedAt" = EXCLUDED."UpdatedAt";
+             """,
+            cancellationToken);
+
+        return await dbContext.EngineeringMetrics
+            .AsNoTracking()
+            .SingleAsync(
+                x =>
+                    x.TeamId == metric.TeamId &&
+                    x.MetricType == metric.MetricType &&
+                    x.PeriodStart == metric.PeriodStart &&
+                    x.PeriodEnd == metric.PeriodEnd,
+                cancellationToken);
+    }
+
     public async Task AddAsync(
         EngineeringMetric metric,
         CancellationToken cancellationToken)

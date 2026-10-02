@@ -12,6 +12,10 @@ public interface IRepositoryRepository
     Task<IReadOnlyList<Repository>> GetByTeamIdAsync(
         Guid teamId,
         CancellationToken cancellationToken);
+    
+    Task<Repository> UpsertAsync(
+        Repository repository,
+        CancellationToken cancellationToken);
 
     Task AddAsync(
         Repository repository,

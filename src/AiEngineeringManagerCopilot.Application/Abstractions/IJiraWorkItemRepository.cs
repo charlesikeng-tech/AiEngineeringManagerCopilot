@@ -17,6 +17,10 @@ public interface IJiraWorkItemRepository
         JiraWorkItem workItem,
         CancellationToken cancellationToken);
 
+    Task<JiraWorkItem> UpsertAsync(
+        JiraWorkItem workItem,
+        CancellationToken cancellationToken);
+    
     Task SaveChangesAsync(
         CancellationToken cancellationToken);
     

@@ -13,6 +13,10 @@ public interface IPullRequestReviewRepository
         Guid pullRequestId,
         long externalId,
         CancellationToken cancellationToken);
+    
+    Task<PullRequestReview> UpsertAsync(
+        PullRequestReview review,
+        CancellationToken cancellationToken);
 
     Task AddAsync(
         PullRequestReview review,

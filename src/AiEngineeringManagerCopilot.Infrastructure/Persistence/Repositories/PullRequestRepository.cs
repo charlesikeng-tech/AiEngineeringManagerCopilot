@@ -129,6 +129,55 @@ public sealed class PullRequestRepository(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<PullRequest> UpsertAsync(
+        PullRequest pullRequest,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+             INSERT INTO pull_requests
+                 ("Id",
+                  "RepositoryId",
+                  "ExternalId",
+                  "AuthorExternalId",
+                  "Title",
+                  "State",
+                  "CreatedAt",
+                  "MergedAt",
+                  "ClosedAt",
+                  "IsBlocked")
+             VALUES
+                 ({pullRequest.Id},
+                  {pullRequest.RepositoryId},
+                  {pullRequest.ExternalId},
+                  {pullRequest.AuthorExternalId},
+                  {pullRequest.Title},
+                  {pullRequest.State.ToString()},
+                  {pullRequest.CreatedAt},
+                  {pullRequest.MergedAt},
+                  {pullRequest.ClosedAt},
+                  {pullRequest.IsBlocked})
+             ON CONFLICT
+                 ("RepositoryId", "ExternalId")
+             DO UPDATE SET
+                 "AuthorExternalId" = EXCLUDED."AuthorExternalId",
+                 "Title" = EXCLUDED."Title",
+                 "State" = EXCLUDED."State",
+                 "CreatedAt" = EXCLUDED."CreatedAt",
+                 "MergedAt" = EXCLUDED."MergedAt",
+                 "ClosedAt" = EXCLUDED."ClosedAt";
+             """,
+            cancellationToken);
+
+        return await dbContext.PullRequests
+            .AsNoTracking()
+            .SingleAsync(
+                x =>
+                    x.RepositoryId == pullRequest.RepositoryId &&
+                    x.ExternalId == pullRequest.ExternalId,
+                cancellationToken);
+    }
+
 
     public async Task AddAsync(
         PullRequest pullRequest,
