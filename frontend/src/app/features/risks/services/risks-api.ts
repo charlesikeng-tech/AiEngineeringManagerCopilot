@@ -2,8 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { environment } from '../../../../environments/environment';
-import { EngineeringRisksResponse } from '../../dashboard/models/engineering-dashboard-response';
+import { environment } from '@environments/environment';
+import { EngineeringRisksResponse } from '@features/dashboard/models/engineering-dashboard-response';
 
 @Injectable({
   providedIn: 'root',

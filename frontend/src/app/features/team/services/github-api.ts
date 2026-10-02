@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { environment } from '../../../../environments/environment';
+import { environment } from '@environments/environment';
 import { CreateGitHubConnectionRequest } from '../models/create-github-connection-request';
 import { GitHubConnection } from '../models/github-connection';
 import { GitHubConnectionTestResponse } from '../models/github-connection-test-response';

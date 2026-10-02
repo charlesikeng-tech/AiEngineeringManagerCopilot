@@ -32,8 +32,8 @@ import { provideEchartsCore } from 'ngx-echarts';
 import { firstValueFrom } from 'rxjs';
 
 import { routes } from './app.routes';
-import { AppInitializer } from './core/app/app-initializer';
-import { authInterceptor } from './core/auth/auth-interceptor';
+import { AppInitializer } from '@core/app/app-initializer';
+import { authInterceptor } from '@core/auth/auth-interceptor';
 
 echarts.use([LineChart, GridComponent, TooltipComponent, CanvasRenderer]);
 

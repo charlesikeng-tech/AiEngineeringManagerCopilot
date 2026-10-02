@@ -2,12 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { environment } from '../../../../environments/environment';
+import { environment } from '@environments/environment';
 import {
   EngineeringAction,
   EngineeringActionsResponse,
   UpdateEngineeringActionRequest,
-} from '../../dashboard/models/engineering-dashboard-response';
+} from '@features/dashboard/models/engineering-dashboard-response';
 
 @Injectable({
   providedIn: 'root',

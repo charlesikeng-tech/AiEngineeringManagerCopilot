@@ -11,11 +11,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { Subject, switchMap } from 'rxjs';
 
-import { TeamContext } from '../../../../core/team/team-context';
+import { TeamContext } from '@core/team/team-context';
 import {
   EngineeringRisk,
   EngineeringRisksResponse,
-} from '../../../dashboard/models/engineering-dashboard-response';
+} from '@features/dashboard/models/engineering-dashboard-response';
 import { RisksApi } from '../../services/risks-api';
 
 import { DatePipe, UpperCasePipe } from '@angular/common';

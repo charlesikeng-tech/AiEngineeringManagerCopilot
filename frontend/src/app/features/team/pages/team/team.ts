@@ -36,7 +36,7 @@ import { EMPTY } from 'rxjs';
 
 import { catchError, switchMap, tap } from 'rxjs/operators';
 
-import { TeamContext } from '../../../../core/team/team-context';
+import { TeamContext } from '@core/team/team-context';
 
 import { CreateGitHubConnectionRequest } from '../../models/create-github-connection-request';
 
@@ -57,7 +57,7 @@ import {
 
 import { EngineeringMetric, MetricDataStatus, MetricType } from '../../models/engineering-metric';
 
-import { ReportsApi } from '../../../reports/services/reports-api';
+import { ReportsApi } from '@features/reports/services/reports-api';
 
 import { GitHubApi } from '../../services/github-api';
 

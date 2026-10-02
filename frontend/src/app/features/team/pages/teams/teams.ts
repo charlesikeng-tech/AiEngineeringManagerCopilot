@@ -13,7 +13,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { Router } from '@angular/router';
-import { TeamContext } from '../../../../core/team/team-context';
+import { TeamContext } from '@core/team/team-context';
 import { CreateTeamRequest, Team } from '../../models/team.model';
 import { TeamApi } from '../../services/team-api';
 

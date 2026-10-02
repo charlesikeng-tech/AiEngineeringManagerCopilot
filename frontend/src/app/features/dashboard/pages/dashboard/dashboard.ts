@@ -6,7 +6,7 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
 import { NzTagModule } from 'ng-zorro-antd/tag';
-import { TeamContext } from '../../../../core/team/team-context';
+import { TeamContext } from '@core/team/team-context';
 import { AiAnalysis } from '../../components/ai-analysis/ai-analysis';
 import { DashboardKpis } from '../../components/dashboard-kpis/dashboard-kpis';
 import { DashboardRisks } from '../../components/dashboard-risks/dashboard-risks';

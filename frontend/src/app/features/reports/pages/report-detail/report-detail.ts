@@ -14,11 +14,11 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
 
-import { TeamContext } from '../../../../core/team/team-context';
+import { TeamContext } from '@core/team/team-context';
 import {
   AIAnalysis,
   EngineeringReport,
-} from '../../../dashboard/models/engineering-dashboard-response';
+} from '@features/dashboard/models/engineering-dashboard-response';
 import { ReportAnalysisApi } from '../../services/report-analysis-api';
 import { ReportsApi } from '../../services/reports-api';
 

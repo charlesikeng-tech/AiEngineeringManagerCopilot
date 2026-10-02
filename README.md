@@ -1099,6 +1099,18 @@ The API is available at `http://localhost:5249`; Swagger is available at
 
 ## Frontend development
 
+Frontend imports use aliases defined in `frontend/tsconfig.json`:
+
+| Alias | Directory |
+|---|---|
+| `@core/*` | `frontend/src/app/core/*` |
+| `@features/*` | `frontend/src/app/features/*` |
+| `@environments/*` | `frontend/src/environments/*` |
+
+Use aliases for imports across application areas and relative imports
+within the same feature. Both application and test TypeScript
+configurations inherit these aliases.
+
 Install a Node.js version supported by Angular 22 and npm. From a separate
 terminal, with the Development API running:
 

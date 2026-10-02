@@ -22,13 +22,13 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { EMPTY } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 
-import { TeamContext } from '../../../../core/team/team-context';
+import { TeamContext } from '@core/team/team-context';
 import {
   ActionStatus,
   EngineeringAction,
   EngineeringActionsResponse,
   UpdateEngineeringActionRequest,
-} from '../../../dashboard/models/engineering-dashboard-response';
+} from '@features/dashboard/models/engineering-dashboard-response';
 import { ActionsApi } from '../../services/actions-api';
 
 type EngineeringActionView = EngineeringAction & {

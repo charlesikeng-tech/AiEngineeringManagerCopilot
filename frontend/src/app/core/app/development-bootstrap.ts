@@ -2,11 +2,11 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core';
 import { catchError, Observable, of, switchMap, throwError } from 'rxjs';
 
-import { environment } from '../../../environments/environment';
+import { environment } from '@environments/environment';
 import {
   AIAnalysis,
   EngineeringReport,
-} from '../../features/dashboard/models/engineering-dashboard-response';
+} from '@features/dashboard/models/engineering-dashboard-response';
 
 @Injectable({
   providedIn: 'root',

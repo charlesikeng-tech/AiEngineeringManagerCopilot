@@ -3,8 +3,8 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, switchMap } from 'rxjs';
 
-import { TeamContext } from '../../../../core/team/team-context';
-import { EngineeringReport } from '../../../dashboard/models/engineering-dashboard-response';
+import { TeamContext } from '@core/team/team-context';
+import { EngineeringReport } from '@features/dashboard/models/engineering-dashboard-response';
 import { ReportsApi } from '../../services/reports-api';
 
 import { DatePipe, DecimalPipe } from '@angular/common';
