@@ -560,6 +560,18 @@ Architecture principles.
 
 ------------------------------------------------------------------------
 
+## API startup
+
+`Program.cs` is the API composition root. Service registration is grouped
+in `AiEngineeringManagerCopilot.Api/DependencyInjection/` by responsibility:
+API configuration, authentication, persistence, application services,
+GitHub/Jira integrations, AI analysis, and background jobs.
+
+Middleware ordering, endpoint mapping, development initialization, and
+health routes remain explicit in `Program.cs`. The registration modules
+preserve service lifetimes, configuration validation, and the existing
+Development, Test, and Production behavior.
+
 ## Dependency direction
 
 The project dependencies follow:
@@ -1102,7 +1114,9 @@ AiEngineeringManagerCopilot/
 ├── src/
 │   │
 │   ├── AiEngineeringManagerCopilot.Api/
-│   │   └── Minimal API endpoints
+│   │   ├── DependencyInjection/
+│   │   ├── Endpoints/
+│   │   └── Program.cs
 │   │
 │   ├── AiEngineeringManagerCopilot.Application/
 │   │   ├── Abstractions/
