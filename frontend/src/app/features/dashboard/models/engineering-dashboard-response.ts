@@ -10,6 +10,7 @@ export interface EngineeringDashboardResponse {
 }
 
 export interface EngineeringReport {
+  hasSnapshot?: boolean;
   id: string;
   teamId: string;
   periodStart: string;

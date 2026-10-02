@@ -4,6 +4,8 @@ namespace AiEngineeringManagerCopilot.Application.AI;
 
 public interface IAIAnalysisRepository
 {
+    Task<IAsyncDisposable> AcquireReportLockAsync(Guid reportId, CancellationToken cancellationToken);
+
     Task AddAsync(
         AIAnalysis analysis,
         CancellationToken cancellationToken);

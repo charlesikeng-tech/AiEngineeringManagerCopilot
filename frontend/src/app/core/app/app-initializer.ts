@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, of, switchMap } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
 import { Auth } from '../auth/auth';
 import { TeamApi } from '../team/team-api';
 import { TeamContext } from '../team/team-context';
@@ -16,6 +17,10 @@ export class AppInitializer {
   private readonly developmentBootstrap = inject(DevelopmentBootstrap);
 
   initialize(): Observable<void> {
+    if (environment.production) {
+      return of(undefined);
+    }
+
     return this.auth.authenticateForDevelopment().pipe(
       switchMap(() => this.teamApi.getTeams()),
 

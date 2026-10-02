@@ -39,6 +39,7 @@ public sealed class GitHubSyncService(
                 accessToken,
                 cancellationToken);
 
+        var failedRequests = 0;
         var created = 0;
         var updated = 0;
 
@@ -76,7 +77,7 @@ public sealed class GitHubSyncService(
             }
         }
 
-        connection.LastSyncAt = DateTimeOffset.UtcNow;
+
 
         await repositoryRepository.SaveChangesAsync(
             cancellationToken);
@@ -101,6 +102,7 @@ public sealed class GitHubSyncService(
             }
             catch (HttpRequestException)
             {
+                failedRequests++;
                 continue;
             }
 
@@ -140,6 +142,7 @@ public sealed class GitHubSyncService(
                 }
                 catch (HttpRequestException)
                 {
+                    failedRequests++;
                     reviews = [];
                 }
 
@@ -176,6 +179,7 @@ public sealed class GitHubSyncService(
             }
             catch (HttpRequestException)
             {
+                failedRequests++;
                 deployments = [];
             }
 
@@ -195,6 +199,7 @@ public sealed class GitHubSyncService(
                 }
                 catch (HttpRequestException)
                 {
+                    failedRequests++;
                     statuses = [];
                 }
 
@@ -227,13 +232,19 @@ public sealed class GitHubSyncService(
         await deploymentRepository.SaveChangesAsync(
             cancellationToken);
 
+        if (failedRequests == 0)
+        {
+            connection.LastSyncAt = DateTimeOffset.UtcNow;
+        }
+
         await gitHubConnectionRepository.SaveChangesAsync(
             cancellationToken);
 
         return new GitHubSyncResponse(
             repositories.Count,
             created,
-            updated);
+            updated,
+            failedRequests);
     }
 
     private static PullRequestState MapPullRequestState(

@@ -8,7 +8,11 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(Auth);
   const token = auth.getToken();
 
-  const isApiRequest = request.url.startsWith(environment.apiUrl);
+  const api = new URL(environment.apiUrl, document.baseURI);
+  const target = new URL(request.url, document.baseURI);
+  const apiPath = api.pathname.replace(/\/$/, '');
+  const isApiRequest = target.origin === api.origin &&
+    (target.pathname === apiPath || target.pathname.startsWith(`${apiPath}/`));
 
   if (!token || !isApiRequest) {
     return next(request);

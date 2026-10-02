@@ -29,7 +29,8 @@ public static class AIAnalysisEndpoints
                         return Results.NotFound();
                     }
                 })
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireRateLimiting("AIAnalysis");
 
         app.MapGet(
                 "/teams/{teamId:guid}/reports/{reportId:guid}/analysis",

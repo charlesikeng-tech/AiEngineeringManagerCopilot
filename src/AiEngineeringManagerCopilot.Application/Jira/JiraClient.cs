@@ -21,6 +21,8 @@ public sealed class JiraClient(
         string apiToken,
         CancellationToken cancellationToken)
     {
+        JiraDestination.Validate(baseUrl);
+
         var url =
             $"{baseUrl.TrimEnd('/')}/rest/api/3/myself";
 
@@ -72,6 +74,8 @@ public sealed class JiraClient(
         string projectKey,
         CancellationToken cancellationToken)
     {
+        JiraDestination.Validate(baseUrl);
+
         var issues = new List<JiraIssue>();
 
         string? nextPageToken = null;
@@ -92,7 +96,9 @@ public sealed class JiraClient(
                     $"&nextPageToken={Uri.EscapeDataString(nextPageToken)}";
             }
 
-            var url =
+            JiraDestination.Validate(baseUrl);
+
+        var url =
                 $"{baseUrl.TrimEnd('/')}/rest/api/3/search/jql?{query}";
 
             using var response = await SendWithRetryAsync(

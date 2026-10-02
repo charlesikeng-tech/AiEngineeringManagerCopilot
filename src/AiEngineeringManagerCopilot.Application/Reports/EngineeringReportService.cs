@@ -1,5 +1,6 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.Actions;
+using AiEngineeringManagerCopilot.Application.AI;
 using AiEngineeringManagerCopilot.Application.Health;
 using AiEngineeringManagerCopilot.Application.Metrics;
 using AiEngineeringManagerCopilot.Application.Risks;
@@ -11,7 +12,7 @@ namespace AiEngineeringManagerCopilot.Application.Reports;
 public sealed class EngineeringReportService(
     ITeamRepository teamRepository,
     ICurrentUser currentUser,
-    IEngineeringHealthScoreService healthScoreService,
+    IEngineeringHealthScoreCalculator healthScoreCalculator,
     IEngineeringReportRepository reportRepository,
     IEngineeringMetricRepository metricRepository,
     IEngineeringInsightGenerator insightGenerator,
@@ -51,24 +52,18 @@ public sealed class EngineeringReportService(
             return null;
         }
 
-        var healthScore = await healthScoreService.CalculateAsync(
-            teamId,
-            periodStart,
-            periodEnd,
-            cancellationToken);
+        var sourceMetrics = await metricRepository.GetByTeamAndPeriodAsync(
+            teamId, periodStart, periodEnd, cancellationToken);
+        var metrics = sourceMetrics
+            .Where(x => x.DataStatus == MetricDataStatus.Available && x.Value.HasValue)
+            .ToDictionary(x => x.MetricType, x => x.Value!.Value);
+        decimal? Value(MetricType type) => metrics.TryGetValue(type, out var value) ? value : null;
+        var healthScore = healthScoreCalculator.Calculate(
+            Value(MetricType.CycleTime), Value(MetricType.PRReviewTime),
+            (int?)Value(MetricType.DeploymentFrequency), Value(MetricType.ChangeFailureRate),
+            Value(MetricType.LeadTime), (int?)Value(MetricType.OpenPRs),
+            (int?)Value(MetricType.MergedPRs), (int?)Value(MetricType.BlockedItems));
 
-        if (healthScore is null)
-        {
-            return null;
-        }
-        
-        
-        var metrics = await GetMetricsAsync(
-            teamId,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-        
         var trends = await GetTrendsAsync(
             teamId,
             periodStart,
@@ -138,7 +133,20 @@ public sealed class EngineeringReportService(
                 CreatedAt = DateTimeOffset.UtcNow
             })
             .ToList();
-        
+
+        report.SnapshotJson = new EngineeringReportSnapshot(
+            1,
+            sourceMetrics.Select(metric =>
+            {
+                var definition = MetricDefinitions.Find(metric.MetricType);
+                return new AIAnalysisMetricContext(metric.MetricType, metric.Value,
+                    metric.DataStatus, definition?.Unit, definition?.TemporalSemantics,
+                    definition?.Description);
+            }).ToList(),
+            metrics.Select(metric => new EngineeringReportMetricResponse(
+                metric.Key, metric.Value, metricScoreCalculator.Calculate(metric.Key, metric.Value))).ToList(),
+            trends).Serialize();
+
         await reportRepository.AddAsync(
             report,
             cancellationToken);
@@ -217,18 +225,10 @@ public sealed class EngineeringReportService(
             reportId,
             cancellationToken);
         
-        var metrics = await GetMetricsAsync(
-            teamId,
-            report.PeriodStart,
-            report.PeriodEnd,
-            cancellationToken);
-        
-        var trends = await GetTrendsAsync(
-            teamId,
-            report.PeriodStart,
-            report.PeriodEnd,
-            metrics,
-            cancellationToken);
+        var snapshot = EngineeringReportSnapshot.Read(report);
+        var metrics = snapshot?.Metrics.ToDictionary(x => x.MetricType, x => x.Value)
+                ?? new Dictionary<MetricType, decimal>();
+        IReadOnlyList<MetricTrendResult> trends = snapshot?.Trends ?? [];
         
         return ToResponse(
             report,
@@ -283,18 +283,10 @@ public sealed class EngineeringReportService(
                 report.Id,
                 cancellationToken);
             
-            var metrics = await GetMetricsAsync(
-                teamId,
-                report.PeriodStart,
-                report.PeriodEnd,
-                cancellationToken);
-            
-            var trends = await GetTrendsAsync(
-                teamId,
-                report.PeriodStart,
-                report.PeriodEnd,
-                metrics,
-                cancellationToken);
+            var snapshot = EngineeringReportSnapshot.Read(report);
+            var metrics = snapshot?.Metrics.ToDictionary(x => x.MetricType, x => x.Value)
+                ?? new Dictionary<MetricType, decimal>();
+            IReadOnlyList<MetricTrendResult> trends = snapshot?.Trends ?? [];
             
             responses.Add(
                 ToResponse(
@@ -331,16 +323,6 @@ public sealed class EngineeringReportService(
             .Select(ToTrendResponse)
             .ToList();
         
-        var reportMetrics = metrics
-            .OrderBy(x => x.Key)
-            .Select(metric => new EngineeringReportMetricResponse(
-                metric.Key,
-                metric.Value,
-                metricScoreCalculator.Calculate(
-                    metric.Key,
-                    metric.Value)))
-            .ToList();
-
         return new EngineeringReportResponse(
             report.Id,
             report.TeamId,
@@ -351,11 +333,12 @@ public sealed class EngineeringReportService(
             healthLevel,
             report.DataCoverage,
             report.CreatedAt,
-            reportMetrics,
+            EngineeringReportSnapshot.Read(report)?.Metrics ?? [],
             insights,
             actions,
             risks,
-            reportTrends);
+            reportTrends,
+            report.SnapshotJson is not null);
     }
 
     private static string BuildExecutiveSummary(

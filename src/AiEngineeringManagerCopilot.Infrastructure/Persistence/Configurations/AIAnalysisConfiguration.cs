@@ -20,6 +20,6 @@ public sealed class AIAnalysisConfiguration
         builder.Property(x => x.CreatedAt)
             .IsRequired();
 
-        builder.HasIndex(x => x.ReportId);
+        builder.HasIndex(x => x.ReportId).IsUnique();
     }
 }

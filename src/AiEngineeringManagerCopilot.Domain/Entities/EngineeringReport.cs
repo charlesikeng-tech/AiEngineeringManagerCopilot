@@ -16,5 +16,7 @@ public sealed class EngineeringReport
 
     public decimal DataCoverage { get; set; }
 
+    public string? SnapshotJson { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 }

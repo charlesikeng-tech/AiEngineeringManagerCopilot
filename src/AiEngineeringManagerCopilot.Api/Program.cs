@@ -168,7 +168,9 @@ builder.Services.AddRateLimiter(options =>
                 partitionKey,
                 _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 5,
+                    PermitLimit = builder.Environment.IsEnvironment("Test")
+                        ? builder.Configuration.GetValue("Testing:AIAnalysisPermitLimit", 10000)
+                        : 5,
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0,
                     AutoReplenishment = true
@@ -563,7 +565,11 @@ builder.Services.AddHttpClient<
 
 builder.Services.AddHttpClient<
     IJiraClient,
-    JiraClient>();
+    JiraClient>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        AllowAutoRedirect = false
+    });
 
 // -----------------------------------------------------------------------------
 // CORS
@@ -629,6 +635,8 @@ app.UseCors(frontendCorsPolicy);
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.UseRateLimiter();
 
 
 

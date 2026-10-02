@@ -26,7 +26,7 @@ public sealed class GitHubBackgroundSyncRunner(
                     connection.TeamId,
                     cancellationToken);
 
-                if (result is null)
+                if (result is null || !result.IsComplete)
                 {
                     failed++;
                     continue;

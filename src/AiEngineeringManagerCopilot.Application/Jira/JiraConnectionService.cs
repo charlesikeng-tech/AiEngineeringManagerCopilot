@@ -38,7 +38,7 @@ public sealed class JiraConnectionService(
                 "A Jira connection already exists for this team.");
         }
 
-        var baseUrl = request.BaseUrl.Trim().TrimEnd('/');
+        var baseUrl = JiraDestination.Validate(request.BaseUrl).GetLeftPart(UriPartial.Authority);
         var email = request.Email.Trim();
         var apiToken = request.ApiToken.Trim();
         

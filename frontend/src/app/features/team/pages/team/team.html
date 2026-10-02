@@ -279,6 +279,9 @@
         <!-- Sync result -->
 
         @if (githubSyncResult(); as syncResult) {
+          @if (!syncResult.isComplete) {
+            <p role="status">Synchronization incomplete. {{ syncResult.failedRequests }} requests failed; metrics may have incomplete source data.</p>
+          }
           <div class="integration-result integration-result--success">
             <div class="integration-result__content">
               <strong>Synchronization completed</strong>

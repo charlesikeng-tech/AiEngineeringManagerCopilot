@@ -16,4 +16,5 @@ public sealed record EngineeringReportResponse(
     IReadOnlyList<EngineeringReportInsightResponse> Insights,
     IReadOnlyList<EngineeringActionResponse> Actions,
     IReadOnlyList<EngineeringReportRiskResponse> Risks,
-    IReadOnlyList<EngineeringMetricTrendResponse> Trends);
+    IReadOnlyList<EngineeringMetricTrendResponse> Trends,
+    bool HasSnapshot = false);

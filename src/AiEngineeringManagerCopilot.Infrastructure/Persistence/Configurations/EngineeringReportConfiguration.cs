@@ -22,6 +22,8 @@ public sealed class EngineeringReportConfiguration
                     "\"DataCoverage\" >= 0 AND \"DataCoverage\" <= 100");
             });
 
+        builder.Property(x => x.SnapshotJson).HasColumnType("jsonb");
+
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id)

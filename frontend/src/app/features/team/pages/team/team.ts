@@ -919,11 +919,13 @@ export class TeamPage {
 
           this.githubSyncing.set(false);
 
-          this.message.success(
-            `GitHub synchronized: ${result.synchronized} repository${
-              result.synchronized === 1 ? '' : 'ies'
-            } synchronized.`,
-          );
+          if (result.isComplete) {
+            this.message.success(`GitHub synchronized: ${result.synchronized} repositories.`);
+          } else {
+            this.message.warning(
+              `GitHub synchronization is incomplete: ${result.failedRequests} requests failed. The last successful sync date has been preserved.`,
+            );
+          }
 
           // Refresh the connection from the backend because
 

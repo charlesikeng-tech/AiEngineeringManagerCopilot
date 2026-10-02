@@ -15,10 +15,12 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render title', async () => {
+  it('should show the holding screen in production', async () => {
     const fixture = TestBed.createComponent(App);
+    Object.defineProperty(fixture.componentInstance, 'production', { value: true });
+    fixture.detectChanges();
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, frontend');
+    expect(compiled.querySelector('h1')?.textContent).toContain('AI Engineering Manager Copilot');
   });
 });

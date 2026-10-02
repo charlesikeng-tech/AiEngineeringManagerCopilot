@@ -173,6 +173,16 @@ public sealed class GitHubBackgroundSyncRunnerTests
         }
     }
 
+    [Fact]
+    public async Task PartialSyncMustNotCountAsSuccess()
+    {
+        var repository = new FakeGitHubConnectionRepository([CreateConnection(Guid.NewGuid())]);
+        var service = new FakeGitHubSyncService { FailedRequests = 1 };
+        var result = await new GitHubBackgroundSyncRunner(repository, service).RunAsync(CancellationToken.None);
+        Assert.Equal(0, result.Succeeded);
+        Assert.Equal(1, result.Failed);
+    }
+
     private sealed class FakeGitHubSyncService
         : IGitHubSyncService
     {
@@ -181,6 +191,7 @@ public sealed class GitHubBackgroundSyncRunnerTests
         public Guid? FailingTeamId { get; set; }
 
         public bool ReturnNull { get; set; }
+        public int FailedRequests { get; set; }
         
         
         public Task<GitHubSyncResponse?> SyncAsync(
@@ -204,7 +215,8 @@ public sealed class GitHubBackgroundSyncRunnerTests
                 new GitHubSyncResponse(
                     Synchronized: 1,
                     Created: 1,
-                    Updated: 0));
+                    Updated: 0,
+                    FailedRequests: FailedRequests));
         }
     }
 }
