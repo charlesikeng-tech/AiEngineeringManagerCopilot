@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.0](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.4.0...v1.5.0) (2026-10-02)
+
+
+### Features
+
+* **actions:** complete engineering actions v1 ([85de832](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/85de8320bd4671f7dcd2645ca74ea00c3d09d8f1))
+* add engineering dashboard API and initialize Angular frontend ([9b35f16](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/9b35f16c4363ef8f2fcca9b915a4f29192018d35))
+* complete Jira integration and AI semantic hardening ([f2ed43e](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/f2ed43eac5db022df9b07b299c6b1f97ce2f083b))
+* **dashboard:** complete engineering dashboard v1 ([e7d4036](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/e7d4036603bc07570ac88180b3e65e4ab85fc7d1))
+* harden production security and fix collapsed sidebar ([c33c412](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/c33c4127dcbe51e80893709dc021d6e29932bdf5))
+* improve engineering insights navigation and reporting ([088e53b](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/088e53bf397a378bc16d4daa8a0f2eb94cca0642))
+* **risks:** complete engineering risks v1 ([afdce58](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/afdce58d114309f767c611760a3960c66f1737f8))
+* **team:** complete team management v1 ([8a26b99](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/8a26b991a8972ce8be718d3f0e1db75a08cbb5d0))
+
 ## [1.4.0](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.3.0...v1.4.0) (2026-09-25)
 
 
