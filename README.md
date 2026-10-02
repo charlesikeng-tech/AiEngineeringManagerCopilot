@@ -304,6 +304,17 @@ CreatedAt
 The metric architecture is intentionally extensible so additional
 signals can be introduced later.
 
+`EngineeringMetricsService` uses the same calculation pipeline for
+individual metrics and the complete set. A complete calculation checks
+team ownership once, reads each integration connection once, and shares
+period pull requests and deployments between the calculators that need
+them. Input data is loaded sequentially into a per-call context; it is
+not cached across teams, periods, or requests.
+
+Individual calculations only load the source and datasets they need.
+The distinction between `SourceNotConfigured`, `NoData`, and an available
+zero value is preserved.
+
 ------------------------------------------------------------------------
 
 # ❤️ Engineering health

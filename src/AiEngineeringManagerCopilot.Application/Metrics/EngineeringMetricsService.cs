@@ -24,10 +24,108 @@ public sealed class EngineeringMetricsService(
     IJiraConnectionRepository jiraConnectionRepository)
     : IEngineeringMetricsService
 {
-    public async Task<IReadOnlyList<EngineeringMetricResponse>?> CalculateAllAsync(
+    private static readonly IReadOnlyList<MetricType> AllMetricTypes =
+    [
+        MetricType.CycleTime,
+        MetricType.PRReviewTime,
+        MetricType.DeploymentFrequency,
+        MetricType.ChangeFailureRate,
+        MetricType.LeadTime,
+        MetricType.OpenPRs,
+        MetricType.MergedPRs,
+        MetricType.BlockedItems
+    ];
+
+    public Task<IReadOnlyList<EngineeringMetricResponse>?> CalculateAllAsync(
         Guid teamId,
         DateOnly periodStart,
         DateOnly periodEnd,
+        CancellationToken cancellationToken) =>
+        CalculateAsync(
+            teamId, periodStart, periodEnd, AllMetricTypes, cancellationToken);
+
+    public Task<EngineeringMetricResponse?> CalculateCycleTimeAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        CancellationToken cancellationToken) =>
+        CalculateSingleAsync(
+            teamId, periodStart, periodEnd, MetricType.CycleTime, cancellationToken);
+
+    public Task<EngineeringMetricResponse?> CalculatePRReviewTimeAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        CancellationToken cancellationToken) =>
+        CalculateSingleAsync(
+            teamId, periodStart, periodEnd, MetricType.PRReviewTime, cancellationToken);
+
+    public Task<EngineeringMetricResponse?> CalculateDeploymentFrequencyAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        CancellationToken cancellationToken) =>
+        CalculateSingleAsync(
+            teamId, periodStart, periodEnd, MetricType.DeploymentFrequency, cancellationToken);
+
+    public Task<EngineeringMetricResponse?> CalculateChangeFailureRateAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        CancellationToken cancellationToken) =>
+        CalculateSingleAsync(
+            teamId, periodStart, periodEnd, MetricType.ChangeFailureRate, cancellationToken);
+
+    public Task<EngineeringMetricResponse?> CalculateLeadTimeAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        CancellationToken cancellationToken) =>
+        CalculateSingleAsync(
+            teamId, periodStart, periodEnd, MetricType.LeadTime, cancellationToken);
+
+    public Task<EngineeringMetricResponse?> CalculateOpenPullRequestsAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        CancellationToken cancellationToken) =>
+        CalculateSingleAsync(
+            teamId, periodStart, periodEnd, MetricType.OpenPRs, cancellationToken);
+
+    public Task<EngineeringMetricResponse?> CalculateMergedPullRequestsAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        CancellationToken cancellationToken) =>
+        CalculateSingleAsync(
+            teamId, periodStart, periodEnd, MetricType.MergedPRs, cancellationToken);
+
+    public Task<EngineeringMetricResponse?> CalculateBlockedItemsAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        CancellationToken cancellationToken) =>
+        CalculateSingleAsync(
+            teamId, periodStart, periodEnd, MetricType.BlockedItems, cancellationToken);
+
+    private async Task<EngineeringMetricResponse?> CalculateSingleAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        MetricType metricType,
+        CancellationToken cancellationToken)
+    {
+        var results = await CalculateAsync(
+            teamId, periodStart, periodEnd, [metricType], cancellationToken);
+
+        return results?[0];
+    }
+
+    private async Task<IReadOnlyList<EngineeringMetricResponse>?> CalculateAsync(
+        Guid teamId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        IReadOnlyList<MetricType> metricTypes,
         CancellationToken cancellationToken)
     {
         ValidatePeriod(periodStart, periodEnd);
@@ -42,533 +140,193 @@ public sealed class EngineeringMetricsService(
             return null;
         }
 
-        var results = new List<EngineeringMetricResponse>();
+        var context = await LoadContextAsync(
+            teamId, periodStart, periodEnd, metricTypes, cancellationToken);
+        var results = new List<EngineeringMetricResponse>(metricTypes.Count);
 
-        var cycleTime = await CalculateCycleTimeAsync(
-            teamId,
-            periodStart,
-            periodEnd,
-            cancellationToken);
+        foreach (var metricType in metricTypes)
+        {
+            var (value, dataStatus) = CalculateMetric(
+                metricType, context, periodStart, periodEnd);
 
-        var prReviewTime = await CalculatePRReviewTimeAsync(
-            teamId,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-
-        var deploymentFrequency = await CalculateDeploymentFrequencyAsync(
-            teamId,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-
-        var changeFailureRate = await CalculateChangeFailureRateAsync(
-            teamId,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-
-        var leadTime = await CalculateLeadTimeAsync(
-            teamId,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-
-        var openPullRequests = await CalculateOpenPullRequestsAsync(
-            teamId,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-
-        var mergedPullRequests = await CalculateMergedPullRequestsAsync(
-            teamId,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-
-        var blockedItems = await CalculateBlockedItemsAsync(
-            teamId,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-
-        AddIfNotNull(results, cycleTime);
-        AddIfNotNull(results, prReviewTime);
-        AddIfNotNull(results, deploymentFrequency);
-        AddIfNotNull(results, changeFailureRate);
-        AddIfNotNull(results, leadTime);
-        AddIfNotNull(results, openPullRequests);
-        AddIfNotNull(results, mergedPullRequests);
-        AddIfNotNull(results, blockedItems);
+            results.Add(await SaveMetricAsync(
+                teamId,
+                metricType,
+                value,
+                dataStatus,
+                periodStart,
+                periodEnd,
+                cancellationToken));
+        }
 
         return results;
     }
 
-    public async Task<EngineeringMetricResponse?> CalculateCycleTimeAsync(
+    private async Task<MetricCalculationContext> LoadContextAsync(
         Guid teamId,
         DateOnly periodStart,
         DateOnly periodEnd,
+        IReadOnlyList<MetricType> metricTypes,
         CancellationToken cancellationToken)
     {
-        ValidatePeriod(periodStart, periodEnd);
+        var gitHubConfigured = metricTypes.Any(IsGitHubMetric) &&
+            await IsGitHubConfiguredAsync(teamId, cancellationToken);
+        var jiraConfigured = metricTypes.Any(type => !IsGitHubMetric(type)) &&
+            await IsJiraConfiguredAsync(teamId, cancellationToken);
 
-        if (!await TeamExistsAsync(teamId, cancellationToken))
-        {
-            return null;
-        }
+        IReadOnlyList<PullRequest> mergedPullRequests =
+            gitHubConfigured && metricTypes.Contains(MetricType.CycleTime)
+                ? await pullRequestRepository.GetMergedByTeamAndPeriodAsync(
+                    teamId, periodStart, periodEnd, cancellationToken)
+                : [];
 
-        if (!await IsGitHubConfiguredAsync(teamId, cancellationToken))
-        {
-            return await SaveMetricAsync(
-                teamId,
-                MetricType.CycleTime,
-                null,
-                MetricDataStatus.SourceNotConfigured,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-        }
+        IReadOnlyList<PullRequest> periodPullRequests =
+            gitHubConfigured &&
+            (metricTypes.Contains(MetricType.PRReviewTime) ||
+             metricTypes.Contains(MetricType.MergedPRs))
+                ? await pullRequestRepository.GetByTeamAndPeriodAsync(
+                    teamId, periodStart, periodEnd, cancellationToken)
+                : [];
 
-        var pullRequests =
-            await pullRequestRepository.GetMergedByTeamAndPeriodAsync(
-                teamId,
-                periodStart,
-                periodEnd,
-                cancellationToken);
+        IReadOnlyList<PullRequestReview> reviews =
+            gitHubConfigured && metricTypes.Contains(MetricType.PRReviewTime)
+                ? await pullRequestReviewRepository.GetByPullRequestIdsAsync(
+                    periodPullRequests.Select(x => x.Id).ToArray(),
+                    cancellationToken)
+                : [];
 
-        if (pullRequests.Count == 0)
-        {
-            return await SaveMetricAsync(
-                teamId,
-                MetricType.CycleTime,
-                null,
-                MetricDataStatus.NoData,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-        }
+        IReadOnlyList<Deployment> deployments =
+            gitHubConfigured &&
+            (metricTypes.Contains(MetricType.DeploymentFrequency) ||
+             metricTypes.Contains(MetricType.ChangeFailureRate))
+                ? await deploymentRepository.GetByTeamAndPeriodAsync(
+                    teamId, periodStart, periodEnd, cancellationToken)
+                : [];
 
-        var result = cycleTimeCalculator.Calculate(
-            pullRequests,
-            periodStart,
-            periodEnd);
+        IReadOnlyList<JiraWorkItem> completedWorkItems =
+            jiraConfigured && metricTypes.Contains(MetricType.LeadTime)
+                ? await jiraWorkItemRepository.GetCompletedByTeamAndPeriodAsync(
+                    teamId,
+                    new DateTimeOffset(
+                        periodStart.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero),
+                    new DateTimeOffset(
+                        periodEnd.ToDateTime(TimeOnly.MaxValue), TimeSpan.Zero),
+                    cancellationToken)
+                : [];
 
-        return await SaveMetricAsync(
-            teamId,
-            MetricType.CycleTime,
-            result.AverageHours,
-            MetricDataStatus.Available,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-    }
+        IReadOnlyList<PullRequest> openPullRequests =
+            gitHubConfigured && metricTypes.Contains(MetricType.OpenPRs)
+                ? await pullRequestRepository.GetOpenByTeamAtDateAsync(
+                    teamId, periodEnd, cancellationToken)
+                : [];
 
-    public async Task<EngineeringMetricResponse?> CalculatePRReviewTimeAsync(
-        Guid teamId,
-        DateOnly periodStart,
-        DateOnly periodEnd,
-        CancellationToken cancellationToken)
-    {
-        ValidatePeriod(periodStart, periodEnd);
+        IReadOnlyList<JiraWorkItem> workItems =
+            jiraConfigured && metricTypes.Contains(MetricType.BlockedItems)
+                ? await jiraWorkItemRepository.GetByTeamAsync(
+                    teamId, cancellationToken)
+                : [];
 
-        if (!await TeamExistsAsync(teamId, cancellationToken))
-        {
-            return null;
-        }
-
-        if (!await IsGitHubConfiguredAsync(teamId, cancellationToken))
-        {
-            return await SaveMetricAsync(
-                teamId,
-                MetricType.PRReviewTime,
-                null,
-                MetricDataStatus.SourceNotConfigured,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-        }
-
-        var pullRequests =
-            await pullRequestRepository.GetByTeamAndPeriodAsync(
-                teamId,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-
-        var pullRequestIds = pullRequests
-            .Select(x => x.Id)
-            .ToArray();
-
-        var reviews =
-            await pullRequestReviewRepository.GetByPullRequestIdsAsync(
-                pullRequestIds,
-                cancellationToken);
-
-        var result = prReviewTimeCalculator.Calculate(
-            pullRequests,
+        return new MetricCalculationContext(
+            gitHubConfigured,
+            jiraConfigured,
+            mergedPullRequests,
+            periodPullRequests,
             reviews,
-            periodStart,
-            periodEnd);
-
-        if (result.PullRequestsCount == 0)
-        {
-            return await SaveMetricAsync(
-                teamId,
-                MetricType.PRReviewTime,
-                null,
-                MetricDataStatus.NoData,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-        }
-
-        return await SaveMetricAsync(
-            teamId,
-            MetricType.PRReviewTime,
-            result.AverageHours,
-            MetricDataStatus.Available,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-    }
-
-    public async Task<EngineeringMetricResponse?>
-        CalculateDeploymentFrequencyAsync(
-            Guid teamId,
-            DateOnly periodStart,
-            DateOnly periodEnd,
-            CancellationToken cancellationToken)
-    {
-        ValidatePeriod(periodStart, periodEnd);
-
-        if (!await TeamExistsAsync(teamId, cancellationToken))
-        {
-            return null;
-        }
-
-        if (!await IsGitHubConfiguredAsync(teamId, cancellationToken))
-        {
-            return await SaveMetricAsync(
-                teamId,
-                MetricType.DeploymentFrequency,
-                null,
-                MetricDataStatus.SourceNotConfigured,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-        }
-
-        var deployments =
-            await deploymentRepository.GetByTeamAndPeriodAsync(
-                teamId,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-
-        var result = deploymentFrequencyCalculator.Calculate(
             deployments,
-            periodStart,
-            periodEnd);
-
-        // 0 deployment est une valeur valide pour une source GitHub configurée.
-        return await SaveMetricAsync(
-            teamId,
-            MetricType.DeploymentFrequency,
-            result.DeploymentCount,
-            MetricDataStatus.Available,
-            periodStart,
-            periodEnd,
-            cancellationToken);
+            completedWorkItems,
+            openPullRequests,
+            workItems);
     }
 
-    public async Task<EngineeringMetricResponse?>
-        CalculateChangeFailureRateAsync(
-            Guid teamId,
-            DateOnly periodStart,
-            DateOnly periodEnd,
-            CancellationToken cancellationToken)
-    {
-        ValidatePeriod(periodStart, periodEnd);
-
-        if (!await TeamExistsAsync(teamId, cancellationToken))
-        {
-            return null;
-        }
-
-        if (!await IsGitHubConfiguredAsync(teamId, cancellationToken))
-        {
-            return await SaveMetricAsync(
-                teamId,
-                MetricType.ChangeFailureRate,
-                null,
-                MetricDataStatus.SourceNotConfigured,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-        }
-
-        var deployments =
-            await deploymentRepository.GetByTeamAndPeriodAsync(
-                teamId,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-
-        if (deployments.Count == 0)
-        {
-            return await SaveMetricAsync(
-                teamId,
-                MetricType.ChangeFailureRate,
-                null,
-                MetricDataStatus.NoData,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-        }
-
-        var result = changeFailureRateCalculator.Calculate(
-            deployments,
-            periodStart,
-            periodEnd);
-
-        return await SaveMetricAsync(
-            teamId,
-            MetricType.ChangeFailureRate,
-            result.FailureRate,
-            MetricDataStatus.Available,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-    }
-
-    public async Task<EngineeringMetricResponse?> CalculateLeadTimeAsync(
-        Guid teamId,
+    private (decimal? Value, MetricDataStatus DataStatus) CalculateMetric(
+        MetricType metricType,
+        MetricCalculationContext context,
         DateOnly periodStart,
-        DateOnly periodEnd,
-        CancellationToken cancellationToken)
+        DateOnly periodEnd)
     {
-        ValidatePeriod(periodStart, periodEnd);
+        var sourceConfigured = IsGitHubMetric(metricType)
+            ? context.GitHubConfigured
+            : context.JiraConfigured;
 
-        if (!await TeamExistsAsync(teamId, cancellationToken))
+        if (!sourceConfigured)
         {
-            return null;
-        }
-        
-        if (!await IsJiraConfiguredAsync(teamId, cancellationToken))
-        {
-            return await SaveMetricAsync(
-                teamId,
-                MetricType.LeadTime,
-                null,
-                MetricDataStatus.SourceNotConfigured,
-                periodStart,
-                periodEnd,
-                cancellationToken);
+            return (null, MetricDataStatus.SourceNotConfigured);
         }
 
-        var from = new DateTimeOffset(
-            periodStart.ToDateTime(TimeOnly.MinValue),
-            TimeSpan.Zero);
-
-        var to = new DateTimeOffset(
-            periodEnd.ToDateTime(TimeOnly.MaxValue),
-            TimeSpan.Zero);
-
-        var workItems =
-            await jiraWorkItemRepository.GetCompletedByTeamAndPeriodAsync(
-                teamId,
-                from,
-                to,
-                cancellationToken);
-        
-        if (workItems.Count == 0)
+        switch (metricType)
         {
-            return await SaveMetricAsync(
-                teamId,
-                MetricType.LeadTime,
-                null,
-                MetricDataStatus.NoData,
-                periodStart,
-                periodEnd,
-                cancellationToken);
+            case MetricType.CycleTime:
+                return context.MergedPullRequests.Count == 0
+                    ? (null, MetricDataStatus.NoData)
+                    : (cycleTimeCalculator.Calculate(
+                        context.MergedPullRequests, periodStart, periodEnd).AverageHours,
+                        MetricDataStatus.Available);
+
+            case MetricType.PRReviewTime:
+                var reviewTime = prReviewTimeCalculator.Calculate(
+                    context.PeriodPullRequests, context.Reviews, periodStart, periodEnd);
+                return reviewTime.PullRequestsCount == 0
+                    ? (null, MetricDataStatus.NoData)
+                    : (reviewTime.AverageHours, MetricDataStatus.Available);
+
+            case MetricType.DeploymentFrequency:
+                return (deploymentFrequencyCalculator.Calculate(
+                    context.Deployments, periodStart, periodEnd).DeploymentCount,
+                    MetricDataStatus.Available);
+
+            case MetricType.ChangeFailureRate:
+                return context.Deployments.Count == 0
+                    ? (null, MetricDataStatus.NoData)
+                    : (changeFailureRateCalculator.Calculate(
+                        context.Deployments, periodStart, periodEnd).FailureRate,
+                        MetricDataStatus.Available);
+
+            case MetricType.LeadTime:
+                return context.CompletedWorkItems.Count == 0
+                    ? (null, MetricDataStatus.NoData)
+                    : (leadTimeCalculator.Calculate(
+                        context.CompletedWorkItems, periodStart, periodEnd).AverageHours,
+                        MetricDataStatus.Available);
+
+            case MetricType.OpenPRs:
+                return (openPullRequestsCalculator.Calculate(
+                    context.OpenPullRequests, periodStart, periodEnd).PullRequestsCount,
+                    MetricDataStatus.Available);
+
+            case MetricType.MergedPRs:
+                return (mergedPullRequestsCalculator.Calculate(
+                    context.PeriodPullRequests, periodStart, periodEnd).PullRequestsCount,
+                    MetricDataStatus.Available);
+
+            case MetricType.BlockedItems:
+                return (blockedItemsCalculator.Calculate(
+                    context.WorkItems, periodStart, periodEnd).ItemsCount,
+                    MetricDataStatus.Available);
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(metricType), metricType, null);
         }
-
-        var result = leadTimeCalculator.Calculate(
-            workItems,
-            periodStart,
-            periodEnd);
-
-        return await SaveMetricAsync(
-            teamId,
-            MetricType.LeadTime,
-            result.AverageHours,
-            MetricDataStatus.Available,
-            periodStart,
-            periodEnd,
-            cancellationToken);
     }
 
-    public async Task<EngineeringMetricResponse?>
-        CalculateOpenPullRequestsAsync(
-            Guid teamId,
-            DateOnly periodStart,
-            DateOnly periodEnd,
-            CancellationToken cancellationToken)
-    {
-        ValidatePeriod(periodStart, periodEnd);
-
-        if (!await TeamExistsAsync(teamId, cancellationToken))
+    private static bool IsGitHubMetric(MetricType metricType) =>
+        metricType switch
         {
-            return null;
-        }
-
-        if (!await IsGitHubConfiguredAsync(teamId, cancellationToken))
-        {
-            return await SaveMetricAsync(
-                teamId,
-                MetricType.OpenPRs,
-                null,
-                MetricDataStatus.SourceNotConfigured,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-        }
-
-        var pullRequests =
-            await pullRequestRepository.GetOpenByTeamAtDateAsync(
-                teamId,
-                periodEnd,
-                cancellationToken);
-
-        var result = openPullRequestsCalculator.Calculate(
-            pullRequests,
-            periodStart,
-            periodEnd);
-
-        return await SaveMetricAsync(
-            teamId,
-            MetricType.OpenPRs,
-            result.PullRequestsCount,
-            MetricDataStatus.Available,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-    }
-
-    public async Task<EngineeringMetricResponse?>
-        CalculateMergedPullRequestsAsync(
-            Guid teamId,
-            DateOnly periodStart,
-            DateOnly periodEnd,
-            CancellationToken cancellationToken)
-    {
-        ValidatePeriod(periodStart, periodEnd);
-
-        if (!await TeamExistsAsync(teamId, cancellationToken))
-        {
-            return null;
-        }
-
-        if (!await IsGitHubConfiguredAsync(teamId, cancellationToken))
-        {
-            return await SaveMetricAsync(
-                teamId,
-                MetricType.MergedPRs,
-                null,
-                MetricDataStatus.SourceNotConfigured,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-        }
-
-        var pullRequests =
-            await pullRequestRepository.GetByTeamAndPeriodAsync(
-                teamId,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-
-        var result = mergedPullRequestsCalculator.Calculate(
-            pullRequests,
-            periodStart,
-            periodEnd);
-
-        return await SaveMetricAsync(
-            teamId,
-            MetricType.MergedPRs,
-            result.PullRequestsCount,
-            MetricDataStatus.Available,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-    }
-
-    public async Task<EngineeringMetricResponse?>
-        CalculateBlockedItemsAsync(
-            Guid teamId,
-            DateOnly periodStart,
-            DateOnly periodEnd,
-            CancellationToken cancellationToken)
-    {
-        ValidatePeriod(periodStart, periodEnd);
-
-        if (!await TeamExistsAsync(teamId, cancellationToken))
-        {
-            return null;
-        }
-        
-        if (!await IsJiraConfiguredAsync(teamId, cancellationToken))
-        {
-            return await SaveMetricAsync(
-                teamId,
-                MetricType.BlockedItems,
-                null,
-                MetricDataStatus.SourceNotConfigured,
-                periodStart,
-                periodEnd,
-                cancellationToken);
-        }
-
-        var workItems =
-            await jiraWorkItemRepository.GetByTeamAsync(
-                teamId,
-                cancellationToken);
-
-        var result = blockedItemsCalculator.Calculate(
-            workItems,
-            periodStart,
-            periodEnd);
-
-        return await SaveMetricAsync(
-            teamId,
-            MetricType.BlockedItems,
-            result.ItemsCount,
-            MetricDataStatus.Available,
-            periodStart,
-            periodEnd,
-            cancellationToken);
-    }
-
-    private async Task<bool> TeamExistsAsync(
-        Guid teamId,
-        CancellationToken cancellationToken)
-    {
-        var team = await teamRepository.GetByIdAsync(
-            teamId,
-            currentUser.UserId,
-            cancellationToken);
-
-        return team is not null;
-    }
+            MetricType.CycleTime or
+            MetricType.PRReviewTime or
+            MetricType.DeploymentFrequency or
+            MetricType.ChangeFailureRate or
+            MetricType.OpenPRs or
+            MetricType.MergedPRs => true,
+            MetricType.LeadTime or MetricType.BlockedItems => false,
+            _ => throw new ArgumentOutOfRangeException(nameof(metricType), metricType, null)
+        };
 
     private async Task<bool> IsGitHubConfiguredAsync(
         Guid teamId,
         CancellationToken cancellationToken)
     {
-        var connection =
-            await gitHubConnectionRepository.GetByTeamIdAsync(
-                teamId,
-                cancellationToken);
+        var connection = await gitHubConnectionRepository.GetByTeamIdAsync(
+            teamId, cancellationToken);
 
         return connection is not null;
     }
@@ -577,10 +335,8 @@ public sealed class EngineeringMetricsService(
         Guid teamId,
         CancellationToken cancellationToken)
     {
-        var connection =
-            await jiraConnectionRepository.GetByTeamIdAsync(
-                teamId,
-                cancellationToken);
+        var connection = await jiraConnectionRepository.GetByTeamIdAsync(
+            teamId, cancellationToken);
 
         return connection is not null;
     }
@@ -595,7 +351,7 @@ public sealed class EngineeringMetricsService(
         CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
-        
+
         var metric = new EngineeringMetric
         {
             Id = Guid.NewGuid(),
@@ -609,10 +365,8 @@ public sealed class EngineeringMetricsService(
             UpdatedAt = now
         };
 
-        var persistedMetric =
-            await metricRepository.UpsertAsync(
-                metric,
-                cancellationToken);
+        var persistedMetric = await metricRepository.UpsertAsync(
+            metric, cancellationToken);
 
         return new EngineeringMetricResponse(
             persistedMetric.Id,
@@ -625,19 +379,7 @@ public sealed class EngineeringMetricsService(
             persistedMetric.CreatedAt);
     }
 
-    private static void AddIfNotNull(
-        ICollection<EngineeringMetricResponse> results,
-        EngineeringMetricResponse? metric)
-    {
-        if (metric is not null)
-        {
-            results.Add(metric);
-        }
-    }
-
-    private static void ValidatePeriod(
-        DateOnly periodStart,
-        DateOnly periodEnd)
+    private static void ValidatePeriod(DateOnly periodStart, DateOnly periodEnd)
     {
         if (periodStart > periodEnd)
         {
@@ -645,4 +387,15 @@ public sealed class EngineeringMetricsService(
                 "periodStart must be before or equal to periodEnd.");
         }
     }
+
+    private sealed record MetricCalculationContext(
+        bool GitHubConfigured,
+        bool JiraConfigured,
+        IReadOnlyList<PullRequest> MergedPullRequests,
+        IReadOnlyList<PullRequest> PeriodPullRequests,
+        IReadOnlyList<PullRequestReview> Reviews,
+        IReadOnlyList<Deployment> Deployments,
+        IReadOnlyList<JiraWorkItem> CompletedWorkItems,
+        IReadOnlyList<PullRequest> OpenPullRequests,
+        IReadOnlyList<JiraWorkItem> WorkItems);
 }
