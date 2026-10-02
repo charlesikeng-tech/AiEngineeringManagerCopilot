@@ -109,6 +109,32 @@ The current backend MVP already supports:
 -   deterministic test authentication for integration tests;
 -   automated unit and integration testing.
 
+An Angular frontend is also available under `frontend/`. It includes a
+dashboard, report list and detail views, risks, action tracking, team
+selection, and team/GitHub connection management.
+
+## Production readiness
+
+The application is an MVP with a local development frontend, not a
+production-ready deployment. The following gaps were identified in the
+2026-10-02 static code audit and remain open:
+
+| Area | Current limitation | Required hardening |
+|---|---|---|
+| Frontend startup | Startup always uses `/dev/token`, selects the first team, and prepares August/September 2026 reports. The production API URL is still `http://localhost:5249`. | Separate demo initialization from normal startup and configure production authentication/API access. |
+| AI request limits | An AI rate-limit policy is registered, but neither the middleware nor endpoint policy is applied. | Wire the policy into the request pipeline and analysis endpoint. |
+| Concurrent AI analysis | Existing analyses are checked before generation, but `ReportId` has no unique constraint. | Prevent concurrent duplicate generation and persistence. |
+| Historical reports | Stored scores and conclusions are combined with metrics that can later be recalculated. | Snapshot or version the report inputs. |
+| GitHub synchronization | Some HTTP failures are treated as empty results, and `LastSyncAt` is set before collection finishes. | Expose partial failures and preserve previously known deployment statuses. |
+| Deployment metrics | Unknown statuses enter the failure-rate denominator; later status updates can change the recorded deployment date. | Define explicit status and reporting-period semantics. |
+| Frontend state | Report/risk streams terminate after an HTTP error; dashboard cancellation can reset loading for a newer request. | Recover within each request and associate state with the active request. |
+| AI output validation | Local parsing does not validate every required field, collection, or enum value. | Reject incomplete or invalid results before persistence. |
+| Secret-protection keys | Data Protection is registered without an explicit persistent/shared key store. | Define key persistence and sharing for the deployment topology. |
+
+These are known limitations, not completed fixes. Production readiness
+also requires frontend accessibility improvements and pull-request
+validation covering both backend and frontend.
+
 ------------------------------------------------------------------------
 
 # 🔌 Engineering data integrations
@@ -572,6 +598,23 @@ health routes remain explicit in `Program.cs`. The registration modules
 preserve service lifetimes, configuration validation, and the existing
 Development, Test, and Production behavior.
 
+The registration modules are:
+
+| Module | Responsibility |
+|---|---|
+| `ApiServiceCollectionExtensions` | JSON, health checks, OpenAPI, CORS, and rate-limit policy registration |
+| `AuthenticationServiceCollectionExtensions` | JWT options, authentication, authorization, and current-user resolution |
+| `PersistenceServiceCollectionExtensions` | PostgreSQL, repositories, secret protection, and development initialization |
+| `ApplicationServiceCollectionExtensions` | Validators, use cases, metric calculators, and engineering intelligence |
+| `IntegrationServiceCollectionExtensions` | GitHub/Jira services and HTTP clients |
+| `AIServiceCollectionExtensions` | LLM configuration, providers, parsing, and analysis services |
+| `BackgroundJobServiceCollectionExtensions` | Synchronization runners and environment-specific hosted services |
+
+Registration coverage in
+`tests/AiEngineeringManagerCopilot.UnitTests/DependencyInjection/ServiceRegistrationTests.cs`
+checks service resolution, lifetimes, environment-specific registrations,
+authentication/API configuration, and invalid startup options.
+
 ## Dependency direction
 
 The project dependencies follow:
@@ -876,6 +919,14 @@ The Jira synchronization endpoint imports Jira issues into
 -   Jira Cloud REST API
 -   OpenAI
 
+## Frontend
+
+-   Angular 22 and TypeScript
+-   RxJS and Angular signals
+-   NG-ZORRO Ant Design
+-   ECharts / ngx-echarts
+-   Angular CLI unit tests with Vitest
+
 ## Testing
 
 -   xUnit
@@ -914,21 +965,11 @@ AiEngineeringManagerCopilot.UnitTests
 AiEngineeringManagerCopilot.IntegrationTests
 ```
 
-The current local baseline is:
-
-``` text
-420 total
-420 passed
-0 failed
-0 skipped
-```
-
-The suite includes both unit and integration tests. The exact split can
-evolve as new scenarios are added, while the project target remains a
-fully green regression suite.
-
-The final total is also maintained automatically in the generated README
-status section.
+The backend suite includes both unit and integration tests. Counts evolve
+as scenarios are added; the generated README status section records the
+last results produced by `scripts/update-readme.sh`, not a live guarantee
+for the current worktree. Frontend tests are separate and are not included
+in that generated total.
 
 Run all tests:
 
@@ -957,7 +998,7 @@ The automated suite covers areas including:
 -   action generation;
 -   AI analysis;
 -   structured LLM parsing;
--   duplicate AI analysis prevention;
+-   reuse of an existing AI analysis on sequential requests;
 -   fake and real-provider configuration behavior;
 -   metric trends;
 -   Early Warning detection and actions;
@@ -965,7 +1006,13 @@ The automated suite covers areas including:
 -   Jira retry and rate-limit resilience;
 -   GitHub and Jira background synchronization;
 -   current-user behavior and team ownership isolation;
--   JWT/test-authentication infrastructure.
+-   JWT/test-authentication infrastructure;
+-   dependency-injection registration and environment-specific behavior.
+
+Existing-analysis reuse does not currently guarantee idempotency for
+concurrent requests. Frontend coverage also needs strengthening: the
+starter app-title assertion is outdated, and the interceptor test does
+not exercise an HTTP request.
 
 Integration tests use PostgreSQL.
 
@@ -1012,10 +1059,53 @@ Run tests:
 dotnet test
 ```
 
-Run the API:
+For a local database, start the development PostgreSQL service:
 
 ``` bash
-dotnet run --project src/AiEngineeringManagerCopilot.Api
+docker compose up -d postgres
+```
+
+Supply `ConnectionStrings:Default` and `Jwt:Key` through User Secrets or
+environment variables before starting the API. The JWT signing key must
+contain at least 32 characters. The Development configuration currently
+selects OpenAI; set `Llm:Provider` to `Fake` for local execution without an
+OpenAI API key.
+
+For example, configure the fake provider with:
+
+``` bash
+dotnet user-secrets set "Llm:Provider" "Fake" --project src/AiEngineeringManagerCopilot.Api
+```
+
+Run the API with the HTTP development profile:
+
+``` bash
+dotnet run --project src/AiEngineeringManagerCopilot.Api --launch-profile http
+```
+
+The API is available at `http://localhost:5249`; Swagger is available at
+`http://localhost:5249/swagger`.
+
+## Frontend development
+
+Install a Node.js version supported by Angular 22 and npm. From a separate
+terminal, with the Development API running:
+
+``` bash
+cd frontend
+npm ci
+npm start
+```
+
+Open `http://localhost:4200`. The current frontend startup requests a
+development JWT and prepares demo reports; it must not be used unchanged
+as a production authentication flow.
+
+Frontend commands, run from `frontend/`:
+
+``` bash
+npm run build
+npm test -- --watch=false
 ```
 
 ------------------------------------------------------------------------
@@ -1139,6 +1229,11 @@ AiEngineeringManagerCopilot/
 │       ├── Jira/
 │       └── AI/
 │
+├── frontend/
+│   ├── src/app/core/
+│   ├── src/app/features/
+│   └── src/environments/
+│
 ├── tests/
 │   ├── AiEngineeringManagerCopilot.UnitTests/
 │   └── AiEngineeringManagerCopilot.IntegrationTests/
@@ -1225,7 +1320,10 @@ EngineeringReport
        └── AIAnalysis
 ```
 
-This prevents unnecessary duplicate analyses and LLM calls.
+This avoids duplicate analyses and LLM calls on sequential requests.
+It does not protect simultaneous requests: both can pass the existence
+check, and the database currently has no unique constraint on `ReportId`.
+Concurrency-safe generation and persistence remain required.
 
 ------------------------------------------------------------------------
 
@@ -1443,14 +1541,18 @@ The generated section is delimited by:
 
     ## Phase 5 — Engineering Management cockpit
 
-    - [ ] Web dashboard
-    - [ ] Team health overview
+    The following UI capabilities are available in the local development frontend; checked items do not imply production readiness.
+
+    - [x] Local development web dashboard
+    - [x] Team health overview
     - [x] Metric trends
-    - [ ] Risk dashboard
-    - [ ] Action tracking
-    - [ ] Historical comparisons
-    - [ ] Team-level filtering
-    - [ ] Engineering health evolution
+    - [x] Risk dashboard
+    - [x] Action tracking
+    - [x] Initial report-to-report comparisons
+    - [x] Team selection
+    - [x] Engineering health evolution
+    - [ ] Production authentication and deployment configuration
+    - [ ] Frontend error recovery, concurrency, and accessibility hardening
     - [ ] Weekly engineering brief
 
     ---
@@ -1506,19 +1608,17 @@ The generated section is delimited by:
 
     ### Lead Time reporting period
 
-    The current Lead Time implementation still selects work items based on the current repository period semantics.
-
-    A future improvement should evaluate whether Lead Time reporting should select items completed during the reporting period using `DoneAt`.
+    Lead Time selects completed work items whose `DoneAt` falls within the reporting period through `GetCompletedByTeamAndPeriodAsync`. The completion timestamp remains the Jira `resolutiondate` approximation described above.
 
     ### Change Failure Rate
 
-    The current implementation is based on deployment status and is an approximation of full DORA Change Failure Rate.
+    The current implementation is based on deployment status and is an approximation of full DORA Change Failure Rate. All statuses enter the denominator, while only `failure` enters the numerator; unknown or pending outcomes can therefore lower the reported rate.
 
     A more mature implementation could correlate deployments with incidents, rollbacks or production failures.
 
     ### GitHub synchronization resilience
 
-    GitHub pagination, retry and rate-limit handling are implemented. Further hardening can still be added as synchronization volume and provider behavior evolve.
+    GitHub pagination, retry and rate-limit handling are implemented. The synchronization workflow can still hide partial HTTP failures as empty collections and mark the connection as synchronized before all data is collected. Partial-success reporting and preservation of known deployment statuses remain open.
 
     ### Authentication and authorization
 
@@ -1528,13 +1628,17 @@ The generated section is delimited by:
 
     ### Dashboard
 
-    There is currently no production web dashboard.
+    An Angular dashboard and report, risk, action, and team screens are implemented for local development. The frontend still depends on development authentication and demo initialization, and its production API URL points to localhost.
 
-    The product is backend/API-first at this stage.
+    Error recovery, concurrent UI state updates, accessibility, and frontend regression coverage need hardening before production use.
 
     ### Historical intelligence
 
-    Metric Trends v1 provides an initial cross-period view. Broader historical intelligence, longer-term comparisons and richer forecasting remain future work.
+    Metric Trends v1 provides an initial cross-period view. Report metrics are currently reloaded from mutable period data rather than stored as an immutable snapshot, so recalculation can make historical metrics inconsistent with persisted scores and conclusions. Broader historical intelligence, longer-term comparisons and richer forecasting remain future work.
+
+    ### Continuous integration
+
+    The README workflow runs backend tests after pushes to `main`. There is currently no pull-request validation workflow or frontend build/test workflow. Release automation is not a substitute for a pre-merge quality gate.
 
     ### CI integration-test initialization
 
