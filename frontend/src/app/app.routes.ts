@@ -1,8 +1,20 @@
 import { Routes } from '@angular/router';
+import { authGuard } from '@core/auth/auth-guard';
 
 export const routes: Routes = [
   {
+    path: 'setup',
+    data: { setup: true },
+    loadComponent: () => import('@core/auth/administrator-access').then(({ AdministratorAccess }) => AdministratorAccess),
+  },
+  {
+    path: 'admin/login',
+    loadComponent: () => import('@core/auth/administrator-access').then(({ AdministratorAccess }) => AdministratorAccess),
+  },
+  {
     path: '',
+    canActivate: [authGuard],
+    canActivateChild: [authGuard],
     loadComponent: () =>
       import('@core/layout/main-layout/main-layout').then(({ MainLayout }) => MainLayout),
     children: [

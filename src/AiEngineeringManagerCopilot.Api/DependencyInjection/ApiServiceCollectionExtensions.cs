@@ -124,7 +124,7 @@ public static class ApiServiceCollectionExtensions
                         policy.WithOrigins(allowedOrigins);
                     }
 
-                    policy.AllowAnyHeader().AllowAnyMethod();
+                    policy.AllowAnyHeader().AllowAnyMethod().AllowCredentials();
                 });
         });
 

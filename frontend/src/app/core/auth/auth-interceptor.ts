@@ -1,5 +1,6 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { catchError, throwError } from 'rxjs';
 
 import { environment } from '@environments/environment';
 import { Auth } from './auth';
@@ -8,17 +9,27 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(Auth);
   const token = auth.getToken();
 
-  const isApiRequest = request.url.startsWith(environment.apiUrl);
+  const isApiRequest = request.url === environment.apiUrl ||
+    request.url.startsWith(`${environment.apiUrl}/`);
 
-  if (!token || !isApiRequest) {
+  if (!isApiRequest) {
     return next(request);
   }
 
   const authenticatedRequest = request.clone({
+    withCredentials: true,
     setHeaders: {
-      Authorization: `Bearer ${token}`,
+      'X-Session-Protection': '1',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
 
-  return next(authenticatedRequest);
+  return next(authenticatedRequest).pipe(
+    catchError((error: HttpErrorResponse) => {
+      if (error.status === 401) {
+        auth.clearSession();
+      }
+      return throwError(() => error);
+    }),
+  );
 };

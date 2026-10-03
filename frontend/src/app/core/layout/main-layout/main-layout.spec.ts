@@ -18,6 +18,7 @@ import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { of } from 'rxjs';
 import { routes } from '../../../app.routes';
 import { MainLayout } from './main-layout';
+import { Auth } from '@core/auth/auth';
 
 @Component({ template: '' })
 class EmptyPage {}
@@ -41,6 +42,7 @@ describe('MainLayout integrations navigation', () => {
           WarningOutline,
         ]),
         { provide: TeamApi, useValue: { getTeams: () => of([]) } },
+        { provide: Auth, useValue: { logout: () => of(undefined) } },
       ],
     });
   });
@@ -52,7 +54,7 @@ describe('MainLayout integrations navigation', () => {
 
   it('registers the integrations route under the main layout', () => {
     expect(
-      routes[0].children?.find((route) => route.path === 'integrations')?.loadComponent,
+      routes.find((route) => route.path === '')?.children?.find((route) => route.path === 'integrations')?.loadComponent,
     ).toBeDefined();
   });
 

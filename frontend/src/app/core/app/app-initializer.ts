@@ -1,10 +1,9 @@
-import { inject, Injectable } from '@angular/core';
-import { map, Observable, of, switchMap } from 'rxjs';
+import { inject, Injectable, signal } from '@angular/core';
+import { catchError, map, Observable, of, switchMap, timeout } from 'rxjs';
 
 import { Auth } from '@core/auth/auth';
 import { TeamApi } from '@core/team/team-api';
 import { TeamContext } from '@core/team/team-context';
-import { DevelopmentBootstrap } from './development-bootstrap';
 
 @Injectable({
   providedIn: 'root',
@@ -13,37 +12,28 @@ export class AppInitializer {
   private readonly auth = inject(Auth);
   private readonly teamApi = inject(TeamApi);
   private readonly teamContext = inject(TeamContext);
-  private readonly developmentBootstrap = inject(DevelopmentBootstrap);
+  readonly initializationError = signal<string | null>(null);
 
   initialize(): Observable<void> {
-    return this.auth.authenticateForDevelopment().pipe(
-      switchMap(() => this.teamApi.getTeams()),
+    this.initializationError.set(null);
+    this.teamContext.clearTeam();
+    return this.auth.loadCurrent().pipe(
+      switchMap((user) => user ? this.initializeTeams() : of(undefined)),
+      catchError(() => {
+        this.initializationError.set('Impossible de charger votre session ou vos équipes. Vérifiez la connexion au serveur et rechargez la page.');
+        return of(undefined);
+      }),
+    );
+  }
 
-      switchMap((teams) => {
+  initializeTeams(): Observable<void> {
+    this.initializationError.set(null);
+    this.teamContext.clearTeam();
+    return this.teamApi.getTeams().pipe(
+      timeout(10000),
+      map((teams) => {
         const selectedTeam = teams[0];
-
-        if (!selectedTeam) {
-          return of(undefined);
-        }
-
-        this.teamContext.selectTeam(selectedTeam.id);
-
-        // Ensure August report exists first
-        return this.developmentBootstrap
-          .ensureReport(selectedTeam.id, '2026-08-01', '2026-08-31')
-          .pipe(
-            // Then ensure September report exists
-            switchMap(() =>
-              this.developmentBootstrap.ensureReport(selectedTeam.id, '2026-09-01', '2026-09-30'),
-            ),
-
-            // AI analysis only for the current/latest report
-            switchMap((septemberReport) =>
-              this.developmentBootstrap.ensureAnalysis(selectedTeam.id, septemberReport.id),
-            ),
-
-            map(() => undefined),
-          );
+        if (selectedTeam) this.teamContext.selectTeam(selectedTeam.id);
       }),
     );
   }

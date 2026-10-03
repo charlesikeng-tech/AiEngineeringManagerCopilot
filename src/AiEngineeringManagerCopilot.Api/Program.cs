@@ -32,9 +32,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(ApiServiceCollectionExtensions.FrontendCorsPolicy);
 app.UseAuthentication();
+app.UseMiddleware<SessionProtectionMiddleware>();
 app.UseRateLimiter();
 app.UseAuthorization();
 
+app.MapLocalAuthenticationEndpoints();
 app.MapTeamEndpoints();
 app.MapTeamMemberEndpoints();
 app.MapGitHubEndpoints();
@@ -49,7 +51,8 @@ app.MapEngineeringDashboardEndpoints();
 app.MapEngineeringRiskEndpoints();
 app.MapEngineeringActionEndpoints();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() &&
+    app.Configuration.GetValue<bool>("Development:EnableToken"))
 {
     app.MapPost(
             "/dev/token",
@@ -68,7 +71,10 @@ if (app.Environment.IsDevelopment())
             })
         .WithTags("Development")
         .AllowAnonymous();
+}
 
+if (app.Environment.IsDevelopment())
+{
     app.UseSwagger();
     app.UseSwaggerUI();
 }

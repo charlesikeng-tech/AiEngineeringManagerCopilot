@@ -8,6 +8,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 {
     public DbSet<User> Users => Set<User>();
 
+    public DbSet<LocalAdministrator> LocalAdministrators => Set<LocalAdministrator>();
+    public DbSet<Installation> Installations => Set<Installation>();
+    public DbSet<AdministratorSession> AdministratorSessions => Set<AdministratorSession>();
+
     public DbSet<Team> Teams => Set<Team>();
 
     public DbSet<TeamMember> TeamMembers => Set<TeamMember>();

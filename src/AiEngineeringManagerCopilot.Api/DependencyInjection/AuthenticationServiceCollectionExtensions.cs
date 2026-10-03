@@ -3,6 +3,9 @@ using AiEngineeringManagerCopilot.Api.Authentication;
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
+using System.Threading.RateLimiting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -31,8 +34,32 @@ public static class AuthenticationServiceCollectionExtensions
             ?? throw new InvalidOperationException(
                 "JWT configuration is missing.");
 
-        services.AddAuthentication(
-                JwtBearerDefaults.AuthenticationScheme)
+        services.AddIdentityCore<IdentityUser>(options =>
+        {
+            options.Password.RequiredLength = 12;
+            options.Password.RequiredUniqueChars = 4;
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireNonAlphanumeric = true;
+        }).AddUserStore<PasswordValidationUserStore>();
+        services.AddRateLimiter(options => options.AddPolicy("LocalAuthentication", context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 10, Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0, AutoReplenishment = true
+                })));
+
+        services.AddAuthentication("BearerOrSession")
+            .AddPolicyScheme("BearerOrSession", null, options =>
+                options.ForwardDefaultSelector = context =>
+                    context.Request.Headers.Authorization.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                        ? JwtBearerDefaults.AuthenticationScheme
+                        : LocalSessionAuthenticationHandler.Scheme)
+            .AddScheme<AuthenticationSchemeOptions, LocalSessionAuthenticationHandler>(
+                LocalSessionAuthenticationHandler.Scheme, _ => { })
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters =
@@ -50,7 +77,14 @@ public static class AuthenticationServiceCollectionExtensions
                     };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options => options.AddPolicy("LocalAdministrator", policy =>
+        {
+            policy.AddAuthenticationSchemes("BearerOrSession");
+            policy.RequireAuthenticatedUser();
+            policy.RequireRole(LocalSessionAuthenticationHandler.AdministratorRole);
+            policy.RequireAssertion(context =>
+                context.User.Identity?.AuthenticationType == LocalSessionAuthenticationHandler.Scheme);
+        }));
 
         if (environment.IsDevelopment())
         {
