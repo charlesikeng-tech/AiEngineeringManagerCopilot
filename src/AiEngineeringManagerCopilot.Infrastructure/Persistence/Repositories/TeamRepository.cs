@@ -1,4 +1,5 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
+using AiEngineeringManagerCopilot.Application.Common;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,6 +39,32 @@ public sealed class TeamRepository(
         await dbContext.Teams.AddAsync(
             team,
             cancellationToken);
+    }
+
+    public async Task<PagedResult<Team>> GetPageByOwnerAsync(
+        Guid ownerUserId,
+        int pageNumber,
+        int pageSize,
+        string? search,
+        CancellationToken cancellationToken)
+    {
+        var query = dbContext.Teams.AsNoTracking()
+            .Where(team => team.OwnerUserId == ownerUserId);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var normalizedSearch = search.Trim().ToLowerInvariant();
+            query = query.Where(team => team.Name.ToLower().Contains(normalizedSearch));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query.OrderBy(team => team.Name)
+            .ThenBy(team => team.Id)
+            .Skip(checked((pageNumber - 1) * pageSize))
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<Team>(items, totalCount, pageNumber, pageSize);
     }
 
     public Task SaveChangesAsync(

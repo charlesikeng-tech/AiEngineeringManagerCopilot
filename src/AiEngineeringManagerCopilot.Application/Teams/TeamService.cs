@@ -71,6 +71,24 @@ public sealed class TeamService(
             : TeamResponse.FromEntity(team);
     }
 
+    public async Task<PagedResult<TeamResponse>> GetPageAsync(
+        GetTeamsPageRequest request,
+        CancellationToken cancellationToken)
+    {
+        var page = await teamRepository.GetPageByOwnerAsync(
+            currentUser.UserId,
+            request.PageNumber,
+            request.PageSize,
+            request.Search,
+            cancellationToken);
+
+        return new PagedResult<TeamResponse>(
+            page.Items.Select(TeamResponse.FromEntity).ToList(),
+            page.TotalCount,
+            page.PageNumber,
+            page.PageSize);
+    }
+
     public async Task<TeamResponse?> UpdateAsync(
         Guid teamId,
         UpdateTeamRequest request,

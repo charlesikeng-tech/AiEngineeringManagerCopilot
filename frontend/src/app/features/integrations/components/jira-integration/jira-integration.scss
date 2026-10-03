@@ -1,0 +1,84 @@
+:host {
+  display: block;
+  margin-top: var(--app-space-md);
+}
+
+.jira-card {
+  display: grid;
+  gap: var(--app-space-md);
+}
+
+.jira-card__header,
+.jira-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--app-space-sm);
+}
+
+.jira-card__header {
+  justify-content: space-between;
+
+  h3 {
+    margin: 0;
+    font-size: 15px;
+  }
+  p {
+    margin: var(--app-space-xs) 0 0;
+    color: var(--app-text-secondary);
+  }
+}
+
+.jira-status {
+  padding: 4px 8px;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  color: var(--app-text-secondary);
+  font-size: 11px;
+}
+
+.jira-status--connected {
+  color: var(--app-success);
+  background: var(--app-success-soft);
+}
+
+.jira-metadata,
+.jira-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--app-space-md);
+  margin: 0;
+}
+
+.jira-metadata {
+  dt {
+    color: var(--app-text-tertiary);
+    font-size: 12px;
+  }
+  dd {
+    margin: 4px 0 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.jira-field {
+  display: grid;
+  gap: var(--app-space-xs);
+
+  p {
+    margin: 0;
+    color: var(--app-text-secondary);
+    font-size: 12px;
+  }
+}
+
+.jira-form .jira-actions {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .jira-metadata,
+  .jira-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

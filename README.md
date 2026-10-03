@@ -113,7 +113,25 @@ The current backend MVP already supports:
 
 An Angular frontend is also available under `frontend/`. It includes a
 dashboard, report list and detail views, risks, action tracking, team
-selection, and team/GitHub connection management.
+selection, team management, and a central **Integrations** page.
+The Integrations menu opens a server-paginated overview of teams, with GitHub/Jira
+connection states and separate last-recorded synchronization dates, plus
+Slack/Teams notification configuration. It loads 10 teams per page by default,
+with page sizes of 10, 20, or 50. Only connections for the displayed page are
+fetched, with at most four teams loaded concurrently. An optional name search
+is applied on the server after a short debounce, without changing the active
+team. **Configure** opens that team's settings,
+separating **Data sources** from **Notifications**. Returning to the overview
+reloads the states while retaining the page, page size, and search. Settings
+remain per-team and are not shared across teams.
+Recorded synchronization dates do not guarantee that every data collection
+step succeeded; the current API does not expose a complete synchronization
+execution status.
+
+`GET /teams/paged?pageNumber=1&pageSize=10&search=Platform` returns
+`items`, `totalCount`, `pageNumber`, and `pageSize`, restricted to the current
+user's teams. Pages are ordered by team name and ID; page size is limited to
+100. The existing `GET /teams` array response is unchanged for other screens.
 
 ## Production readiness
 
@@ -918,7 +936,8 @@ The Jira synchronization endpoint imports Jira issues into
 
 ## Slack report notifications
 
-Each team can configure a Slack Incoming Webhook from its team settings.
+Each team can configure a Slack Incoming Webhook from **Integrations >
+Notifications**, after selecting the team.
 The webhook is encrypted before it is stored, is never returned by the API,
 and is restricted to HTTPS URLs hosted on `hooks.slack.com`. Slack receives
 a message after a report is successfully persisted, containing the team,
@@ -926,7 +945,7 @@ reporting period, health score, and health level. A Slack delivery failure is
 logged and does not roll back report generation.
 
 The **Send test** action posts a test message to the configured channel.
-Remove the webhook from team settings to stop notifications. Apply the
+Remove the webhook from the Integrations page to stop notifications. Apply the
 `AddSlackWebhookConnection` EF migration before deploying the feature:
 
 ```sh
@@ -939,9 +958,10 @@ dotnet ef database update \
 
 ## Microsoft Teams report notifications
 
-Each team can configure Microsoft Teams independently of Slack from its team
-settings. In Teams, create a **Workflows** workflow using **Post to a channel
-when a webhook request is received**, choose **Anyone** for who can trigger
+Each team can configure Microsoft Teams independently of Slack from
+**Integrations > Notifications**, after selecting the team. In Teams, create
+a **Workflows** workflow using **Post to a channel when a webhook request is
+received**, choose **Anyone** for who can trigger
 the webhook, select the destination channel, and copy the signed webhook URL
 into the Microsoft Teams connection form. Use **Send test** to confirm delivery.
 The URL is a secret: it is encrypted at rest and never returned by the API.

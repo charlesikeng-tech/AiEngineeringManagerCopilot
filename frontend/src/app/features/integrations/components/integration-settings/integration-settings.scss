@@ -1,0 +1,406 @@
+/* Integration configuration */
+
+.data-sources-card {
+  padding: 0;
+
+  overflow: hidden;
+}
+
+.data-source {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: var(--app-space-xl);
+
+  padding: 22px 24px;
+}
+
+.data-source__main {
+  display: flex;
+  min-width: 0;
+
+  flex: 1;
+
+  align-items: flex-start;
+
+  gap: var(--app-space-md);
+}
+
+.data-source__icon {
+  display: flex;
+
+  width: 44px;
+  height: 44px;
+
+  flex: 0 0 44px;
+
+  align-items: center;
+  justify-content: center;
+
+  color: var(--app-text-primary);
+
+  background: var(--app-surface-secondary);
+
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+
+  font-size: 24px;
+
+  nz-icon {
+    display: flex;
+
+    font-size: 24px;
+  }
+}
+
+.data-source__content {
+  min-width: 0;
+  flex: 1;
+
+  > p {
+    max-width: 720px;
+
+    margin: var(--app-space-xs) 0 0;
+
+    color: var(--app-text-secondary);
+
+    font-size: 13px;
+    line-height: 1.6;
+  }
+}
+
+.data-source__heading {
+  display: flex;
+  align-items: center;
+
+  gap: var(--app-space-sm);
+
+  strong {
+    color: var(--app-text-primary);
+
+    font-size: 15px;
+    font-weight: 600;
+  }
+}
+
+/* ---------------------------------------------------------
+   Integration status
+   --------------------------------------------------------- */
+
+.integration-status {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 22px;
+
+  padding: 2px 8px;
+
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.integration-status--connected {
+  color: var(--app-success);
+
+  background: var(--app-success-soft);
+}
+
+.integration-status--disconnected,
+.integration-status--loading {
+  color: var(--app-text-secondary);
+
+  background: var(--app-surface-secondary);
+}
+
+.integration-status--error {
+  color: var(--app-danger);
+
+  background: var(--app-danger-soft);
+}
+
+/* ---------------------------------------------------------
+   Integration metadata
+   --------------------------------------------------------- */
+
+.integration-metadata {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: var(--app-space-sm) var(--app-space-xl);
+
+  margin-top: var(--app-space-md);
+}
+
+.integration-metadata__item {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+
+  span {
+    color: var(--app-text-tertiary);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  strong {
+    max-width: 260px;
+
+    overflow: hidden;
+
+    color: var(--app-text-primary);
+
+    font-size: 12px;
+    font-weight: 600;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* ---------------------------------------------------------
+   Data source actions
+   --------------------------------------------------------- */
+
+.data-source__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  flex-shrink: 0;
+}
+
+.slack-connection-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  align-items: end;
+  gap: var(--app-space-xs) var(--app-space-sm);
+
+  label {
+    grid-column: 1;
+  }
+
+  input {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  button {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+
+/* ---------------------------------------------------------
+   Integration results
+   --------------------------------------------------------- */
+
+.integration-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: var(--app-space-lg);
+
+  padding: var(--app-space-md) 24px;
+
+  border-top: 1px solid var(--app-border);
+}
+
+.integration-result--success {
+  background: var(--app-success-soft);
+}
+
+.integration-result--error {
+  background: var(--app-danger-soft);
+}
+
+.integration-result__content {
+  display: flex;
+  min-width: 0;
+
+  flex-direction: column;
+
+  gap: 3px;
+
+  strong {
+    color: var(--app-text-primary);
+
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  span {
+    color: var(--app-text-secondary);
+
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+.integration-result__meta {
+  flex-shrink: 0;
+
+  color: var(--app-text-secondary);
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------
+   Sync statistics
+   --------------------------------------------------------- */
+
+.sync-stats {
+  display: flex;
+  align-items: center;
+
+  gap: var(--app-space-xl);
+}
+
+.sync-stat {
+  display: flex;
+
+  min-width: 70px;
+
+  flex-direction: column;
+
+  gap: 2px;
+
+  text-align: right;
+
+  strong {
+    color: var(--app-text-primary);
+
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  span {
+    color: var(--app-text-tertiary);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+}
+
+/* ---------------------------------------------------------
+   GitHub connection drawer
+   --------------------------------------------------------- */
+
+.integration-drawer-intro {
+  margin-bottom: var(--app-space-lg);
+
+  padding: var(--app-space-md);
+
+  background: var(--app-surface-secondary);
+
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+
+  strong {
+    display: block;
+
+    margin-bottom: var(--app-space-xs);
+
+    color: var(--app-text-primary);
+
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    color: var(--app-text-secondary);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+}
+
+.integration-scope {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-md);
+
+  p {
+    margin: 0;
+    color: var(--app-text-secondary);
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 900px) {
+  .data-source,
+  .integration-result {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .data-source__actions {
+    width: 100%;
+    flex-wrap: wrap;
+    padding-left: calc(44px + var(--app-space-md));
+  }
+
+  .sync-stats {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .sync-stat {
+    text-align: left;
+  }
+}
+
+@media (max-width: 640px) {
+  .data-source,
+  .integration-result {
+    padding: var(--app-space-md);
+  }
+
+  .data-source__main {
+    width: 100%;
+  }
+
+  .data-source__actions {
+    padding-left: 0;
+  }
+
+  .data-source__actions button {
+    flex: 1;
+  }
+
+  .slack-connection-form {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .integration-metadata {
+    flex-direction: column;
+    gap: var(--app-space-sm);
+  }
+
+  .sync-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--app-space-sm);
+  }
+
+  .sync-stat {
+    min-width: 0;
+  }
+}

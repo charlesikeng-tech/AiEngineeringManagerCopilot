@@ -1,4 +1,5 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
+using AiEngineeringManagerCopilot.Application.Common;
 using AiEngineeringManagerCopilot.Application.Health;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Domain.Enums;
@@ -233,6 +234,10 @@ public sealed class EngineeringHealthScoreServiceTests
             Team team,
             CancellationToken cancellationToken)
             => Task.CompletedTask;
+
+        public Task<PagedResult<Team>> GetPageByOwnerAsync(
+            Guid ownerUserId, int pageNumber, int pageSize, string? search, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
 
         public Task SaveChangesAsync(
             CancellationToken cancellationToken)

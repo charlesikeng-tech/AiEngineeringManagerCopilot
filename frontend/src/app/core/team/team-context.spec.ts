@@ -30,6 +30,34 @@ describe('TeamContext', () => {
     expect(localStorage.getItem(SELECTED_TEAM_STORAGE_KEY)).toBeNull();
   });
 
+  it('increments synchronously on changes even when returning to the original team', () => {
+    const context = TestBed.inject(TeamContext);
+    context.selectTeam('a');
+    expect(context.selectionVersion()).toBe(1);
+    context.selectTeam('b');
+    context.selectTeam('a');
+    expect(context.selectedTeamId()).toBe('a');
+    expect(context.selectionVersion()).toBe(3);
+    expect(localStorage.getItem(SELECTED_TEAM_STORAGE_KEY)).toBe('a');
+  });
+
+  it('does not advance the revision when selecting the same team', () => {
+    const context = TestBed.inject(TeamContext);
+    context.selectTeam('a');
+    context.selectTeam('a');
+    expect(context.selectionVersion()).toBe(1);
+  });
+
+  it('advances the revision on clearing a selection but not an already empty selection', () => {
+    const context = TestBed.inject(TeamContext);
+    context.selectTeam('a');
+    context.clearTeam();
+    context.clearTeam();
+    expect(context.selectionVersion()).toBe(2);
+    expect(context.hasSelectedTeam()).toBe(false);
+    expect(localStorage.getItem(SELECTED_TEAM_STORAGE_KEY)).toBeNull();
+  });
+
   it('remains usable when browser storage is blocked', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new DOMException('Storage is blocked', 'SecurityError');

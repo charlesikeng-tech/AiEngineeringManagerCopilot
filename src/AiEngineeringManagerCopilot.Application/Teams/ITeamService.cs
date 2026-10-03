@@ -1,3 +1,5 @@
+using AiEngineeringManagerCopilot.Application.Common;
+
 namespace AiEngineeringManagerCopilot.Application.Teams;
 
 public interface ITeamService
@@ -7,6 +9,10 @@ public interface ITeamService
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<TeamResponse>> GetAllAsync(
+        CancellationToken cancellationToken);
+
+    Task<PagedResult<TeamResponse>> GetPageAsync(
+        GetTeamsPageRequest request,
         CancellationToken cancellationToken);
 
     Task<TeamResponse?> GetByIdAsync(

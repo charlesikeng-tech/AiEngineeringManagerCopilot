@@ -3,6 +3,7 @@ import { ApplicationConfig, inject, provideAppInitializer } from '@angular/core'
 import { provideRouter } from '@angular/router';
 
 import {
+  ApiOutline,
   ArrowDownOutline,
   ArrowUpOutline,
   BarChartOutline,
@@ -39,6 +40,7 @@ export const appConfig: ApplicationConfig = {
     ...provideFrontendI18n(),
 
     provideNzIcons([
+      ApiOutline,
       DashboardOutline,
       FileTextOutline,
       WarningOutline,

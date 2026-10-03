@@ -1,4 +1,5 @@
 using AiEngineeringManagerCopilot.Domain.Entities;
+using AiEngineeringManagerCopilot.Application.Common;
 
 namespace AiEngineeringManagerCopilot.Application.Abstractions;
 
@@ -11,6 +12,13 @@ public interface ITeamRepository
 
     Task<IReadOnlyList<Team>> GetByOwnerAsync(
         Guid ownerUserId,
+        CancellationToken cancellationToken);
+
+    Task<PagedResult<Team>> GetPageByOwnerAsync(
+        Guid ownerUserId,
+        int pageNumber,
+        int pageSize,
+        string? search,
         CancellationToken cancellationToken);
 
     Task AddAsync(

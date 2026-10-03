@@ -1,0 +1,234 @@
+<div class="app-page">
+  <header class="page-header">
+    <div class="page-header__content">
+      <h1>{{ 'integrations.title' | translate }}</h1>
+      <p>{{ 'integrations.overview.description' | translate }}</p>
+    </div>
+  </header>
+
+  @if (configuring()) {
+    <section class="app-section configuration-heading">
+      <button nz-button type="button" (click)="showOverview()">
+        {{ 'integrations.overview.back' | translate }}
+      </button>
+      <h2>
+        @if (configuredTeamName()) {
+          {{ 'integrations.overview.configuration' | translate: { team: configuredTeamName() } }}
+        } @else {
+          {{ 'integrations.overview.configurationDefault' | translate }}
+        }
+      </h2>
+    </section>
+    <app-integration-settings />
+  } @else {
+    <section class="app-section">
+      <div class="app-card overview-panel">
+        <div class="overview-toolbar">
+          <div class="team-filter">
+            <label for="integration-team-filter">{{
+              'integrations.overview.filter' | translate
+            }}</label>
+            <input
+              nz-input
+              type="search"
+              maxlength="200"
+              id="integration-team-filter"
+              [ngModel]="searchText()"
+              (ngModelChange)="setSearch($event)"
+              [placeholder]="'integrations.overview.searchPlaceholder' | translate"
+              [attr.aria-label]="'integrations.overview.filter' | translate"
+            />
+          </div>
+          <button
+            nz-button
+            type="button"
+            [nzLoading]="refreshing()"
+            [disabled]="refreshing()"
+            (click)="refresh()"
+          >
+            {{ 'integrations.overview.refresh' | translate }}
+          </button>
+        </div>
+
+        @if (loadError()) {
+          <nz-alert
+            nzType="error"
+            nzShowIcon
+            [nzMessage]="'integrations.overview.loadError' | translate"
+          />
+        } @else if (loadingTeams()) {
+          <div class="state-container"><nz-spin nzSimple /></div>
+        } @else if (rows().length === 0) {
+          <div class="empty-state">
+            <nz-empty
+              [nzNotFoundContent]="
+                (search() ? 'integrations.overview.noResults' : 'integrations.overview.noTeams')
+                  | translate
+              "
+            />
+            @if (search()) {
+              <button nz-button type="button" (click)="setSearch('')">
+                {{ 'integrations.overview.clearSearch' | translate }}
+              </button>
+            } @else {
+              <a nz-button routerLink="/team">{{
+                'integrations.overview.manageTeams' | translate
+              }}</a>
+            }
+          </div>
+        } @else {
+          <div
+            class="overview-table-wrapper"
+            tabindex="0"
+            role="region"
+            [attr.aria-label]="'integrations.overview.caption' | translate"
+          >
+            <table class="overview-table">
+              <caption class="table-caption">
+                {{
+                  'integrations.overview.caption' | translate
+                }}
+              </caption>
+              <thead>
+                <tr class="table-groups">
+                  <th scope="col" rowspan="2" class="team-column">
+                    {{ 'integrations.overview.team' | translate }}
+                  </th>
+                  <th scope="colgroup" colspan="2">{{ 'integrations.dataSources' | translate }}</th>
+                  <th scope="colgroup" colspan="2">
+                    {{ 'integrations.notifications' | translate }}
+                  </th>
+                  <th scope="col" rowspan="2" class="actions-column">
+                    {{ 'integrations.overview.actions' | translate }}
+                  </th>
+                </tr>
+                <tr class="table-providers">
+                  <th scope="col" class="source-column">GitHub</th>
+                  <th scope="col" class="source-column">Jira</th>
+                  <th scope="col" class="notification-column">Slack</th>
+                  <th scope="col" class="notification-column">Microsoft Teams</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of rows(); track row.team.id) {
+                  <tr>
+                    <th scope="row">
+                      <span class="team-name" [title]="row.team.name">{{ row.team.name }}</span>
+                    </th>
+                    @for (source of [row.github, row.jira]; track $index) {
+                      <td>
+                        <span
+                          class="connection-status"
+                          [class.connection-status--connected]="source.status === 'connected'"
+                          [class.connection-status--error]="source.status === 'error'"
+                        >
+                          <span class="status-dot" aria-hidden="true"></span>
+                          {{ 'integrations.overview.status.' + source.status | translate }}
+                        </span>
+                        @if (source.status === 'connected') {
+                          <div class="sync-date">
+                            <span class="sync-label" aria-hidden="true">{{
+                              'integrations.overview.syncShortLabel' | translate
+                            }}</span>
+                            @if (source.lastSyncAt) {
+                              <time
+                                [attr.datetime]="source.lastSyncAt"
+                                [title]="
+                                  ('integrations.overview.lastSync' | translate) +
+                                  ': ' +
+                                  (source.lastSyncAt | appDate: 'medium')
+                                "
+                                [attr.aria-label]="
+                                  ('integrations.overview.lastSync' | translate) +
+                                  ': ' +
+                                  (source.lastSyncAt | appDate: 'medium')
+                                "
+                                >{{ source.lastSyncAt | appDate: 'short' }}</time
+                              >
+                            } @else {
+                              <span>{{ 'integrations.overview.never' | translate }}</span>
+                            }
+                          </div>
+                        }
+                      </td>
+                    }
+                    @for (notification of [row.slack, row.microsoftTeams]; track $index) {
+                      <td>
+                        <span
+                          class="connection-status"
+                          [class.connection-status--connected]="notification.status === 'connected'"
+                          [class.connection-status--error]="notification.status === 'error'"
+                        >
+                          <span class="status-dot" aria-hidden="true"></span>
+                          {{
+                            'integrations.overview.notificationStatus.' + notification.status
+                              | translate
+                          }}
+                        </span>
+                      </td>
+                    }
+                    <td>
+                      <button
+                        nz-button
+                        nzSize="small"
+                        class="configure-button"
+                        type="button"
+                        (click)="configure(row.team.id)"
+                        [attr.aria-label]="
+                          'integrations.overview.configureTeam' | translate: { team: row.team.name }
+                        "
+                      >
+                        {{ 'integrations.overview.configure' | translate }}
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        @if (!loadError() && totalCount() > 0) {
+          <div class="overview-pagination">
+            <div class="pagination-size">
+              <label for="integration-page-size">{{
+                'integrations.overview.pageSize' | translate
+              }}</label>
+              <nz-select
+                id="integration-page-size"
+                [ngModel]="pageSize()"
+                (ngModelChange)="changePageSize($event)"
+                [nzDisabled]="loadingTeams()"
+                [attr.aria-label]="'integrations.overview.pageSize' | translate"
+              >
+                @for (size of pageSizeOptions; track size) {
+                  <nz-option [nzValue]="size" [nzLabel]="size.toString()" />
+                }
+              </nz-select>
+            </div>
+            <nz-pagination
+              [nzPageIndex]="pageNumber()"
+              [nzPageSize]="pageSize()"
+              [nzTotal]="totalCount()"
+              nzShowQuickJumper
+              [nzDisabled]="loadingTeams()"
+              [nzShowTotal]="pageTotal"
+              (nzPageIndexChange)="changePage($event)"
+            />
+            <ng-template #pageTotal let-total let-range="range">
+              {{
+                'integrations.overview.pageTotal'
+                  | translate: { from: range[0], to: range[1], total: total }
+              }}
+            </ng-template>
+          </div>
+        }
+      </div>
+      @if (!loadError() && !loadingTeams() && rows().length > 0) {
+        <details class="overview-note">
+          <summary>{{ 'integrations.overview.syncNoteTitle' | translate }}</summary>
+          <p>{{ 'integrations.overview.syncNote' | translate }}</p>
+        </details>
+      }
+    </section>
+  }
+</div>

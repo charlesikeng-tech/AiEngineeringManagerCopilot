@@ -41,6 +41,13 @@ export const routes: Routes = [
           import('@features/actions/pages/actions/actions').then(({ Actions }) => Actions),
       },
       {
+        path: 'integrations',
+        loadComponent: () =>
+          import('@features/integrations/pages/integrations/integrations').then(
+            ({ IntegrationsPage }) => IntegrationsPage,
+          ),
+      },
+      {
         path: 'team',
         loadComponent: () =>
           import('@features/team/pages/teams/teams').then(({ TeamsPage }) => TeamsPage),

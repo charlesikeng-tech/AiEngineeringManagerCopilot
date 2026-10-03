@@ -549,6 +549,9 @@ public sealed class EngineeringMetricsServiceTests
         }
 
         public Task<IReadOnlyList<Team>> GetByOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<AiEngineeringManagerCopilot.Application.Common.PagedResult<Team>> GetPageByOwnerAsync(
+            Guid ownerUserId, int pageNumber, int pageSize, string? search, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
         public Task AddAsync(Team team, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task DeleteAsync(Team team, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task AddAsync(GitHubConnection connection, CancellationToken cancellationToken) => throw new NotSupportedException();

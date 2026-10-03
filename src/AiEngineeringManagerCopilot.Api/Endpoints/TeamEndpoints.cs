@@ -1,4 +1,6 @@
 using AiEngineeringManagerCopilot.Application.Teams;
+using AiEngineeringManagerCopilot.Application.Common;
+using FluentValidation;
 
 namespace AiEngineeringManagerCopilot.Api.Endpoints;
 
@@ -44,6 +46,25 @@ public static class TeamEndpoints
             .WithName("GetTeams")
             .WithSummary("Get current user's teams")
             .WithDescription("Returns all teams owned by the current user.");
+
+        group.MapGet(
+                "/paged",
+                async (
+                    int? pageNumber,
+                    int? pageSize,
+                    string? search,
+                    ITeamService teamService,
+                    IValidator<GetTeamsPageRequest> validator,
+                    CancellationToken cancellationToken) =>
+                {
+                    var request = new GetTeamsPageRequest(pageNumber ?? 1, pageSize ?? 10, search);
+                    await RequestValidator.ValidateAndThrowAsync(request, validator, cancellationToken);
+                    var result = await teamService.GetPageAsync(request, cancellationToken);
+                    return Results.Ok(result);
+                })
+            .WithName("GetTeamsPage")
+            .WithSummary("Get a page of current user's teams")
+            .WithDescription("Returns teams ordered by name and ID, with an optional name search.");
 
         group.MapGet(
                 "/{teamId:guid}",

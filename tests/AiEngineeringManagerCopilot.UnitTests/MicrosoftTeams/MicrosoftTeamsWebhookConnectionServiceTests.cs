@@ -163,6 +163,9 @@ public sealed class MicrosoftTeamsWebhookConnectionServiceTests
 
         public Task<IReadOnlyList<Team>> GetByOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+        public Task<PagedResult<Team>> GetPageByOwnerAsync(
+            Guid ownerUserId, int pageNumber, int pageSize, string? search, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
         public Task AddAsync(Team value, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
         public Task DeleteAsync(Team value, CancellationToken cancellationToken) =>

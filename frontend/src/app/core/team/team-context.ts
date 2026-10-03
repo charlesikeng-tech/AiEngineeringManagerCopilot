@@ -9,19 +9,27 @@ const SELECTED_TEAM_STORAGE_KEY = 'selectedTeamId';
 export class TeamContext {
   private readonly document = inject(DOCUMENT);
   private readonly selectedTeamIdState = signal<string | null>(this.readSelectedTeamId());
+  private readonly selectionVersionState = signal(0);
 
   readonly selectedTeamId = this.selectedTeamIdState.asReadonly();
+  readonly selectionVersion = this.selectionVersionState.asReadonly();
 
   readonly hasSelectedTeam = computed(() => this.selectedTeamId() !== null);
 
   selectTeam(teamId: string): void {
-    this.selectedTeamIdState.set(teamId);
+    if (this.selectedTeamIdState() !== teamId) {
+      this.selectedTeamIdState.set(teamId);
+      this.selectionVersionState.update((version) => version + 1);
+    }
 
     this.persistSelectedTeamId(teamId);
   }
 
   clearTeam(): void {
-    this.selectedTeamIdState.set(null);
+    if (this.selectedTeamIdState() !== null) {
+      this.selectedTeamIdState.set(null);
+      this.selectionVersionState.update((version) => version + 1);
+    }
 
     this.removeSelectedTeamId();
   }

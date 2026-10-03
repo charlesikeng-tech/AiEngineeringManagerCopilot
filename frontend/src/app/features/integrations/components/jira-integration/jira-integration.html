@@ -1,0 +1,174 @@
+<article class="app-card jira-card">
+  <div class="jira-card__header">
+    <div>
+      <h3>{{ 'integrations.jira.title' | translate }}</h3>
+      <p>
+        {{
+          (connection()
+            ? 'integrations.jira.connectedDescription'
+            : 'integrations.jira.description'
+          ) | translate
+        }}
+      </p>
+    </div>
+    <span class="jira-status" [class.jira-status--connected]="connection() && !loadError()">
+      {{
+        (loading()
+          ? 'integrations.jira.loading'
+          : loadError()
+            ? 'integrations.jira.error'
+            : connection()
+              ? 'integrations.jira.connected'
+              : 'integrations.jira.notConnected'
+        ) | translate
+      }}
+    </span>
+  </div>
+
+  @if (loading()) {
+    <nz-spin nzSimple />
+  } @else if (loadError()) {
+    <nz-alert nzType="error" nzShowIcon [nzMessage]="'integrations.jira.loadError' | translate" />
+    <button nz-button type="button" (click)="reload()">
+      {{ 'integrations.jira.retry' | translate }}
+    </button>
+  } @else if (connection(); as connected) {
+    <dl class="jira-metadata">
+      <div>
+        <dt>{{ 'integrations.jira.baseUrl' | translate }}</dt>
+        <dd>{{ connected.baseUrl }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'integrations.jira.email' | translate }}</dt>
+        <dd>{{ connected.email }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'integrations.jira.projectKey' | translate }}</dt>
+        <dd>{{ connected.projectKey }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'integrations.jira.lastSync' | translate }}</dt>
+        <dd>
+          {{
+            connected.lastSyncAt
+              ? (connected.lastSyncAt | appDate: 'medium')
+              : ('integrations.jira.never' | translate)
+          }}
+        </dd>
+      </div>
+    </dl>
+    <div class="jira-actions">
+      <button
+        nz-button
+        type="button"
+        [nzLoading]="testing()"
+        [disabled]="busy()"
+        (click)="testConnection()"
+      >
+        {{ 'integrations.jira.test' | translate }}
+      </button>
+      <button
+        nz-button
+        nzType="primary"
+        type="button"
+        [nzLoading]="syncing()"
+        [disabled]="busy()"
+        (click)="sync()"
+      >
+        {{ 'integrations.jira.sync' | translate }}
+      </button>
+      <button
+        nz-button
+        nzDanger
+        type="button"
+        nz-popconfirm
+        [nzPopconfirmTitle]="'integrations.jira.disconnectConfirm' | translate"
+        [nzLoading]="disconnecting()"
+        [disabled]="busy()"
+        (nzOnConfirm)="disconnect()"
+      >
+        {{ 'integrations.jira.disconnect' | translate }}
+      </button>
+    </div>
+  } @else if (!connectOpen()) {
+    <button nz-button nzType="primary" type="button" (click)="openConnection()">
+      {{ 'integrations.jira.connect' | translate }}
+    </button>
+  } @else {
+    <form class="jira-form" [formGroup]="form" (ngSubmit)="connect()">
+      <div class="jira-field">
+        <label for="jira-base-url">{{ 'integrations.jira.baseUrl' | translate }}</label>
+        <input
+          nz-input
+          id="jira-base-url"
+          type="url"
+          formControlName="baseUrl"
+          [placeholder]="'integrations.jira.baseUrlPlaceholder' | translate"
+        />
+      </div>
+      <div class="jira-field">
+        <label for="jira-email">{{ 'integrations.jira.email' | translate }}</label>
+        <input
+          nz-input
+          id="jira-email"
+          type="email"
+          formControlName="email"
+          autocomplete="username"
+        />
+      </div>
+      <div class="jira-field">
+        <label for="jira-project-key">{{ 'integrations.jira.projectKey' | translate }}</label>
+        <input nz-input id="jira-project-key" formControlName="projectKey" />
+      </div>
+      <div class="jira-field">
+        <label for="jira-api-token">{{ 'integrations.jira.apiToken' | translate }}</label>
+        <input
+          nz-input
+          id="jira-api-token"
+          type="password"
+          formControlName="apiToken"
+          autocomplete="new-password"
+          aria-describedby="jira-token-hint"
+        />
+        <p id="jira-token-hint">{{ 'integrations.jira.tokenHint' | translate }}</p>
+      </div>
+      <div class="jira-actions">
+        <button
+          nz-button
+          nzType="primary"
+          type="submit"
+          [nzLoading]="saving()"
+          [disabled]="form.invalid || busy()"
+        >
+          {{ 'integrations.jira.save' | translate }}
+        </button>
+        <button nz-button type="button" [disabled]="saving()" (click)="closeConnection()">
+          {{ 'integrations.jira.cancel' | translate }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (testResult(); as result) {
+    <nz-alert
+      [nzType]="result.isValid ? 'success' : 'error'"
+      nzShowIcon
+      [nzMessage]="
+        (result.isValid ? 'integrations.jira.testSucceeded' : 'integrations.jira.testFailed')
+          | translate
+      "
+      [nzDescription]="result.displayName || ''"
+    />
+  }
+  @if (syncResult(); as result) {
+    <nz-alert
+      nzType="success"
+      nzShowIcon
+      [nzMessage]="'integrations.jira.syncSucceeded' | translate"
+      [nzDescription]="
+        'integrations.jira.syncSummary'
+          | translate: { total: result.total, created: result.created, updated: result.updated }
+      "
+    />
+  }
+</article>

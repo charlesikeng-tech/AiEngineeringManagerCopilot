@@ -1,4 +1,5 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
+using AiEngineeringManagerCopilot.Application.Common;
 using AiEngineeringManagerCopilot.Application.Teams;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using FluentAssertions;
@@ -8,6 +9,27 @@ namespace AiEngineeringManagerCopilot.UnitTests.Teams;
 
 public sealed class TeamServiceTests
 {
+    [Fact]
+    public async Task GetPageAsync_ShouldScopePaginationToCurrentUserAndMapResults()
+    {
+        var userId = Guid.NewGuid();
+        var repository = new FakeTeamRepository
+        {
+            Team = new Team { Id = Guid.NewGuid(), OwnerUserId = userId, Name = "Platform" }
+        };
+        var service = new TeamService(
+            repository, new FakeCurrentUser(userId), new FakeCreateTeamValidator(), new FakeUpdateTeamValidator());
+        var result = await service.GetPageAsync(new GetTeamsPageRequest(2, 20, "Platform"), CancellationToken.None);
+        repository.ReceivedOwnerUserId.Should().Be(userId);
+        repository.ReceivedPageNumber.Should().Be(2);
+        repository.ReceivedPageSize.Should().Be(20);
+        repository.ReceivedSearch.Should().Be("Platform");
+        result.TotalCount.Should().Be(25);
+        result.Items.Should().ContainSingle().Which.Name.Should().Be("Platform");
+        result.PageNumber.Should().Be(2);
+        result.PageSize.Should().Be(20);
+    }
+
     [Fact]
     public async Task GetByIdAsync_ShouldUseCurrentUserId()
     {
@@ -121,6 +143,22 @@ public sealed class TeamServiceTests
         {
             throw new NotSupportedException();
         }
+
+        public Task<PagedResult<Team>> GetPageByOwnerAsync(
+            Guid ownerUserId, int pageNumber, int pageSize, string? search,
+            CancellationToken cancellationToken)
+        {
+            ReceivedOwnerUserId = ownerUserId;
+            ReceivedPageNumber = pageNumber;
+            ReceivedPageSize = pageSize;
+            ReceivedSearch = search;
+            return Task.FromResult(new PagedResult<Team>(
+                Team is null ? [] : [Team], 25, pageNumber, pageSize));
+        }
+
+        public int ReceivedPageNumber { get; private set; }
+        public int ReceivedPageSize { get; private set; }
+        public string? ReceivedSearch { get; private set; }
 
         public Task SaveChangesAsync(
             CancellationToken cancellationToken)
