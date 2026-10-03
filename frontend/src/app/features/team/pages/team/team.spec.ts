@@ -8,6 +8,7 @@ import {
   EditOutline,
   GithubOutline,
   PlusOutline,
+  SlackOutline,
   SyncOutline,
 } from '@ant-design/icons-angular/icons';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
@@ -55,6 +56,7 @@ describe('team localization', () => {
           EditOutline,
           GithubOutline,
           PlusOutline,
+          SlackOutline,
           SyncOutline,
         ]),
         {

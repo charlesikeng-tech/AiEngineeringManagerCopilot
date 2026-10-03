@@ -4,16 +4,16 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { I18nService } from '@core/i18n/i18n.service';
 import { TeamContext } from '@core/team/team-context';
+import { Actions } from '@features/actions/pages/actions/actions';
+import { ActionsApi } from '@features/actions/services/actions-api';
+import { ReportDetail } from '@features/reports/pages/report-detail/report-detail';
+import { Reports } from '@features/reports/pages/reports/reports';
+import { ReportAnalysisApi } from '@features/reports/services/report-analysis-api';
+import { ReportsApi } from '@features/reports/services/reports-api';
+import { Risks } from '@features/risks/pages/risks/risks';
+import { RisksApi } from '@features/risks/services/risks-api';
 import managementEn from '../../../public/i18n/management/en.json';
 import managementFr from '../../../public/i18n/management/fr.json';
-import { ActionsApi } from './actions/services/actions-api';
-import { Actions } from './actions/pages/actions/actions';
-import { ReportAnalysisApi } from './reports/services/report-analysis-api';
-import { ReportsApi } from './reports/services/reports-api';
-import { ReportDetail } from './reports/pages/report-detail/report-detail';
-import { Reports } from './reports/pages/reports/reports';
-import { RisksApi } from './risks/services/risks-api';
-import { Risks } from './risks/pages/risks/risks';
 import { NzMessageService } from 'ng-zorro-antd/message';
 
 describe('management page localization', () => {

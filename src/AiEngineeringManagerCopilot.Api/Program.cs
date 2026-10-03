@@ -32,6 +32,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(ApiServiceCollectionExtensions.FrontendCorsPolicy);
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapTeamEndpoints();

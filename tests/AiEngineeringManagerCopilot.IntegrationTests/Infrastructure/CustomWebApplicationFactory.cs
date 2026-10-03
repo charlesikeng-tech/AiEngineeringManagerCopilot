@@ -1,3 +1,4 @@
+using System.Globalization;
 using AiEngineeringManagerCopilot.Api.Authentication;
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.Jira;
@@ -20,10 +21,15 @@ public class CustomWebApplicationFactory
 {
     private static readonly object DatabaseInitializationLock = new();
 
+    protected virtual int AIAnalysisRequestLimit => int.MaxValue;
+
     protected override void ConfigureWebHost(
         IWebHostBuilder builder)
     {
         builder.UseEnvironment("Test");
+        builder.UseSetting(
+            "RateLimiting:AIAnalysis:PermitLimit",
+            AIAnalysisRequestLimit.ToString(CultureInfo.InvariantCulture));
         
         builder.UseSetting(
             "Jwt:Issuer",

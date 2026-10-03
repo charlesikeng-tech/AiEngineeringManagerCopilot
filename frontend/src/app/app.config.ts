@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import {
   ArrowDownOutline,
   ArrowUpOutline,
+  BarChartOutline,
   CheckSquareOutline,
   DashboardOutline,
   FileTextOutline,
@@ -14,6 +15,7 @@ import {
   MinusOutline,
   PlusOutline,
   SlackOutline,
+  SyncOutline,
   TeamOutline,
   WarningOutline,
 } from '@ant-design/icons-angular/icons';
@@ -50,6 +52,8 @@ export const appConfig: ApplicationConfig = {
       PlusOutline,
       GithubOutline,
       SlackOutline,
+      BarChartOutline,
+      SyncOutline,
     ]),
 
     provideAppInitializer(() => {

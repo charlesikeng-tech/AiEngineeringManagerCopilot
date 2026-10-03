@@ -31,11 +31,19 @@ public sealed class TestAuthHandler(
                 AuthenticateResult.NoResult());
             
         }
+
+        var userId = Request.Headers.TryGetValue(
+                "X-Test-UserId",
+                out var userIdHeader)
+            && Guid.TryParse(userIdHeader, out var requestedUserId)
+                ? requestedUserId
+                : UserId;
+
         var claims = new[]
         {
             new Claim(
                 ClaimTypes.NameIdentifier,
-                UserId.ToString())
+                userId.ToString())
         };
 
         var identity = new ClaimsIdentity(

@@ -123,7 +123,7 @@ production-ready deployment. The following gaps were identified in the
 | Area | Current limitation | Required hardening |
 |---|---|---|
 | Frontend startup | Startup always uses `/dev/token`, selects the first team, and prepares August/September 2026 reports. The production API URL is still `http://localhost:5249`. | Separate demo initialization from normal startup and configure production authentication/API access. |
-| AI request limits | An AI rate-limit policy is registered, but neither the middleware nor endpoint policy is applied. | Wire the policy into the request pipeline and analysis endpoint. |
+| AI request limits | Analysis generation is limited to 5 requests per minute per authenticated user, per API instance; excess requests receive HTTP 429 and a `Retry-After` header. The limit is configurable with `RateLimiting:AIAnalysis:PermitLimit`. | Use a shared/distributed limiter if the deployment runs multiple API instances. |
 | Concurrent AI analysis | Existing analyses are checked before generation, but `ReportId` has no unique constraint. | Prevent concurrent duplicate generation and persistence. |
 | Historical reports | Stored scores and conclusions are combined with metrics that can later be recalculated. | Snapshot or version the report inputs. |
 | GitHub synchronization | Some HTTP failures are treated as empty results, and `LastSyncAt` is set before collection finishes. | Expose partial failures and preserve previously known deployment statuses. |

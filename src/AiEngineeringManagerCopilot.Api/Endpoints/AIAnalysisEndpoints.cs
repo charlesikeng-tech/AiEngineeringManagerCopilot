@@ -1,3 +1,4 @@
+using AiEngineeringManagerCopilot.Api.DependencyInjection;
 using AiEngineeringManagerCopilot.Application.AI;
 
 namespace AiEngineeringManagerCopilot.Api.Endpoints;
@@ -29,7 +30,9 @@ public static class AIAnalysisEndpoints
                         return Results.NotFound();
                     }
                 })
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireRateLimiting(
+                ApiServiceCollectionExtensions.AIAnalysisRateLimitPolicy);
 
         app.MapGet(
                 "/teams/{teamId:guid}/reports/{reportId:guid}/analysis",

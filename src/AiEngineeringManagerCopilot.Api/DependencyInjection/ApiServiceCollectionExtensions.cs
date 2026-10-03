@@ -16,6 +16,16 @@ public static class ApiServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        var aiAnalysisPermitLimit = configuration.GetValue(
+            "RateLimiting:AIAnalysis:PermitLimit",
+            5);
+
+        if (aiAnalysisPermitLimit <= 0)
+        {
+            throw new InvalidOperationException(
+                "The AI analysis rate-limit permit limit must be greater than zero.");
+        }
+
         services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.Converters.Add(
@@ -60,6 +70,20 @@ public static class ApiServiceCollectionExtensions
         {
             options.RejectionStatusCode =
                 StatusCodes.Status429TooManyRequests;
+            options.OnRejected = (context, _) =>
+            {
+                if (context.Lease.TryGetMetadata(
+                        MetadataName.RetryAfter,
+                        out var retryAfter))
+                {
+                    context.HttpContext.Response.Headers["Retry-After"] =
+                        Math.Ceiling(retryAfter.TotalSeconds)
+                            .ToString(
+                                System.Globalization.CultureInfo.InvariantCulture);
+                }
+
+                return ValueTask.CompletedTask;
+            };
 
             options.AddPolicy(
                 AIAnalysisRateLimitPolicy,
@@ -76,7 +100,7 @@ public static class ApiServiceCollectionExtensions
                         partitionKey,
                         _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = 5,
+                            PermitLimit = aiAnalysisPermitLimit,
                             Window = TimeSpan.FromMinutes(1),
                             QueueLimit = 0,
                             AutoReplenishment = true

@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, of, switchMap } from 'rxjs';
 
-import { Auth } from '../auth/auth';
-import { TeamApi } from '../team/team-api';
-import { TeamContext } from '../team/team-context';
+import { Auth } from '@core/auth/auth';
+import { TeamApi } from '@core/team/team-api';
+import { TeamContext } from '@core/team/team-context';
 import { DevelopmentBootstrap } from './development-bootstrap';
 
 @Injectable({
