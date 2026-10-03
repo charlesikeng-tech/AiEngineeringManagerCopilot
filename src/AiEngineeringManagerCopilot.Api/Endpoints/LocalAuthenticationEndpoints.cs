@@ -18,6 +18,7 @@ public static class LocalAuthenticationEndpoints
 
     public static void MapLocalAuthenticationEndpoints(this WebApplication app)
     {
+        app.MapSsoEndpoints();
         var group = app.MapGroup("/auth").WithTags("Local administrator");
         group.MapGet("/setup-status", async (AppDbContext db, IConfiguration config, CancellationToken ct) =>
             Results.Ok(new { setupAvailable = SecretConfigured(config) && !await db.Installations.AnyAsync(ct) }))

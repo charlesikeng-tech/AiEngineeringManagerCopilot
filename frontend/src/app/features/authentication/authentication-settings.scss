@@ -1,0 +1,9 @@
+:host { display: block; }
+section { max-width: 1000px; margin: auto; }
+nz-alert { display: block; margin-bottom: 16px; }
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+article, form { background: #fff; border: 1px solid #d9d9d9; border-radius: 8px; padding: 24px; margin: 16px 0; }
+fieldset { border: 0; padding: 0; min-width: 0; }
+label { display: block; margin: 16px 0 6px; }
+nz-select { width: 100%; }
+code { overflow-wrap: anywhere; }

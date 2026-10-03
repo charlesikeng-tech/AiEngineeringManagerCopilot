@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '@core/auth/auth-guard';
+import { administratorGuard } from '@core/auth/administrator-guard';
 
 export const routes: Routes = [
   {
@@ -18,6 +19,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('@core/layout/main-layout/main-layout').then(({ MainLayout }) => MainLayout),
     children: [
+      {
+        path: 'admin/authentication',
+        canActivate: [administratorGuard],
+        loadComponent: () => import('@features/authentication/authentication-settings').then(({ AuthenticationSettings }) => AuthenticationSettings),
+      },
       {
         path: '',
         pathMatch: 'full',

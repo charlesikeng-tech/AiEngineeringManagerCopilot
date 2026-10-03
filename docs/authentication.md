@@ -2,9 +2,11 @@
 
 This first authentication increment installs exactly one **local platform
 administrator**. There is no public signup, default password, automatic
-promotion of an existing user, or SSO implementation. Auth0, Okta and Microsoft
-Entra configuration and SSO are reserved for a later increment. Local login
-remains independent of those future providers.
+promotion of an existing user, or external-user login. The next increment adds
+installation-wide Auth0, Okta and Microsoft Entra provider drafts, real OIDC
+connection testing and explicit configuration activation; see [SSO configuration](sso.md).
+Activation does not yet enable SSO login or provisioning. Local login remains
+independent of those provider configurations.
 
 ## Prepare the database and installation secret
 

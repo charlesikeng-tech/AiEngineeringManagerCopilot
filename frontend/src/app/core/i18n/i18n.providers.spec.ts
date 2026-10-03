@@ -27,7 +27,7 @@ describe('translation HTTP loader', () => {
     const result = firstValueFrom(TestBed.inject(TranslateLoader).getTranslation('fr'));
     const http = TestBed.inject(HttpTestingController);
 
-    for (const scope of ['common', 'team', 'dashboard', 'management']) {
+    for (const scope of ['common', 'team', 'dashboard', 'management', 'sso']) {
       http.expectOne(`./i18n/${scope}/fr.json`).flush({ [scope]: { label: scope } });
     }
 
@@ -36,6 +36,7 @@ describe('translation HTTP loader', () => {
       team: { label: 'team' },
       dashboard: { label: 'dashboard' },
       management: { label: 'management' },
+      sso: { label: 'sso' },
     });
   });
 
@@ -55,7 +56,7 @@ describe('translation HTTP loader', () => {
     const initialized = service.initialize();
     const http = TestBed.inject(HttpTestingController);
 
-    for (const scope of ['common', 'team', 'dashboard', 'management']) {
+    for (const scope of ['common', 'team', 'dashboard', 'management', 'sso']) {
       http.expectOne(`./i18n/${scope}/en.json`).flush(scope === 'common' ? commonEn : {});
     }
     await initialized;

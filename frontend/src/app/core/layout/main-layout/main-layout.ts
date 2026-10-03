@@ -36,6 +36,7 @@ export class MainLayout {
   private readonly teamContext = inject(TeamContext);
   private readonly router = inject(Router);
   readonly isCollapsed = signal(false);
+  readonly administrator = this.auth.user;
 
   logout(): void {
     this.auth.logout().subscribe({

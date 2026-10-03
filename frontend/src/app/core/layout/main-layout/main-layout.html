@@ -99,6 +99,12 @@
 
             <span class="navigation-item-label">{{ 'app.integrations' | translate }}</span>
           </li>
+          @if (administrator()?.role === 'PlatformAdministrator') {
+            <li nz-menu-item routerLink="/admin/authentication" routerLinkActive="ant-menu-item-selected">
+              <nz-icon nzType="lock" />
+              <span class="navigation-item-label">{{ 'sso.title' | translate }}</span>
+            </li>
+          }
         </ul>
       </div>
     </nav>

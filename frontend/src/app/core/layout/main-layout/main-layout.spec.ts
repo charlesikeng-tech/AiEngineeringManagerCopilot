@@ -6,6 +6,7 @@ import {
   CheckSquareOutline,
   DashboardOutline,
   FileTextOutline,
+  LockOutline,
   MenuFoldOutline,
   MenuUnfoldOutline,
   TeamOutline,
@@ -19,6 +20,8 @@ import { of } from 'rxjs';
 import { routes } from '../../../app.routes';
 import { MainLayout } from './main-layout';
 import { Auth } from '@core/auth/auth';
+import ssoEn from '../../../../../public/i18n/sso/en.json';
+import ssoFr from '../../../../../public/i18n/sso/fr.json';
 
 @Component({ template: '' })
 class EmptyPage {}
@@ -30,19 +33,20 @@ describe('MainLayout integrations navigation', () => {
       imports: [MainLayout],
       providers: [
         provideRouter([{ path: 'integrations', component: EmptyPage }]),
-        ...provideI18nTesting(),
+        ...provideI18nTesting('en', { en: ssoEn, fr: ssoFr }),
         provideNzIcons([
           ApiOutline,
           CheckSquareOutline,
           DashboardOutline,
           FileTextOutline,
+          LockOutline,
           MenuFoldOutline,
           MenuUnfoldOutline,
           TeamOutline,
           WarningOutline,
         ]),
         { provide: TeamApi, useValue: { getTeams: () => of([]) } },
-        { provide: Auth, useValue: { logout: () => of(undefined) } },
+        { provide: Auth, useValue: { logout: () => of(undefined), user: () => ({ role: 'PlatformAdministrator' }) } },
       ],
     });
   });
@@ -71,5 +75,17 @@ describe('MainLayout integrations navigation', () => {
     await TestBed.inject(I18nService).setLanguage('fr');
     fixture.detectChanges();
     expect(item.textContent).toContain('Intégrations');
+  });
+
+  it('provides a localized administrator authentication navigation entry and guarded route', async () => {
+    const route = routes.find((route) => route.path === '')?.children?.find((route) => route.path === 'admin/authentication');
+    expect(route?.canActivate?.length).toBe(1);
+    const fixture = TestBed.createComponent(MainLayout);
+    fixture.detectChanges();
+    const item = fixture.nativeElement.querySelector('li[routerlink="/admin/authentication"]');
+    expect(item.textContent).toContain('Administrator authentication');
+    await TestBed.inject(I18nService).setLanguage('fr');
+    fixture.detectChanges();
+    expect(item.textContent).toContain('Authentification administrateur');
   });
 });

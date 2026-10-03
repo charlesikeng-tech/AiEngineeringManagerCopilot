@@ -19,6 +19,7 @@ public static class AuthenticationServiceCollectionExtensions
         IHostEnvironment environment)
     {
         services.AddHttpContextAccessor();
+        services.AddSsoServices(configuration);
 
         services.AddOptions<JwtOptions>()
             .Bind(configuration.GetSection(JwtOptions.SectionName))

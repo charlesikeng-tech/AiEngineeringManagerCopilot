@@ -11,6 +11,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<LocalAdministrator> LocalAdministrators => Set<LocalAdministrator>();
     public DbSet<Installation> Installations => Set<Installation>();
     public DbSet<AdministratorSession> AdministratorSessions => Set<AdministratorSession>();
+    public DbSet<SsoProvider> SsoProviders => Set<SsoProvider>();
+    public DbSet<SsoConnectionTest> SsoConnectionTests => Set<SsoConnectionTest>();
 
     public DbSet<Team> Teams => Set<Team>();
 
