@@ -87,6 +87,7 @@ The current backend MVP already supports:
 -   Jira connection validation;
 -   Jira issue synchronization;
 -   Slack report notifications through per-team Incoming Webhooks;
+-   Microsoft Teams report notifications through per-team Workflows webhooks;
 -   engineering metric calculation;
 -   engineering health scoring;
 -   engineering reports;
@@ -936,6 +937,40 @@ dotnet ef database update \
 
 ------------------------------------------------------------------------
 
+## Microsoft Teams report notifications
+
+Each team can configure Microsoft Teams independently of Slack from its team
+settings. In Teams, create a **Workflows** workflow using **Post to a channel
+when a webhook request is received**, choose **Anyone** for who can trigger
+the webhook, select the destination channel, and copy the signed webhook URL
+into the Microsoft Teams connection form. Use **Send test** to confirm delivery.
+The URL is a secret: it is encrypted at rest and never returned by the API.
+
+Supported addresses are HTTPS Workflows URLs on
+`*.environment.api.powerplatform.com` and `*.logic.azure.com`, with a signed
+`sig` query parameter. Existing Incoming Webhook addresses on
+`outlook.office.com` and `*.webhook.office.com` are also accepted; prefer
+Workflows for new connections. Redirects are disabled.
+
+Teams receives an Adaptive Card after a report is saved, including the team,
+reporting period, health score, and health level. When both Slack and Teams
+are configured, both are notified. Delivery failures are logged without
+rolling back report generation or preventing delivery to the other integration.
+Removing the Teams connection stops only Teams notifications.
+
+The authenticated API exposes `GET`, `POST`, and `DELETE` at
+`/teams/{teamId}/microsoft-teams`, and `POST` at
+`/teams/{teamId}/microsoft-teams/test`, restricted to the team's owner.
+Apply the `AddMicrosoftTeamsWebhookConnection` migration before deployment:
+
+```sh
+dotnet ef database update \
+  --project src/AiEngineeringManagerCopilot.Infrastructure \
+  --startup-project src/AiEngineeringManagerCopilot.Api
+```
+
+------------------------------------------------------------------------
+
 # 🛠️ Technology stack
 
 ## Backend
@@ -951,6 +986,7 @@ dotnet ef database update \
 -   GitHub REST API
 -   Jira Cloud REST API
 -   Slack Incoming Webhooks
+-   Microsoft Teams Workflows / Incoming Webhooks
 -   OpenAI
 
 ## Frontend

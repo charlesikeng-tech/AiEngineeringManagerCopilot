@@ -427,6 +427,120 @@
             </div>
           </div>
         }
+
+        <article class="data-source">
+          <div class="data-source__main">
+            <div class="data-source__icon">
+              <nz-icon nzType="team"></nz-icon>
+            </div>
+            <div class="data-source__content">
+              <div class="data-source__heading">
+                <strong>{{ 'team.microsoftTeams' | translate }}</strong>
+                @if (microsoftTeamsConnectionLoading()) {
+                  <span class="integration-status integration-status--loading">
+                    {{ 'team.connectionLoading' | translate }}
+                  </span>
+                } @else if (microsoftTeamsConnection()) {
+                  <span class="integration-status integration-status--connected">
+                    {{ 'team.connected' | translate }}
+                  </span>
+                } @else if (microsoftTeamsConnectionError()) {
+                  <span class="integration-status integration-status--error">
+                    {{ 'team.connectionError' | translate }}
+                  </span>
+                } @else {
+                  <span class="integration-status integration-status--disconnected">
+                    {{ 'team.notConnected' | translate }}
+                  </span>
+                }
+              </div>
+              @if (microsoftTeamsConnectionLoading()) {
+                <p>{{ 'team.microsoftTeamsChecking' | translate }}</p>
+              } @else if (microsoftTeamsConnectionError()) {
+                <p>{{ 'team.microsoftTeamsLoadError' | translate }}</p>
+              } @else if (microsoftTeamsConnection()) {
+                <p>{{ 'team.microsoftTeamsConnectedDescription' | translate }}</p>
+              } @else {
+                <p>{{ 'team.microsoftTeamsDescription' | translate }}</p>
+              }
+            </div>
+          </div>
+
+          <div class="data-source__actions">
+            @if (microsoftTeamsConnectionLoading()) {
+              <nz-spin nzSimple></nz-spin>
+            } @else if (microsoftTeamsConnectionError()) {
+              <button nz-button nzType="default" type="button" (click)="reloadMicrosoftTeamsConnection()">
+                {{ 'team.retry' | translate }}
+              </button>
+            } @else if (microsoftTeamsConnection()) {
+              <button
+                nz-button
+                nzType="default"
+                type="button"
+                [nzLoading]="microsoftTeamsTesting()"
+                [disabled]="microsoftTeamsDisconnecting()"
+                (click)="testMicrosoftTeamsWebhook()"
+              >
+                {{ 'team.microsoftTeamsTest' | translate }}
+              </button>
+              <button
+                nz-button
+                nzType="default"
+                nzDanger
+                type="button"
+                nz-popconfirm
+                [nzPopconfirmTitle]="'team.microsoftTeamsDisconnectConfirm' | translate"
+                [disabled]="microsoftTeamsTesting() || microsoftTeamsDisconnecting()"
+                (nzOnConfirm)="disconnectMicrosoftTeamsWebhook()"
+              >
+                {{ 'team.disconnect' | translate }}
+              </button>
+            } @else {
+              <form class="slack-connection-form" [formGroup]="microsoftTeamsWebhookForm">
+                <label class="field-label" for="microsoft-teams-webhook-url">
+                  {{ 'team.microsoftTeamsWebhookUrl' | translate }}
+                </label>
+                <input
+                  id="microsoft-teams-webhook-url"
+                  nz-input
+                  type="url"
+                  autocomplete="off"
+                  formControlName="webhookUrl"
+                  [placeholder]="'team.microsoftTeamsWebhookPlaceholder' | translate"
+                />
+                <button
+                  nz-button
+                  nzType="primary"
+                  type="button"
+                  [nzLoading]="microsoftTeamsConnecting()"
+                  [disabled]="microsoftTeamsWebhookForm.invalid || microsoftTeamsConnecting()"
+                  (click)="connectMicrosoftTeamsWebhook()"
+                >
+                  {{ 'team.microsoftTeamsConnect' | translate }}
+                </button>
+              </form>
+            }
+          </div>
+        </article>
+
+        @if (microsoftTeamsTestResult(); as testResult) {
+          <div
+            class="integration-result"
+            [class.integration-result--success]="testResult.success"
+            [class.integration-result--error]="!testResult.success"
+          >
+            <div class="integration-result__content">
+              <strong>
+                {{
+                  (testResult.success ? 'team.microsoftTeamsTestSuccess' : 'team.microsoftTeamsTestFailure')
+                    | translate
+                }}
+              </strong>
+              <span>{{ testResult.message }}</span>
+            </div>
+          </div>
+        }
       </div>
     </section>
 

@@ -1,0 +1,3 @@
+namespace AiEngineeringManagerCopilot.Application.MicrosoftTeams;
+
+public sealed record CreateMicrosoftTeamsWebhookRequest(string WebhookUrl);

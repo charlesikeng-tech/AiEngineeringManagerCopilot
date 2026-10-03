@@ -112,6 +112,11 @@ public class CustomWebApplicationFactory
             services.AddSingleton<ISlackWebhookClient>(
                 provider =>
                     provider.GetRequiredService<FakeSlackWebhookClient>());
+
+            services.RemoveAll<IMicrosoftTeamsWebhookClient>();
+            services.AddSingleton<FakeMicrosoftTeamsWebhookClient>();
+            services.AddSingleton<IMicrosoftTeamsWebhookClient>(
+                provider => provider.GetRequiredService<FakeMicrosoftTeamsWebhookClient>());
         });
     }
 

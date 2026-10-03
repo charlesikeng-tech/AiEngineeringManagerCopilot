@@ -10,6 +10,7 @@ using AiEngineeringManagerCopilot.Application.GitHub;
 using AiEngineeringManagerCopilot.Application.Health;
 using AiEngineeringManagerCopilot.Application.Jira;
 using AiEngineeringManagerCopilot.Application.Metrics;
+using AiEngineeringManagerCopilot.Application.MicrosoftTeams;
 using AiEngineeringManagerCopilot.Application.Reports;
 using AiEngineeringManagerCopilot.Application.Risks;
 using AiEngineeringManagerCopilot.Application.TeamMembers;
@@ -59,6 +60,10 @@ public sealed class ServiceRegistrationTests
             typeof(IGitHubSyncService),
             typeof(IJiraConnectionService),
             typeof(IJiraSyncService),
+            typeof(IMicrosoftTeamsWebhookConnectionService),
+            typeof(IMicrosoftTeamsWebhookClient),
+            typeof(IMicrosoftTeamsWebhookConnectionRepository),
+            typeof(IValidator<CreateMicrosoftTeamsWebhookRequest>),
             typeof(IEngineeringMetricsService),
             typeof(IEngineeringHealthScoreService),
             typeof(IEngineeringReportService),

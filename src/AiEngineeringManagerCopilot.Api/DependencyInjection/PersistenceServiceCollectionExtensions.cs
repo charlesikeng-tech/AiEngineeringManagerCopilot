@@ -40,6 +40,9 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<
             ISlackWebhookConnectionRepository,
             SlackWebhookConnectionRepository>();
+        services.AddScoped<
+            IMicrosoftTeamsWebhookConnectionRepository,
+            MicrosoftTeamsWebhookConnectionRepository>();
         services.AddScoped<IJiraWorkItemRepository, JiraWorkItemRepository>();
         services.AddScoped<
             IEngineeringMetricRepository,

@@ -17,6 +17,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<JiraConnection> JiraConnections => Set<JiraConnection>();
 
     public DbSet<SlackWebhookConnection> SlackWebhookConnections => Set<SlackWebhookConnection>();
+
+    public DbSet<MicrosoftTeamsWebhookConnection> MicrosoftTeamsWebhookConnections =>
+        Set<MicrosoftTeamsWebhookConnection>();
     
     public DbSet<JiraWorkItem> JiraWorkItems => Set<JiraWorkItem>();
 

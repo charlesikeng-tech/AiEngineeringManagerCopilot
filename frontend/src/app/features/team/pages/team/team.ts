@@ -42,6 +42,10 @@ import { TeamContext } from '@core/team/team-context';
 
 import { CreateGitHubConnectionRequest } from '../../models/create-github-connection-request';
 import { CreateSlackWebhookRequest } from '../../models/create-slack-webhook-request';
+import { CreateMicrosoftTeamsWebhookRequest } from '../../models/create-microsoft-teams-webhook-request';
+import { MicrosoftTeamsWebhookConnection } from '../../models/microsoft-teams-webhook-connection';
+import { TestMicrosoftTeamsWebhookResponse } from '../../models/test-microsoft-teams-webhook-response';
+import { microsoftTeamsWebhookUrl } from '../../validators/microsoft-teams-webhook-url';
 
 import { GitHubConnection, GitHubOwnerType } from '../../models/github-connection';
 
@@ -66,6 +70,7 @@ import { ReportsApi } from '@features/reports/services/reports-api';
 
 import { GitHubApi } from '../../services/github-api';
 import { SlackApi } from '../../services/slack-api';
+import { MicrosoftTeamsApi } from '../../services/microsoft-teams-api';
 
 import { MetricsApi } from '../../services/metrics-api';
 
@@ -122,6 +127,7 @@ export class TeamPage {
   private readonly githubApi = inject(GitHubApi);
 
   private readonly slackApi = inject(SlackApi);
+  private readonly microsoftTeamsApi = inject(MicrosoftTeamsApi);
 
   private readonly teamContext = inject(TeamContext);
 
@@ -304,6 +310,20 @@ export class TeamPage {
     }),
   });
 
+  readonly microsoftTeamsConnection = signal<MicrosoftTeamsWebhookConnection | null>(null);
+  readonly microsoftTeamsConnectionLoading = signal(false);
+  readonly microsoftTeamsConnectionError = signal(false);
+  readonly microsoftTeamsConnecting = signal(false);
+  readonly microsoftTeamsTesting = signal(false);
+  readonly microsoftTeamsTestResult = signal<TestMicrosoftTeamsWebhookResponse | null>(null);
+  readonly microsoftTeamsDisconnecting = signal(false);
+  readonly microsoftTeamsWebhookForm = new FormGroup({
+    webhookUrl: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(4096), microsoftTeamsWebhookUrl],
+    }),
+  });
+
   // ---------------------------------------------------------------------------
   // Engineering metrics / reports
   // ---------------------------------------------------------------------------
@@ -425,6 +445,7 @@ export class TeamPage {
 
           this.resetGitHubState();
           this.resetSlackState();
+          this.resetMicrosoftTeamsState();
 
           this.loading.set(!!teamId);
 
@@ -448,6 +469,7 @@ export class TeamPage {
 
                   this.loadGitHubConnection(teamId);
                   this.loadSlackConnection(teamId);
+                  this.loadMicrosoftTeamsConnection(teamId);
                 }),
               ),
             ),
@@ -1136,6 +1158,122 @@ export class TeamPage {
     this.slackTestResult.set(null);
     this.slackDisconnecting.set(false);
     this.slackWebhookForm.reset({ webhookUrl: '' });
+  }
+
+  connectMicrosoftTeamsWebhook(): void {
+    const teamId = this.teamContext.selectedTeamId();
+    if (!teamId || this.microsoftTeamsWebhookForm.invalid || this.microsoftTeamsConnecting()) {
+      this.microsoftTeamsWebhookForm.markAllAsTouched();
+      return;
+    }
+
+    const request: CreateMicrosoftTeamsWebhookRequest = {
+      webhookUrl: this.microsoftTeamsWebhookForm.controls.webhookUrl.value.trim(),
+    };
+    this.microsoftTeamsConnecting.set(true);
+    this.microsoftTeamsApi.createConnection(teamId, request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (connection) => {
+          if (this.teamContext.selectedTeamId() !== teamId) return;
+          this.microsoftTeamsConnection.set(connection);
+          this.microsoftTeamsConnecting.set(false);
+          this.microsoftTeamsWebhookForm.reset({ webhookUrl: '' });
+          this.message.success(this.i18n.t('team.notifications.microsoftTeamsConnected'));
+        },
+        error: () => {
+          if (this.teamContext.selectedTeamId() !== teamId) return;
+          this.microsoftTeamsConnecting.set(false);
+          this.message.error(this.i18n.t('team.notifications.microsoftTeamsConnectFailed'));
+        },
+      });
+  }
+
+  testMicrosoftTeamsWebhook(): void {
+    const teamId = this.teamContext.selectedTeamId();
+    if (!teamId || !this.microsoftTeamsConnection() || this.microsoftTeamsTesting()) return;
+
+    this.microsoftTeamsTesting.set(true);
+    this.microsoftTeamsTestResult.set(null);
+    this.microsoftTeamsApi.testConnection(teamId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          if (this.teamContext.selectedTeamId() !== teamId) return;
+          this.microsoftTeamsTestResult.set(result);
+          this.microsoftTeamsTesting.set(false);
+          if (result.success) {
+            this.message.success(this.i18n.t('team.notifications.microsoftTeamsTested'));
+          } else {
+            this.message.warning(this.i18n.t('team.notifications.microsoftTeamsTestFailed'));
+          }
+        },
+        error: () => {
+          if (this.teamContext.selectedTeamId() !== teamId) return;
+          this.microsoftTeamsTesting.set(false);
+          this.message.error(this.i18n.t('team.notifications.microsoftTeamsTestError'));
+        },
+      });
+  }
+
+  disconnectMicrosoftTeamsWebhook(): void {
+    const teamId = this.teamContext.selectedTeamId();
+    if (!teamId || !this.microsoftTeamsConnection() || this.microsoftTeamsDisconnecting()) return;
+
+    this.microsoftTeamsDisconnecting.set(true);
+    this.microsoftTeamsApi.deleteConnection(teamId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          if (this.teamContext.selectedTeamId() !== teamId) return;
+          this.microsoftTeamsConnection.set(null);
+          this.microsoftTeamsTestResult.set(null);
+          this.microsoftTeamsDisconnecting.set(false);
+          this.message.success(this.i18n.t('team.notifications.microsoftTeamsDisconnected'));
+        },
+        error: () => {
+          if (this.teamContext.selectedTeamId() !== teamId) return;
+          this.microsoftTeamsDisconnecting.set(false);
+          this.message.error(this.i18n.t('team.notifications.microsoftTeamsDisconnectFailed'));
+        },
+      });
+  }
+
+  reloadMicrosoftTeamsConnection(): void {
+    const teamId = this.teamContext.selectedTeamId();
+    if (teamId) this.loadMicrosoftTeamsConnection(teamId);
+  }
+
+  private loadMicrosoftTeamsConnection(teamId: string): void {
+    this.microsoftTeamsConnectionLoading.set(true);
+    this.microsoftTeamsConnectionError.set(false);
+    this.microsoftTeamsConnection.set(null);
+    this.microsoftTeamsTestResult.set(null);
+    this.microsoftTeamsApi.getConnection(teamId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (connection) => {
+          if (this.teamContext.selectedTeamId() !== teamId) return;
+          this.microsoftTeamsConnection.set(connection);
+          this.microsoftTeamsConnectionLoading.set(false);
+        },
+        error: (error: HttpErrorResponse) => {
+          if (this.teamContext.selectedTeamId() !== teamId) return;
+          this.microsoftTeamsConnectionLoading.set(false);
+          if (error.status !== 404) this.microsoftTeamsConnectionError.set(true);
+        },
+      });
+  }
+
+  private resetMicrosoftTeamsState(): void {
+    this.microsoftTeamsConnection.set(null);
+    this.microsoftTeamsConnectionLoading.set(false);
+    this.microsoftTeamsConnectionError.set(false);
+    this.microsoftTeamsConnecting.set(false);
+    this.microsoftTeamsTesting.set(false);
+    this.microsoftTeamsTestResult.set(null);
+    this.microsoftTeamsDisconnecting.set(false);
+    this.microsoftTeamsWebhookForm.reset({ webhookUrl: '' });
   }
 
   // ---------------------------------------------------------------------------
