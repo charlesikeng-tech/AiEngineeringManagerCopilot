@@ -1,5 +1,5 @@
 @if (loading()) {
-  <div class="app-page dashboard-loading">
+  <div class="app-page dashboard-loading" role="status" [attr.aria-label]="'dashboard.loading' | translate">
     <div class="loading-header">
       <nz-skeleton
         [nzActive]="true"
@@ -43,8 +43,8 @@
       <nz-alert
         nzType="error"
         nzShowIcon
-        nzMessage="Dashboard unavailable"
-        [nzDescription]="errorMessage"
+        [nzMessage]="'dashboard.unavailable' | translate"
+        [nzDescription]="errorMessage | translate"
       />
     </div>
   </div>
@@ -56,16 +56,15 @@
     <header class="page-header">
       <div class="page-header__content">
         <span class="page-eyebrow">
-          ENGINEERING
+          {{ 'dashboard.eyebrow' | translate }}
         </span>
 
         <h1>
-          Engineering Overview
+          {{ 'dashboard.title' | translate }}
         </h1>
 
         <p>
-          Monitor delivery, quality and
-          engineering health.
+          {{ 'dashboard.subtitle' | translate }}
         </p>
       </div>
 
@@ -73,18 +72,18 @@
         @if (dashboard.latestReport; as report) {
           <div class="reporting-period">
             <span class="reporting-period__label">
-              REPORTING PERIOD
+              {{ 'dashboard.reportingPeriodUpper' | translate }}
             </span>
 
             <strong>
               {{
                 report.periodStart
-                  | date: 'MMM d'
+                  | appDate: 'MMM d'
               }}
               –
               {{
                 report.periodEnd
-                  | date: 'MMM d, y'
+                  | appDate: 'MMM d, y'
               }}
             </strong>
           </div>
@@ -162,7 +161,7 @@
   <div class="app-page">
     <div class="empty-state">
       <nz-empty
-        nzNotFoundContent="No dashboard data available"
+        [nzNotFoundContent]="'dashboard.empty' | translate"
       />
     </div>
   </div>

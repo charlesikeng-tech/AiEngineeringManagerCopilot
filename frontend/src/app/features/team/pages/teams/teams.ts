@@ -13,6 +13,8 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
+import { LocalizedNumberPipe } from '@core/i18n/localized-format.pipes';
 import { TeamContext } from '@core/team/team-context';
 import { CreateTeamRequest, Team } from '../../models/team.model';
 import { TeamApi } from '../../services/team-api';
@@ -21,6 +23,8 @@ import { TeamApi } from '../../services/team-api';
   selector: 'app-teams',
   standalone: true,
   imports: [
+    TranslatePipe,
+    LocalizedNumberPipe,
     ReactiveFormsModule,
     NzAlertModule,
     NzButtonModule,

@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
+import { LanguageSelector } from '@core/i18n/language-selector/language-selector';
 
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -20,6 +22,8 @@ import { TeamSelector } from '../../team/team-selector/team-selector';
     NzLayoutModule,
     NzMenuModule,
     TeamSelector,
+    TranslatePipe,
+    LanguageSelector,
   ],
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.scss',

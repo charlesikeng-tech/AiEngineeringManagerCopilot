@@ -1,0 +1,166 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+}
+
+.language-selector {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+
+  height: 40px;
+}
+
+/* =========================================================
+   LANGUAGE CONTROL
+   ========================================================= */
+
+.language-control {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 64px;
+  height: 40px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d9dce3;
+  border-radius: 8px;
+
+  background: #fff;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+
+  &:hover {
+    border-color: var(--app-primary);
+  }
+
+  &:focus-within {
+    border-color: var(--app-primary);
+    box-shadow: 0 0 0 2px rgb(91 71 234 / 10%);
+  }
+}
+
+/* =========================================================
+   FLAG
+   ========================================================= */
+
+.language-flag {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 18px;
+  line-height: 1;
+
+  transform: translateY(-50%);
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   NATIVE SELECT
+   ========================================================= */
+
+select {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  margin: 0;
+  padding: 0 8px 0 38px;
+
+  box-sizing: border-box;
+
+  border: 0;
+  outline: 0;
+  border-radius: inherit;
+
+  background: transparent;
+
+  /*
+   * The visible language is rendered by .language-flag.
+   * We keep the native select for keyboard navigation,
+   * accessibility and the native dropdown.
+   */
+  color: transparent;
+
+  font: inherit;
+
+  cursor: pointer;
+
+  appearance: auto;
+  -webkit-appearance: auto;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.language-error {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+
+  z-index: 10;
+
+  width: max-content;
+  max-width: 240px;
+
+  padding: 4px 8px;
+
+  border-radius: 4px;
+
+  background: #fff;
+
+  color: #dc2626;
+
+  font-size: 12px;
+  line-height: 1.4;
+
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+.sr-only {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+
+  padding: 0;
+  margin: -1px;
+
+  overflow: hidden;
+
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+
+  white-space: nowrap;
+
+  border: 0;
+}

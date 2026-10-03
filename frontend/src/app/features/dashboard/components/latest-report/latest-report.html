@@ -1,8 +1,8 @@
 <nz-card class="report-card">
   <div class="section-header">
     <div>
-      <h2>Latest Engineering Report</h2>
-      <p>Engineering health summary for the latest reporting period</p>
+      <h2>{{ 'dashboard.report.title' | translate }}</h2>
+      <p>{{ 'dashboard.report.subtitle' | translate }}</p>
     </div>
 
     @if (report(); as currentReport) {
@@ -13,7 +13,7 @@
         [class.health-status--critical]="currentReport.healthLevel === 'Critical'"
       >
         <span class="health-status-dot"></span>
-        {{ currentReport.healthLevel }}
+        {{ ('healthLevels.' + currentReport.healthLevel) | translate }}
       </span>
     }
   </div>
@@ -21,16 +21,16 @@
   @if (report(); as currentReport) {
     <div class="report-content">
       <div class="report-period">
-        <span>Reporting period</span>
+        <span>{{ 'dashboard.reportingPeriod' | translate }}</span>
         <strong>{{ period() }}</strong>
       </div>
 
       <div class="report-stats">
         <div class="report-stat">
-          <span class="stat-label">Overall score</span>
+          <span class="stat-label">{{ 'dashboard.overallScore' | translate }}</span>
 
           <div class="score-value">
-            {{ currentReport.overallScore }}
+            {{ currentReport.overallScore | appNumber }}
             <span>/100</span>
           </div>
 
@@ -42,11 +42,10 @@
         </div>
 
         <div class="report-stat">
-          <span class="stat-label">Data coverage</span>
+          <span class="stat-label">{{ 'dashboard.dataCoverage' | translate }}</span>
 
           <div class="score-value">
-            {{ coveragePercentage() }}
-            <span>%</span>
+            {{ coveragePercentage() / 100 | appPercent: '1.0-0' }}
           </div>
 
           <nz-progress [nzPercent]="coveragePercentage()" [nzShowInfo]="false" nzSize="small" />
@@ -54,7 +53,7 @@
       </div>
 
       <div class="executive-summary">
-        <span class="summary-label">Executive summary</span>
+        <span class="summary-label">{{ 'dashboard.executiveSummary' | translate }}</span>
 
         <p>
           {{ currentReport.executiveSummary }}
@@ -66,7 +65,7 @@
           class="app-button app-button--primary"
           [routerLink]="['/reports', currentReport.id]"
         >
-          View full report
+          {{ 'dashboard.report.view' | translate }}
           <span aria-hidden="true">→</span>
         </a>
 
@@ -74,14 +73,14 @@
           class="app-button app-button--secondary"
           routerLink="/actions"
         >
-          Open action plan
+          {{ 'dashboard.report.actionPlan' | translate }}
           <span aria-hidden="true">→</span>
         </a>
       </div>
     </div>
   } @else {
     <div class="empty-report">
-      <nz-empty nzNotFoundContent="No engineering report available" />
+      <nz-empty [nzNotFoundContent]="'dashboard.report.empty' | translate" />
     </div>
   }
 </nz-card>

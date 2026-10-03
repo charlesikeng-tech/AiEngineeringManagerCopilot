@@ -1,0 +1,62 @@
+{
+  "app": {
+    "documentTitle": "Copilote IA pour les Engineering Managers",
+    "intelligence": "Intelligence d'ingénierie",
+    "platform": "Plateforme d'intelligence d'ingénierie",
+    "workspace": "Espace de travail",
+    "management": "Gestion",
+    "overview": "Vue d'ensemble",
+    "reports": "Rapports",
+    "risks": "Risques",
+    "actions": "Actions",
+    "teams": "Équipes",
+    "expandSidebar": "Déployer la barre latérale",
+    "collapseSidebar": "Réduire la barre latérale",
+    "activeTeam": "Équipe active",
+    "selectTeam": "Sélectionner une équipe",
+    "development": "Développement"
+  },
+  "language": {
+    "label": "Langue",
+    "loadError": "Impossible de charger cette langue. Veuillez réessayer."
+  },
+  "metrics": {
+    "CycleTime": "Temps de cycle",
+    "PRReviewTime": "Temps de revue des PR",
+    "DeploymentFrequency": "Fréquence de déploiement",
+    "ChangeFailureRate": "Taux d'échec des changements",
+    "LeadTime": "Délai de livraison",
+    "OpenPRs": "PR ouvertes",
+    "MergedPRs": "PR fusionnées",
+    "BlockedItems": "Éléments bloqués"
+  },
+  "statuses": {
+    "Todo": "À faire",
+    "InProgress": "En cours",
+    "Done": "Terminée",
+    "Cancelled": "Annulée"
+  },
+  "priorities": {
+    "Low": "Faible",
+    "Medium": "Moyenne",
+    "High": "Élevée",
+    "Critical": "Critique"
+  },
+  "healthLevels": {
+    "Excellent": "Excellent",
+    "Healthy": "Bonne santé",
+    "Good": "Bon",
+    "Attention": "À surveiller",
+    "Warning": "Alerte",
+    "Critical": "Critique",
+    "Unknown": "Inconnu",
+    "Needs Attention": "À surveiller",
+    "At Risk": "À risque",
+    "No Data": "Aucune donnée"
+  },
+  "metricDataStatus": {
+    "Available": "Disponible",
+    "NoData": "Aucune donnée",
+    "SourceNotConfigured": "Non connectée"
+  }
+}

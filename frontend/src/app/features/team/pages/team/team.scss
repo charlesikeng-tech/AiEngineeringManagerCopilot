@@ -11,16 +11,6 @@
 
 
 
-.team-summary__label {
-  color: var(--app-text-tertiary);
-
-  font-size: 11px;
-  font-weight: 600;
-
-  letter-spacing: 0.08em;
-}
-
-
 /* ---------------------------------------------------------
    Team overview
    --------------------------------------------------------- */
@@ -34,7 +24,9 @@
   gap: var(--app-space-md);
 }
 
-.overview-card__actions {
+.overview-card__actions,
+.data-source__actions,
+.member-actions {
   display: flex;
   align-items: center;
 
@@ -51,7 +43,8 @@
    Data sources
    --------------------------------------------------------- */
 
-.data-sources-card {
+.data-sources-card,
+.members-card {
   padding: 0;
 
   overflow: hidden;
@@ -159,19 +152,16 @@
   white-space: nowrap;
 }
 
-.integration-status--connected {
+.integration-status--connected,
+.metric-status--available {
   color: var(--app-success);
 
   background: var(--app-success-soft);
 }
 
-.integration-status--disconnected {
-  color: var(--app-text-secondary);
-
-  background: var(--app-surface-secondary);
-}
-
-.integration-status--loading {
+.integration-status--disconnected,
+.integration-status--loading,
+.metric-status--no-data {
   color: var(--app-text-secondary);
 
   background: var(--app-surface-secondary);
@@ -235,12 +225,28 @@
    --------------------------------------------------------- */
 
 .data-source__actions {
-  display: flex;
   flex-shrink: 0;
+}
 
-  align-items: center;
+.slack-connection-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  align-items: end;
+  gap: var(--app-space-xs) var(--app-space-sm);
 
-  gap: var(--app-space-xs);
+  label {
+    grid-column: 1;
+  }
+
+  input {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  button {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
 }
 
 
@@ -642,18 +648,6 @@
   white-space: nowrap;
 }
 
-.metric-status--available {
-  color: var(--app-success);
-
-  background: var(--app-success-soft);
-}
-
-.metric-status--no-data {
-  color: var(--app-text-secondary);
-
-  background: var(--app-surface-secondary);
-}
-
 .metric-status--not-configured {
   color: var(--app-warning, var(--app-text-secondary));
 
@@ -755,12 +749,6 @@
 /* ---------------------------------------------------------
    Members card
    --------------------------------------------------------- */
-
-.members-card {
-  padding: 0;
-
-  overflow: hidden;
-}
 
 .members-empty {
   border: 0;
@@ -934,12 +922,6 @@
    --------------------------------------------------------- */
 
 .member-actions {
-  display: flex;
-
-  align-items: center;
-
-  gap: var(--app-space-xs);
-
   flex-shrink: 0;
 }
 
@@ -953,7 +935,8 @@
     grid-template-columns: 1fr;
   }
 
-  .data-source {
+  .data-source,
+  .integration-result {
     align-items: flex-start;
 
     flex-direction: column;
@@ -966,12 +949,6 @@
 
     padding-left:
       calc(44px + var(--app-space-md));
-  }
-
-  .integration-result {
-    align-items: flex-start;
-
-    flex-direction: column;
   }
 
   .sync-stats {
@@ -1030,10 +1007,6 @@
    --------------------------------------------------------- */
 
 @media (max-width: 640px) {
-  .team-summary {
-    width: 100%;
-  }
-
   .section-actions {
     width: 100%;
 
@@ -1043,7 +1016,9 @@
 
   /* Data sources */
 
-  .data-source {
+  .data-source,
+  .integration-result,
+  .engineering-data-card {
     padding:
       var(--app-space-md);
   }
@@ -1060,14 +1035,15 @@
     flex: 1;
   }
 
+  .slack-connection-form {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
   .integration-metadata {
     flex-direction: column;
 
     gap: var(--app-space-sm);
-  }
-
-  .integration-result {
-    padding: var(--app-space-md);
   }
 
   .sync-stats {
@@ -1085,10 +1061,6 @@
 
 
   /* Engineering data */
-
-  .engineering-data-card {
-    padding: var(--app-space-md);
-  }
 
   .metrics-period {
     flex-direction: column;

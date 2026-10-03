@@ -1,0 +1,30 @@
+<div class="language-selector">
+  <label class="sr-only" for="app-language">
+    {{ 'language.label' | translate }}
+  </label>
+
+  <div class="language-control">
+    <span class="language-flag" aria-hidden="true">
+      {{ i18n.language() === 'fr' ? '🇫🇷' : '🇬🇧' }}
+    </span>
+
+    <select
+      #languageSelect
+      id="app-language"
+      [value]="i18n.language()"
+      [disabled]="loading()"
+      [attr.aria-busy]="loading()"
+      [attr.aria-describedby]="error() ? 'language-error' : null"
+      (change)="selectLanguage(languageSelect)"
+    >
+      <option value="en">🇬🇧</option>
+      <option value="fr">🇫🇷</option>
+    </select>
+  </div>
+
+  @if (error()) {
+    <span id="language-error" class="language-error" role="alert">
+      {{ 'language.loadError' | translate }}
+    </span>
+  }
+</div>

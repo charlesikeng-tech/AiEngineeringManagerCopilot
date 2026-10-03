@@ -3,15 +3,15 @@
     <div class="state-container">
       <nz-spin nzSimple nzSize="large"></nz-spin>
 
-      <span>Loading team...</span>
+      <span>{{ 'team.loading' | translate }}</span>
     </div>
   } @else if (error()) {
     <div class="state-container">
       <nz-alert
         nzType="error"
         nzShowIcon
-        nzMessage="Unable to load team"
-        nzDescription="The selected team and its members could not be loaded."
+        [nzMessage]="'team.loadError' | translate"
+        [nzDescription]="'team.loadErrorDescription' | translate"
       ></nz-alert>
     </div>
   } @else if (team(); as currentTeam) {
@@ -23,19 +23,19 @@
 
     <header class="page-header">
       <div class="page-header__content">
-        <span class="page-eyebrow">TEAM MANAGEMENT</span>
+        <span class="page-eyebrow">{{ 'team.management' | translate }}</span>
 
         <h1>{{ currentTeam.name }}</h1>
 
         <p>
-          {{ currentTeam.description || 'Manage your engineering team and its members.' }}
+          {{ currentTeam.description || ('team.descriptionFallback' | translate) }}
         </p>
       </div>
 
       <div class="page-summary">
-        <span class="page-summary__label">TEAM MEMBERS</span>
+        <span class="page-summary__label">{{ 'team.membersSummary' | translate }}</span>
 
-        <strong class="page-summary__value">{{ members().length }}</strong>
+        <strong class="page-summary__value">{{ members().length | appNumber }}</strong>
       </div>
     </header>
 
@@ -51,7 +51,7 @@
 
         <div class="overview-card">
           <div class="overview-card__header">
-            <span class="overview-card__label">TEAM</span>
+            <span class="overview-card__label">{{ 'team.team' | translate }}</span>
 
             <div class="overview-card__actions">
               <button
@@ -61,7 +61,7 @@
                 [disabled]="updatingTeam() || deletingTeam()"
                 (click)="openEditTeam()"
               >
-                Edit team
+                {{ 'team.editTeam' | translate }}
               </button>
 
               <button
@@ -70,12 +70,12 @@
                 nzDanger
                 type="button"
                 nz-popconfirm
-                nzPopconfirmTitle="Delete this team permanently?"
+                [nzPopconfirmTitle]="'team.deleteTeamConfirm' | translate"
                 nzPopconfirmPlacement="topRight"
                 [disabled]="updatingTeam() || deletingTeam()"
                 (nzOnConfirm)="deleteTeam()"
               >
-                Delete team
+                {{ 'team.deleteTeam' | translate }}
               </button>
             </div>
           </div>
@@ -83,20 +83,20 @@
           <strong>{{ currentTeam.name }}</strong>
 
           <p>
-            {{ currentTeam.description || 'No description available.' }}
+            {{ currentTeam.description || ('team.noDescription' | translate) }}
           </p>
         </div>
 
         <!-- Members overview -->
 
         <div class="overview-card">
-          <span class="overview-card__label">MEMBERS</span>
+          <span class="overview-card__label">{{ 'team.membersLabel' | translate }}</span>
 
           <strong class="member-total">
-            {{ members().length }}
+            {{ members().length | appNumber }}
           </strong>
 
-          <p>People currently assigned to this team.</p>
+          <p>{{ 'team.membersDescription' | translate }}</p>
         </div>
       </div>
     </section>
@@ -110,13 +110,12 @@
     <section class="app-section">
       <div class="section-header">
         <div class="section-header__content">
-          <span class="section-eyebrow">INTEGRATIONS</span>
+          <span class="section-eyebrow">{{ 'team.integrations' | translate }}</span>
 
-          <h2>Data Sources</h2>
+          <h2>{{ 'team.dataSources' | translate }}</h2>
 
           <p>
-            Connect the engineering systems used to calculate metrics and generate engineering
-            intelligence.
+            {{ 'team.dataSourcesDescription' | translate }}
           </p>
         </div>
       </div>
@@ -136,62 +135,66 @@
 
             <div class="data-source__content">
               <div class="data-source__heading">
-                <strong>GitHub</strong>
+                <strong>{{ 'team.github' | translate }}</strong>
 
                 @if (githubConnectionLoading()) {
-                  <span class="integration-status integration-status--loading"> Loading... </span>
+                  <span class="integration-status integration-status--loading">{{
+                    'team.connectionLoading' | translate
+                  }}</span>
                 } @else if (githubConnection()) {
-                  <span class="integration-status integration-status--connected"> Connected </span>
+                  <span class="integration-status integration-status--connected">{{
+                    'team.connected' | translate
+                  }}</span>
                 } @else if (githubConnectionError()) {
-                  <span class="integration-status integration-status--error"> Error </span>
+                  <span class="integration-status integration-status--error">{{
+                    'team.connectionError' | translate
+                  }}</span>
                 } @else {
                   <span class="integration-status integration-status--disconnected">
-                    Not connected
+                    {{ 'team.notConnected' | translate }}
                   </span>
                 }
               </div>
 
               @if (githubConnectionLoading()) {
-                <p>Checking GitHub connection...</p>
+                <p>{{ 'team.checkingConnection' | translate }}</p>
               } @else if (githubConnectionError()) {
-                <p>The GitHub connection status could not be loaded.</p>
+                <p>{{ 'team.connectionLoadError' | translate }}</p>
               } @else if (githubConnection(); as connection) {
                 <p>
-                  Repository, pull request, review and deployment data are collected from this
-                  GitHub account.
+                  {{ 'team.connectedDescription' | translate }}
                 </p>
 
                 <div class="integration-metadata">
                   <div class="integration-metadata__item">
-                    <span>Account</span>
+                    <span>{{ 'team.account' | translate }}</span>
 
                     <strong>{{ connection.owner }}</strong>
                   </div>
 
                   <div class="integration-metadata__item">
-                    <span>Type</span>
+                    <span>{{ 'team.type' | translate }}</span>
 
                     <strong>
-                      {{ connection.ownerType === 'User' ? 'Personal account' : 'Organization' }}
+                      {{ 'team.ownerTypes.' + connection.ownerType | translate }}
                     </strong>
                   </div>
 
                   <div class="integration-metadata__item">
-                    <span>Last sync</span>
+                    <span>{{ 'team.lastSync' | translate }}</span>
 
                     <strong>
                       @if (connection.lastSyncAt) {
-                        {{ connection.lastSyncAt | date: 'medium' }}
+                        {{ connection.lastSyncAt | appDate: 'medium' }}
                       } @else {
-                        Never
+                        {{ 'team.never' | translate }}
                       }
                     </strong>
                   </div>
                 </div>
               } @else {
                 <p>
-                  Connect GitHub to collect repositories, pull requests, reviews and deployment
-                  activity.
+                  {{ 'team.connectDescription' | translate }}
                 </p>
               }
             </div>
@@ -202,7 +205,7 @@
               <nz-spin nzSimple></nz-spin>
             } @else if (githubConnectionError()) {
               <button nz-button nzType="default" type="button" (click)="reloadGitHubConnection()">
-                Retry
+                {{ 'team.retry' | translate }}
               </button>
             } @else if (githubConnection()) {
               <button
@@ -213,7 +216,7 @@
                 [disabled]="githubSyncing() || githubDisconnecting()"
                 (click)="testGitHubConnection()"
               >
-                Test connection
+                {{ 'team.testConnection' | translate }}
               </button>
 
               <button
@@ -226,7 +229,7 @@
               >
                 <nz-icon nzType="sync"></nz-icon>
 
-                Sync now
+                {{ 'team.syncNow' | translate }}
               </button>
 
               <button
@@ -235,16 +238,16 @@
                 nzDanger
                 type="button"
                 nz-popconfirm
-                nzPopconfirmTitle="Disconnect GitHub from this team?"
+                [nzPopconfirmTitle]="'team.disconnectConfirm' | translate"
                 nzPopconfirmPlacement="topRight"
                 [disabled]="githubTesting() || githubSyncing() || githubDisconnecting()"
                 (nzOnConfirm)="disconnectGitHub()"
               >
-                Disconnect
+                {{ 'team.disconnect' | translate }}
               </button>
             } @else {
               <button nz-button nzType="primary" type="button" (click)="openGitHubConnection()">
-                Connect GitHub
+                {{ 'team.connectGitHub' | translate }}
               </button>
             }
           </div>
@@ -260,7 +263,10 @@
           >
             <div class="integration-result__content">
               <strong>
-                {{ testResult.success ? 'Connection verified' : 'Connection test failed' }}
+                {{
+                  (testResult.success ? 'team.connectionVerified' : 'team.connectionTestFailed')
+                    | translate
+                }}
               </strong>
 
               <span>
@@ -281,29 +287,143 @@
         @if (githubSyncResult(); as syncResult) {
           <div class="integration-result integration-result--success">
             <div class="integration-result__content">
-              <strong>Synchronization completed</strong>
+              <strong>{{ 'team.syncCompleted' | translate }}</strong>
 
-              <span> GitHub data has been refreshed successfully. </span>
+              <span>{{ 'team.syncDescription' | translate }}</span>
             </div>
 
             <div class="sync-stats">
               <div class="sync-stat">
-                <strong>{{ syncResult.synchronized }}</strong>
+                <strong>{{ syncResult.synchronized | appNumber }}</strong>
 
-                <span>Synchronized</span>
+                <span>{{ 'team.synchronized' | translate }}</span>
               </div>
 
               <div class="sync-stat">
-                <strong>{{ syncResult.created }}</strong>
+                <strong>{{ syncResult.created | appNumber }}</strong>
 
-                <span>Created</span>
+                <span>{{ 'team.created' | translate }}</span>
               </div>
 
               <div class="sync-stat">
-                <strong>{{ syncResult.updated }}</strong>
+                <strong>{{ syncResult.updated | appNumber }}</strong>
 
-                <span>Updated</span>
+                <span>{{ 'team.updated' | translate }}</span>
               </div>
+            </div>
+          </div>
+        }
+
+        <article class="data-source">
+          <div class="data-source__main">
+            <div class="data-source__icon">
+              <nz-icon nzType="slack"></nz-icon>
+            </div>
+            <div class="data-source__content">
+              <div class="data-source__heading">
+                <strong>{{ 'team.slack' | translate }}</strong>
+                @if (slackConnectionLoading()) {
+                  <span class="integration-status integration-status--loading">
+                    {{ 'team.connectionLoading' | translate }}
+                  </span>
+                } @else if (slackConnection()) {
+                  <span class="integration-status integration-status--connected">
+                    {{ 'team.connected' | translate }}
+                  </span>
+                } @else if (slackConnectionError()) {
+                  <span class="integration-status integration-status--error">
+                    {{ 'team.connectionError' | translate }}
+                  </span>
+                } @else {
+                  <span class="integration-status integration-status--disconnected">
+                    {{ 'team.notConnected' | translate }}
+                  </span>
+                }
+              </div>
+              @if (slackConnectionLoading()) {
+                <p>{{ 'team.slackChecking' | translate }}</p>
+              } @else if (slackConnectionError()) {
+                <p>{{ 'team.slackLoadError' | translate }}</p>
+              } @else if (slackConnection()) {
+                <p>{{ 'team.slackConnectedDescription' | translate }}</p>
+              } @else {
+                <p>{{ 'team.slackDescription' | translate }}</p>
+              }
+            </div>
+          </div>
+
+          <div class="data-source__actions">
+            @if (slackConnectionLoading()) {
+              <nz-spin nzSimple></nz-spin>
+            } @else if (slackConnectionError()) {
+              <button nz-button nzType="default" type="button" (click)="reloadSlackConnection()">
+                {{ 'team.retry' | translate }}
+              </button>
+            } @else if (slackConnection()) {
+              <button
+                nz-button
+                nzType="default"
+                type="button"
+                [nzLoading]="slackTesting()"
+                [disabled]="slackDisconnecting()"
+                (click)="testSlackWebhook()"
+              >
+                {{ 'team.slackTest' | translate }}
+              </button>
+              <button
+                nz-button
+                nzType="text"
+                nzDanger
+                type="button"
+                nz-popconfirm
+                [nzPopconfirmTitle]="'team.slackDisconnectConfirm' | translate"
+                [disabled]="slackTesting() || slackDisconnecting()"
+                (nzOnConfirm)="disconnectSlackWebhook()"
+              >
+                {{ 'team.disconnect' | translate }}
+              </button>
+            } @else {
+              <form class="slack-connection-form" [formGroup]="slackWebhookForm">
+                <label class="field-label" for="slack-webhook-url">
+                  {{ 'team.slackWebhookUrl' | translate }}
+                </label>
+                <input
+                  id="slack-webhook-url"
+                  nz-input
+                  type="url"
+                  autocomplete="off"
+                  formControlName="webhookUrl"
+                  [placeholder]="'team.slackWebhookPlaceholder' | translate"
+                />
+                <button
+                  nz-button
+                  nzType="primary"
+                  type="button"
+                  [nzLoading]="slackConnecting()"
+                  [disabled]="slackWebhookForm.invalid || slackConnecting()"
+                  (click)="connectSlackWebhook()"
+                >
+                  {{ 'team.slackConnect' | translate }}
+                </button>
+              </form>
+            }
+          </div>
+        </article>
+
+        @if (slackTestResult(); as testResult) {
+          <div
+            class="integration-result"
+            [class.integration-result--success]="testResult.success"
+            [class.integration-result--error]="!testResult.success"
+          >
+            <div class="integration-result__content">
+              <strong>
+                {{
+                  (testResult.success ? 'team.slackTestSuccess' : 'team.slackTestFailure')
+                    | translate
+                }}
+              </strong>
+              <span>{{ testResult.message }}</span>
             </div>
           </div>
         }
@@ -319,11 +439,11 @@
     <section class="app-section">
       <div class="section-header">
         <div class="section-header__content">
-          <span class="section-eyebrow">ENGINEERING INTELLIGENCE</span>
+          <span class="section-eyebrow">{{ 'team.engineeringIntelligence' | translate }}</span>
 
-          <h2>Engineering Data</h2>
+          <h2>{{ 'team.engineeringData' | translate }}</h2>
 
-          <p>Calculate engineering metrics from the data collected for this team.</p>
+          <p>{{ 'team.engineeringDataDescription' | translate }}</p>
         </div>
       </div>
 
@@ -333,13 +453,13 @@
         <div class="metrics-toolbar">
           <form class="metrics-period" [formGroup]="metricsPeriodForm">
             <div class="metrics-period__field">
-              <label for="metrics-period-start"> Period start </label>
+              <label for="metrics-period-start">{{ 'team.periodStart' | translate }}</label>
 
               <input id="metrics-period-start" nz-input type="date" formControlName="periodStart" />
             </div>
 
             <div class="metrics-period__field">
-              <label for="metrics-period-end"> Period end </label>
+              <label for="metrics-period-end">{{ 'team.periodEnd' | translate }}</label>
 
               <input id="metrics-period-end" nz-input type="date" formControlName="periodEnd" />
             </div>
@@ -354,7 +474,7 @@
               [disabled]="calculatingMetrics() || generatingReport() || metricsPeriodForm.invalid"
               (click)="calculateMetrics()"
             >
-              Calculate metrics
+              {{ 'team.calculateMetrics' | translate }}
             </button>
 
             <button
@@ -367,7 +487,7 @@
               "
               (click)="generateReport()"
             >
-              Generate report
+              {{ 'team.generateReport' | translate }}
             </button>
           </div>
 
@@ -375,8 +495,8 @@
             <nz-alert
               nzType="error"
               nzShowIcon
-              nzMessage="Unable to generate report"
-              nzDescription="The engineering report could not be generated for the selected period."
+              [nzMessage]="'team.reportError' | translate"
+              [nzDescription]="'team.reportErrorDescription' | translate"
             ></nz-alert>
           }
         </div>
@@ -387,8 +507,8 @@
           <nz-alert
             nzType="info"
             nzShowIcon
-            nzMessage="Reporting period changed"
-            nzDescription="Recalculate the metrics before generating a report for this period."
+            [nzMessage]="'team.periodChanged' | translate"
+            [nzDescription]="'team.periodChangedDescription' | translate"
           ></nz-alert>
         }
 
@@ -398,8 +518,8 @@
           <nz-alert
             nzType="warning"
             nzShowIcon
-            nzMessage="GitHub is not connected"
-            nzDescription="GitHub-backed metrics will be unavailable until a GitHub data source is configured."
+            [nzMessage]="'team.githubNotConnected' | translate"
+            [nzDescription]="'team.githubNotConnectedDescription' | translate"
           ></nz-alert>
         }
 
@@ -409,8 +529,8 @@
           <nz-alert
             nzType="error"
             nzShowIcon
-            nzMessage="Unable to calculate metrics"
-            nzDescription="The engineering metrics could not be calculated for the selected period."
+            [nzMessage]="'team.metricsError' | translate"
+            [nzDescription]="'team.metricsErrorDescription' | translate"
           ></nz-alert>
         }
 
@@ -422,9 +542,9 @@
               <nz-icon nzType="bar-chart"></nz-icon>
             </div>
 
-            <strong>No metrics calculated yet</strong>
+            <strong>{{ 'team.metricsEmpty' | translate }}</strong>
 
-            <p>Select a reporting period and calculate the engineering metrics for this team.</p>
+            <p>{{ 'team.metricsEmptyDescription' | translate }}</p>
           </div>
         }
 
@@ -433,21 +553,23 @@
         @if (metrics().length > 0) {
           <div class="metrics-summary">
             <div>
-              <span>REPORTING PERIOD</span>
+              <span>{{ 'team.reportingPeriod' | translate }}</span>
 
               <strong>
-                {{ metricsPeriodForm.controls.periodStart.value | date: 'mediumDate' }}
+                {{ metricsPeriodForm.controls.periodStart.value | appDate: 'mediumDate' }}
 
                 —
 
-                {{ metricsPeriodForm.controls.periodEnd.value | date: 'mediumDate' }}
+                {{ metricsPeriodForm.controls.periodEnd.value | appDate: 'mediumDate' }}
               </strong>
             </div>
 
             <div>
-              <span>OBSERVABLE METRICS</span>
+              <span>{{ 'team.observableMetrics' | translate }}</span>
 
-              <strong> {{ availableMetricCount() }}/{{ metrics().length }} </strong>
+              <strong>
+                {{ availableMetricCount() | appNumber }}/{{ metrics().length | appNumber }}
+              </strong>
             </div>
           </div>
 
@@ -480,11 +602,11 @@
                   </strong>
 
                   @if (currentMetric.dataStatus === 'NoData') {
-                    <p>No usable data was observed for this metric during the selected period.</p>
+                    <p>{{ 'team.metricNoDataDescription' | translate }}</p>
                   }
 
                   @if (currentMetric.dataStatus === 'SourceNotConfigured') {
-                    <p>The required data source is not configured.</p>
+                    <p>{{ 'team.metricSourceMissing' | translate }}</p>
                   }
                 </article>
               }
@@ -503,18 +625,19 @@
     <section class="app-section">
       <div class="section-header">
         <div class="section-header__content">
-          <span class="section-eyebrow">PEOPLE</span>
+          <span class="section-eyebrow">{{ 'team.people' | translate }}</span>
 
-          <h2>Team Members</h2>
+          <h2>{{ 'team.membersTitle' | translate }}</h2>
 
-          <p>Manage the people assigned to this engineering team.</p>
+          <p>{{ 'team.membersSectionDescription' | translate }}</p>
         </div>
 
         <div class="section-actions">
           <span class="member-count">
-            {{ members().length }}
-
-            {{ members().length === 1 ? 'member' : 'members' }}
+            {{
+              (members().length === 1 ? 'team.memberCountOne' : 'team.memberCountMany')
+                | translate: { count: (members().length | appNumber) }
+            }}
           </span>
 
           <button
@@ -526,7 +649,7 @@
           >
             <nz-icon nzType="plus"></nz-icon>
 
-            Add member
+            {{ 'team.addMember' | translate }}
           </button>
         </div>
       </div>
@@ -534,7 +657,7 @@
       <div class="app-card members-card">
         @if (members().length === 0) {
           <div class="empty-state members-empty">
-            <nz-empty nzNotFoundContent="No members have been added to this team."></nz-empty>
+            <nz-empty [nzNotFoundContent]="'team.membersEmpty' | translate"></nz-empty>
           </div>
         } @else {
           <div class="members-list">
@@ -558,7 +681,7 @@
 
                     @if (member.providerUserId) {
                       <span class="provider-id">
-                        Provider ID:
+                        {{ 'team.providerId' | translate }}
 
                         {{ member.providerUserId }}
                       </span>
@@ -573,7 +696,7 @@
                       [disabled]="memberMutationInProgress()"
                       (click)="openEditMember(member)"
                     >
-                      Edit
+                      {{ 'team.edit' | translate }}
                     </button>
 
                     <button
@@ -582,12 +705,12 @@
                       nzDanger
                       type="button"
                       nz-popconfirm
-                      nzPopconfirmTitle="Remove this member from the team?"
+                      [nzPopconfirmTitle]="'team.removeMemberConfirm' | translate"
                       nzPopconfirmPlacement="topRight"
                       [disabled]="memberMutationInProgress()"
                       (nzOnConfirm)="deleteMember(member)"
                     >
-                      Delete
+                      {{ 'team.delete' | translate }}
                     </button>
                   </div>
                 </div>
@@ -605,46 +728,46 @@
          \===================================================== -->
 
     <nz-drawer
-      nzTitle="Edit team"
+      [nzTitle]="'team.editTeam' | translate"
       [nzVisible]="editTeamOpen()"
       [nzWidth]="480"
       [nzClosable]="!updatingTeam()"
       [nzMaskClosable]="!updatingTeam()"
       (nzOnClose)="closeEditTeam()"
     >
-      <ng-container \*nzDrawerContent>
+      <ng-container *nzDrawerContent>
         <form nz-form nzLayout="vertical" [formGroup]="editTeamForm">
           <nz-form-item>
-            <nz-form-label nzRequired> Team name </nz-form-label>
+            <nz-form-label nzRequired>{{ 'team.teamName' | translate }}</nz-form-label>
 
-            <nz-form-control nzErrorTip="Team name is required and cannot exceed 200 characters.">
+            <nz-form-control [nzErrorTip]="'team.teamNameError' | translate">
               <input
                 nz-input
                 type="text"
                 formControlName="name"
                 maxlength="200"
-                placeholder="Engineering team"
+                [placeholder]="'team.teamNamePlaceholder' | translate"
               />
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label> Description </nz-form-label>
+            <nz-form-label>{{ 'team.descriptionLabel' | translate }}</nz-form-label>
 
-            <nz-form-control nzErrorTip="Description cannot exceed 2000 characters.">
+            <nz-form-control [nzErrorTip]="'team.descriptionError' | translate">
               <textarea
                 nz-input
                 formControlName="description"
                 maxlength="2000"
                 rows="5"
-                placeholder="Describe the team's mission and responsibilities..."
+                [placeholder]="'team.descriptionPlaceholder' | translate"
               ></textarea>
             </nz-form-control>
           </nz-form-item>
 
           <div class="drawer-actions">
             <button nz-button type="button" [disabled]="updatingTeam()" (click)="closeEditTeam()">
-              Cancel
+              {{ 'team.cancel' | translate }}
             </button>
 
             <button
@@ -655,7 +778,7 @@
               [disabled]="editTeamForm.invalid || updatingTeam()"
               (click)="updateTeam()"
             >
-              Save changes
+              {{ 'team.saveChanges' | translate }}
             </button>
           </div>
         </form>
@@ -669,65 +792,65 @@
          \===================================================== -->
 
     <nz-drawer
-      [nzTitle]="editingMember() ? 'Edit team member' : 'Add team member'"
+      [nzTitle]="(editingMember() ? 'team.editMemberTitle' : 'team.addMemberTitle') | translate"
       [nzVisible]="addMemberOpen()"
       [nzWidth]="480"
       [nzClosable]="!creatingMember()"
       [nzMaskClosable]="!creatingMember()"
       (nzOnClose)="closeAddMember()"
     >
-      <ng-container \*nzDrawerContent>
+      <ng-container *nzDrawerContent>
         <form nz-form nzLayout="vertical" [formGroup]="addMemberForm">
           <nz-form-item>
-            <nz-form-label nzRequired> Name </nz-form-label>
+            <nz-form-label nzRequired>{{ 'team.name' | translate }}</nz-form-label>
 
-            <nz-form-control nzErrorTip="Enter a valid name (maximum 200 characters).">
+            <nz-form-control [nzErrorTip]="'team.nameError' | translate">
               <input
                 nz-input
                 type="text"
                 formControlName="name"
                 maxlength="200"
-                placeholder="e.g. Jane Smith"
+                [placeholder]="'team.namePlaceholder' | translate"
               />
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label nzRequired> Email </nz-form-label>
+            <nz-form-label nzRequired>{{ 'team.email' | translate }}</nz-form-label>
 
-            <nz-form-control nzErrorTip="Enter a valid email address.">
+            <nz-form-control [nzErrorTip]="'team.emailError' | translate">
               <input
                 nz-input
                 type="email"
                 formControlName="email"
                 maxlength="320"
-                placeholder="jane.smith@example.com"
+                [placeholder]="'team.emailPlaceholder' | translate"
               />
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label nzRequired> Role </nz-form-label>
+            <nz-form-label nzRequired>{{ 'team.role' | translate }}</nz-form-label>
 
             <nz-form-control>
               <nz-select formControlName="role">
                 @for (role of memberRoles; track role.value) {
-                  <nz-option [nzValue]="role.value" [nzLabel]="role.label"></nz-option>
+                  <nz-option [nzValue]="role.value" [nzLabel]="role.label | translate"></nz-option>
                 }
               </nz-select>
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label> Provider User ID </nz-form-label>
+            <nz-form-label>{{ 'team.providerUserId' | translate }}</nz-form-label>
 
-            <nz-form-control nzErrorTip="Provider User ID cannot exceed 200 characters.">
+            <nz-form-control [nzErrorTip]="'team.providerUserIdError' | translate">
               <input
                 nz-input
                 type="text"
                 formControlName="providerUserId"
                 maxlength="200"
-                placeholder="Optional"
+                [placeholder]="'team.optional' | translate"
               />
             </nz-form-control>
           </nz-form-item>
@@ -739,7 +862,7 @@
               [disabled]="creatingMember()"
               (click)="closeAddMember()"
             >
-              Cancel
+              {{ 'team.cancel' | translate }}
             </button>
 
             <button
@@ -750,7 +873,7 @@
               [disabled]="addMemberForm.invalid || creatingMember()"
               (click)="saveMember()"
             >
-              {{ editingMember() ? 'Save changes' : 'Add member' }}
+              {{ (editingMember() ? 'team.saveChanges' : 'team.addMember') | translate }}
             </button>
           </div>
         </form>
@@ -764,33 +887,35 @@
          \===================================================== -->
 
     <nz-drawer
-      nzTitle="Connect GitHub"
+      [nzTitle]="'team.connectGitHub' | translate"
       [nzVisible]="githubConnectOpen()"
       [nzWidth]="480"
       [nzClosable]="!githubConnecting()"
       [nzMaskClosable]="!githubConnecting()"
       (nzOnClose)="closeGitHubConnection()"
     >
-      <ng-container \*nzDrawerContent>
+      <ng-container *nzDrawerContent>
         <form nz-form nzLayout="vertical" [formGroup]="githubConnectionForm">
           <div class="integration-drawer-intro">
-            <strong>GitHub data source</strong>
+            <strong>{{ 'team.githubDataSource' | translate }}</strong>
 
             <p>
-              Connect a personal GitHub account or an organization to collect engineering activity
-              for this team.
+              {{ 'team.githubDrawerDescription' | translate }}
             </p>
           </div>
 
           <!-- Owner type -->
 
           <nz-form-item>
-            <nz-form-label nzRequired> Account type </nz-form-label>
+            <nz-form-label nzRequired>{{ 'team.accountType' | translate }}</nz-form-label>
 
             <nz-form-control>
               <nz-select formControlName="ownerType">
                 @for (ownerType of githubOwnerTypes; track ownerType.value) {
-                  <nz-option [nzValue]="ownerType.value" [nzLabel]="ownerType.label"></nz-option>
+                  <nz-option
+                    [nzValue]="ownerType.value"
+                    [nzLabel]="ownerType.label | translate"
+                  ></nz-option>
                 }
               </nz-select>
             </nz-form-control>
@@ -799,16 +924,16 @@
           <!-- Owner -->
 
           <nz-form-item>
-            <nz-form-label nzRequired> GitHub account </nz-form-label>
+            <nz-form-label nzRequired>{{ 'team.githubAccount' | translate }}</nz-form-label>
 
-            <nz-form-control nzErrorTip="Enter a valid GitHub account.">
+            <nz-form-control [nzErrorTip]="'team.githubAccountError' | translate">
               <input
                 nz-input
                 type="text"
                 formControlName="owner"
                 maxlength="200"
                 autocomplete="off"
-                placeholder="e.g. charlesikeng-tech"
+                [placeholder]="'team.githubAccountPlaceholder' | translate"
               />
             </nz-form-control>
           </nz-form-item>
@@ -816,15 +941,15 @@
           <!-- PAT -->
 
           <nz-form-item>
-            <nz-form-label nzRequired> Personal access token </nz-form-label>
+            <nz-form-label nzRequired>{{ 'team.accessToken' | translate }}</nz-form-label>
 
-            <nz-form-control nzErrorTip="A GitHub personal access token is required.">
+            <nz-form-control [nzErrorTip]="'team.accessTokenError' | translate">
               <input
                 nz-input
                 type="password"
                 formControlName="accessToken"
                 autocomplete="new-password"
-                placeholder="GitHub personal access token"
+                [placeholder]="'team.accessTokenPlaceholder' | translate"
               />
             </nz-form-control>
           </nz-form-item>
@@ -832,7 +957,7 @@
           <nz-alert
             nzType="info"
             nzShowIcon
-            nzMessage="Your token is not displayed after the connection is created."
+            [nzMessage]="'team.tokenNotice' | translate"
           ></nz-alert>
 
           <div class="drawer-actions">
@@ -842,7 +967,7 @@
               [disabled]="githubConnecting()"
               (click)="closeGitHubConnection()"
             >
-              Cancel
+              {{ 'team.cancel' | translate }}
             </button>
 
             <button
@@ -853,7 +978,7 @@
               [disabled]="githubConnectionForm.invalid || githubConnecting()"
               (click)="connectGitHub()"
             >
-              Connect GitHub
+              {{ 'team.connectGitHub' | translate }}
             </button>
           </div>
         </form>
@@ -867,7 +992,7 @@
          \===================================================== -->
 
     <div class="empty-state">
-      <nz-empty nzNotFoundContent="No team is currently selected."></nz-empty>
+      <nz-empty [nzNotFoundContent]="'team.noTeamSelected' | translate"></nz-empty>
     </div>
   }
 </div>

@@ -1,7 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { I18nService } from '@core/i18n/i18n.service';
+import { LocalizedNumberPipe } from '@core/i18n/localized-format.pipes';
+import { TranslatePipe } from '@ngx-translate/core';
 
-import { EChartsOption } from 'echarts';
-import { NgxEchartsDirective } from 'ngx-echarts';
+import type { EChartsOption } from 'echarts';
+import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
@@ -11,23 +14,35 @@ import { EngineeringHealthHistoryPoint } from '../../models/engineering-dashboar
 @Component({
   selector: 'app-health-evolution',
   standalone: true,
-  imports: [NgxEchartsDirective, NzCardModule, NzEmptyModule],
+  imports: [TranslatePipe, LocalizedNumberPipe, NgxEchartsDirective, NzCardModule, NzEmptyModule],
+  providers: [
+    provideEchartsCore({
+      echarts: () => import('../../echarts/echarts-core'),
+    }),
+  ],
   templateUrl: './health-evolution.html',
   styleUrl: './health-evolution.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HealthEvolution {
+  private readonly i18n = inject(I18nService);
   readonly history = input.required<readonly EngineeringHealthHistoryPoint[]>();
 
   readonly chartOptions = computed<EChartsOption>(() => {
+    this.i18n.language();
     const history = this.history();
+    const numbers = new Intl.NumberFormat(this.i18n.locale(), { maximumFractionDigits: 20 });
+    const percentages = new Intl.NumberFormat(this.i18n.locale(), {
+      style: 'percent',
+      maximumFractionDigits: 0,
+    });
 
     return {
       animationDuration: 500,
 
       tooltip: {
         trigger: 'axis',
-        formatter: (params: any) => {
+        formatter: (params) => {
           const item = Array.isArray(params) ? params[0] : params;
 
           if (!item) {
@@ -42,9 +57,9 @@ export class HealthEvolution {
 
           return `
             <strong>${this.formatPeriod(point)}</strong><br />
-            Health score: <strong>${point.overallScore}/100</strong><br />
-            ${point.healthLevel}<br />
-            Data coverage: ${Math.round(point.dataCoverage)}%
+            ${this.i18n.t('dashboard.healthScore')}: <strong>${numbers.format(point.overallScore)}/100</strong><br />
+            ${this.i18n.t(`healthLevels.${point.healthLevel}`)}<br />
+            ${this.i18n.t('dashboard.dataCoverage')}: ${percentages.format(Math.round(point.dataCoverage) / 100)}
           `;
         },
       },
@@ -94,6 +109,7 @@ export class HealthEvolution {
         axisLabel: {
           color: '#98a2b3',
           fontSize: 11,
+          formatter: (value: number) => numbers.format(value),
         },
         splitLine: {
           lineStyle: {
@@ -104,7 +120,7 @@ export class HealthEvolution {
 
       series: [
         {
-          name: 'Health Score',
+          name: this.i18n.t('dashboard.healthScore'),
           type: 'line',
           smooth: true,
           symbol: 'circle',
@@ -135,7 +151,7 @@ export class HealthEvolution {
   private formatPeriod(point: EngineeringHealthHistoryPoint): string {
     const start = new Date(`${point.periodStart}T00:00:00`);
 
-    return new Intl.DateTimeFormat('en', {
+    return new Intl.DateTimeFormat(this.i18n.locale(), {
       month: 'short',
       year: 'numeric',
     }).format(start);

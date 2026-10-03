@@ -1,6 +1,7 @@
 using AiEngineeringManagerCopilot.Api.Authentication;
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.Jira;
+using AiEngineeringManagerCopilot.Application.Slack;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using AiEngineeringManagerCopilot.IntegrationTests.Authentication;
@@ -97,6 +98,14 @@ public class CustomWebApplicationFactory
             services.AddSingleton<IJiraClient>(
                 provider =>
                     provider.GetRequiredService<FakeJiraClient>());
+
+            services.RemoveAll<ISlackWebhookClient>();
+
+            services.AddSingleton<FakeSlackWebhookClient>();
+
+            services.AddSingleton<ISlackWebhookClient>(
+                provider =>
+                    provider.GetRequiredService<FakeSlackWebhookClient>());
         });
     }
 

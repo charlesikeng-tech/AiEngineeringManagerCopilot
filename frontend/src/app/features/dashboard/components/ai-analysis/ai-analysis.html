@@ -4,9 +4,9 @@
       <div class="ai-icon">✦</div>
 
       <div>
-        <div class="ai-title">AI Engineering Analysis</div>
+        <div class="ai-title">{{ 'dashboard.ai.title' | translate }}</div>
 
-        <div class="ai-subtitle">Insights generated from your engineering data</div>
+        <div class="ai-subtitle">{{ 'dashboard.ai.subtitle' | translate }}</div>
       </div>
     </div>
 
@@ -15,7 +15,7 @@
 
   @if (analysis(); as analysis) {
     <div class="ai-summary">
-      <div class="section-label">Executive summary</div>
+      <div class="section-label">{{ 'dashboard.executiveSummary' | translate }}</div>
 
       <p>
         {{ analysis.summary }}
@@ -24,7 +24,7 @@
 
     @if (analysis.insights.length > 0) {
       <div class="ai-section">
-        <div class="section-label">Key insights</div>
+        <div class="section-label">{{ 'dashboard.ai.insights' | translate }}</div>
 
         <div class="insight-list">
           @for (insight of analysis.insights; track insight.title) {
@@ -48,13 +48,13 @@
 
     @if (analysis.actions.length > 0) {
       <div class="ai-section">
-        <div class="section-label">Recommended actions</div>
+        <div class="section-label">{{ 'dashboard.ai.actions' | translate }}</div>
 
         <div class="action-list">
           @for (action of analysis.actions; track action.title) {
             <div class="action">
               <div class="action-number">
-                {{ $index + 1 }}
+                {{ $index + 1 | appNumber }}
               </div>
 
               <div>
@@ -74,18 +74,18 @@
 
     @if (analysis.evidence?.length) {
       <div class="evidence-section">
-        <div class="section-label">Evidence</div>
+        <div class="section-label">{{ 'dashboard.ai.evidence' | translate }}</div>
 
         <div class="evidence-list">
           @for (evidence of analysis.evidence ?? []; track evidence.metricType) {
             <div class="evidence">
               <div>
                 <strong>
-                  {{ evidence.metricType }}
+                  {{ ('metrics.' + evidence.metricType) | translate }}
                 </strong>
 
                 <span>
-                  {{ evidence.value }}
+                  {{ evidence.value | appNumber }}
                 </span>
               </div>
 
@@ -95,13 +95,13 @@
                 [nzShowInfo]="false"
               />
 
-              <span class="confidence"> {{ confidencePercentage(evidence) }}% confidence </span>
+              <span class="confidence">{{ 'dashboard.ai.confidence' | translate: { percentage: (confidencePercentage(evidence) / 100 | appPercent: '1.0-0') } }}</span>
             </div>
           }
         </div>
       </div>
     }
   } @else {
-    <nz-empty nzNotFoundContent="No AI analysis available" />
+    <nz-empty [nzNotFoundContent]="'dashboard.ai.empty' | translate" />
   }
 </nz-card>

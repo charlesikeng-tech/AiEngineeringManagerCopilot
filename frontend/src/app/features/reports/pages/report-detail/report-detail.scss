@@ -364,7 +364,8 @@
 
 
 
-.ai-card {
+.ai-card,
+.report-item {
 
   position: relative;
 
@@ -376,7 +377,9 @@
 
 
 
-.ai-card::before {
+.ai-card::before,
+.ai-action::before,
+.risk-item::before {
 
   position: absolute;
 
@@ -394,14 +397,23 @@
 
 
 
-  background: var(--app-ai);
-
-
-
   content: "";
 
 }
 
+.ai-card::before {
+  background: var(--app-ai);
+}
+
+.ai-context__item,
+.ai-insight,
+.ai-action,
+.evidence-card {
+  padding: var(--app-space-md);
+  background: var(--app-surface-secondary);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+}
 
 
 
@@ -449,20 +461,6 @@
 
 
   gap: 4px;
-
-
-
-  padding: var(--app-space-md);
-
-
-
-  background: var(--app-surface-secondary);
-
-
-
-  border: 1px solid var(--app-border);
-
-  border-radius: var(--app-radius-md);
 
 
 
@@ -610,7 +608,8 @@
 
 
 
-.ai-block-header {
+.ai-block-header,
+.item-heading {
 
   display: flex;
 
@@ -624,9 +623,10 @@
 
 
 
+}
+
+.ai-block-header {
   margin-bottom: var(--app-space-md);
-
-
 
   h3 {
 
@@ -714,7 +714,10 @@
 
 
 
-.ai-insights {
+.ai-insights,
+.ai-actions,
+.metric-card,
+.item-list {
 
   display: flex;
 
@@ -722,31 +725,16 @@
 
 
 
+}
+
+.ai-insights,
+.item-list {
   gap: var(--app-space-md);
-
 }
 
 
-
-.ai-insight {
-
-  padding: var(--app-space-md);
-
-
-
-  background: var(--app-surface-secondary);
-
-
-
-  border: 1px solid var(--app-border);
-
-  border-radius: var(--app-radius-md);
-
-}
-
-
-
-.ai-insight__header {
+.ai-insight__header,
+.ai-action__header {
 
   display: flex;
 
@@ -758,6 +746,9 @@
 
 
 
+}
+
+.ai-insight__header {
   h4 {
 
     margin: 3px 0 0;
@@ -816,7 +807,8 @@
 
 
 
-.ai-insight__details {
+.ai-insight__details,
+.item-details {
 
   display: grid;
 
@@ -836,6 +828,9 @@
 
 
 
+}
+
+.ai-insight__details {
   >div {
 
     padding: var(--app-space-md);
@@ -909,13 +904,6 @@
 
 
 .ai-actions {
-
-  display: flex;
-
-  flex-direction: column;
-
-
-
   gap: var(--app-space-sm);
 
 }
@@ -928,45 +916,7 @@
 
 
 
-  padding: var(--app-space-md);
-
-
-
   overflow: hidden;
-
-
-
-  background: var(--app-surface-secondary);
-
-
-
-  border: 1px solid var(--app-border);
-
-  border-radius: var(--app-radius-md);
-
-
-
-  &::before {
-
-    position: absolute;
-
-
-
-    top: 0;
-
-    left: 0;
-
-
-
-    width: 3px;
-
-    height: 100%;
-
-
-
-    content: "";
-
-  }
 
 
 
@@ -990,7 +940,9 @@
 
 
 
-.ai-action--critical::before {
+.ai-action--critical::before,
+.risk-item--critical::before,
+.severity--critical .severity-dot {
 
   background: var(--app-danger);
 
@@ -998,7 +950,9 @@
 
 
 
-.ai-action--high::before {
+.ai-action--high::before,
+.risk-item--high::before,
+.severity--high .severity-dot {
 
   background: var(--app-warning);
 
@@ -1006,7 +960,9 @@
 
 
 
-.ai-action--medium::before {
+.ai-action--medium::before,
+.risk-item--medium::before,
+.severity--medium .severity-dot {
 
   background: #fdb022;
 
@@ -1014,23 +970,11 @@
 
 
 
-.ai-action--low::before {
+.ai-action--low::before,
+.risk-item--low::before,
+.severity--low .severity-dot {
 
   background: var(--app-success);
-
-}
-
-
-
-.ai-action__header {
-
-  display: flex;
-
-  align-items: flex-start;
-
-
-
-  gap: var(--app-space-md);
 
 }
 
@@ -1213,21 +1157,6 @@
 
 
 .evidence-card {
-
-  padding: var(--app-space-md);
-
-
-
-  background: var(--app-surface-secondary);
-
-
-
-  border: 1px solid var(--app-border);
-
-  border-radius: var(--app-radius-md);
-
-
-
   p {
 
     margin: var(--app-space-sm) 0 0;
@@ -1538,16 +1467,6 @@
 
 
 
-.metric-card {
-
-  display: flex;
-
-  flex-direction: column;
-
-}
-
-
-
 .metric-name {
 
   color: var(--app-text-tertiary);
@@ -1640,46 +1559,7 @@
 
 
 
-.item-list {
-
-  display: flex;
-
-  flex-direction: column;
-
-
-
-  gap: var(--app-space-md);
-
-}
-
-
-
-.report-item {
-
-  position: relative;
-
-
-
-  overflow: hidden;
-
-}
-
-
-
 .item-heading {
-
-  display: flex;
-
-  align-items: flex-start;
-
-  justify-content: space-between;
-
-
-
-  gap: var(--app-space-md);
-
-
-
   h3 {
 
     margin: 4px 0 0;
@@ -1747,28 +1627,6 @@
    Details
 
    \--------------------------------------------------------- */
-
-
-
-.item-details {
-
-  display: grid;
-
-
-
-  grid-template-columns:
-
-    repeat(auto-fit, minmax(260px, 1fr));
-
-
-
-  gap: var(--app-space-md);
-
-
-
-  margin-top: var(--app-space-md);
-
-}
 
 
 
@@ -1848,62 +1706,6 @@
 
 
 
-.risk-item::before {
-
-  position: absolute;
-
-
-
-  top: 0;
-
-  left: 0;
-
-
-
-  width: 3px;
-
-  height: 100%;
-
-
-
-  content: "";
-
-}
-
-
-
-.risk-item--critical::before {
-
-  background: var(--app-danger);
-
-}
-
-
-
-.risk-item--high::before {
-
-  background: var(--app-warning);
-
-}
-
-
-
-.risk-item--medium::before {
-
-  background: #fdb022;
-
-}
-
-
-
-.risk-item--low::before {
-
-  background: var(--app-success);
-
-}
-
-
-
 .severity {
 
   display: inline-flex;
@@ -1941,38 +1743,6 @@
 
 
   background: var(--app-text-tertiary);
-
-}
-
-
-
-.severity--critical .severity-dot {
-
-  background: var(--app-danger);
-
-}
-
-
-
-.severity--high .severity-dot {
-
-  background: var(--app-warning);
-
-}
-
-
-
-.severity--medium .severity-dot {
-
-  background: #fdb022;
-
-}
-
-
-
-.severity--low .severity-dot {
-
-  background: var(--app-success);
 
 }
 
@@ -2199,9 +1969,6 @@
     line-height: 1.6;
   }
 
-  .ai-action-button {
-    margin-top: var(--app-space-xs);
-  }
 }
 
 .analysis-state--generating {
@@ -2289,7 +2056,6 @@
 
 @media (prefers-reduced-motion: reduce) {
 
-  .ai-action-button,
   .ai-context,
   .ai-summary,
   .ai-block,
@@ -2313,10 +2079,6 @@
     align-self: center;
   }
 
-  .ai-action-button {
-    flex: 1 1 auto;
-  }
-
   .analysis-state {
     min-height: 160px;
 
@@ -2337,7 +2099,4 @@
     align-self: flex-start;
   }
 
-  .ai-action-button {
-    width: 100%;
-  }
 }

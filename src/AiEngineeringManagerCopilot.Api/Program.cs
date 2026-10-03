@@ -38,6 +38,7 @@ app.MapTeamEndpoints();
 app.MapTeamMemberEndpoints();
 app.MapGitHubEndpoints();
 app.MapJiraConnectionEndpoints();
+app.MapSlackEndpoints();
 app.MapMetricsEndpoints();
 app.MapHealthEndpoints();
 app.MapEngineeringReportEndpoints();

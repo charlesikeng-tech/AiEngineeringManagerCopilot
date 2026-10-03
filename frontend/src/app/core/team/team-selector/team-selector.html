@@ -4,16 +4,16 @@
   </div>
 
   <div class="team-selector__content">
-    <span class="team-selector__label">ACTIVE TEAM</span>
+    <span class="team-selector__label">{{ 'app.activeTeam' | translate }}</span>
 
     <nz-select
       class="team-selector__select"
       [ngModel]="teamContext.selectedTeamId()"
       (ngModelChange)="selectTeam($event)"
       [nzLoading]="loading()"
-      nzPlaceHolder="Select a team"
+      [nzPlaceHolder]="'app.selectTeam' | translate"
       nzBorderless
-      aria-label="Active team"
+      [attr.aria-label]="'app.activeTeam' | translate"
     >
       @for (team of teams(); track team.id) {
         <nz-option [nzValue]="team.id" [nzLabel]="team.name" />

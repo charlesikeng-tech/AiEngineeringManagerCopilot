@@ -37,6 +37,9 @@ public static class PersistenceServiceCollectionExtensions
             GitHubConnectionRepository>();
         services.AddScoped<IRepositoryRepository, RepositoryRepository>();
         services.AddScoped<IJiraConnectionRepository, JiraConnectionRepository>();
+        services.AddScoped<
+            ISlackWebhookConnectionRepository,
+            SlackWebhookConnectionRepository>();
         services.AddScoped<IJiraWorkItemRepository, JiraWorkItemRepository>();
         services.AddScoped<
             IEngineeringMetricRepository,

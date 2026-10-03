@@ -18,7 +18,11 @@ import {
 } from '@features/dashboard/models/engineering-dashboard-response';
 import { RisksApi } from '../../services/risks-api';
 
-import { DatePipe, UpperCasePipe } from '@angular/common';
+import { UpperCasePipe } from '@angular/common';
+import { I18nService } from '@core/i18n/i18n.service';
+import { engineeringCategoryLabel } from '@core/i18n/engineering-category-label';
+import { LocalizedDatePipe, LocalizedNumberPipe } from '@core/i18n/localized-format.pipes';
+import { TranslatePipe } from '@ngx-translate/core';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
@@ -26,12 +30,13 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 @Component({
   selector: 'app-risks',
   standalone: true,
-  imports: [DatePipe, UpperCasePipe, RouterLink, NzAlertModule, NzEmptyModule, NzSpinModule],
+  imports: [LocalizedDatePipe, LocalizedNumberPipe, TranslatePipe, UpperCasePipe, RouterLink, NzAlertModule, NzEmptyModule, NzSpinModule],
   templateUrl: './risks.html',
   styleUrl: './risks.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Risks {
+  readonly i18n = inject(I18nService);
   private readonly risksApi = inject(RisksApi);
   private readonly teamContext = inject(TeamContext);
   private readonly destroyRef = inject(DestroyRef);
@@ -115,17 +120,14 @@ export class Risks {
   readonly totalCount = computed(() => this.risks().length);
 
   metricLabel(metricType: string): string {
-    const labels: Record<string, string> = {
-      CycleTime: 'Cycle Time',
-      PRReviewTime: 'PR Review Time',
-      DeploymentFrequency: 'Deployment Frequency',
-      ChangeFailureRate: 'Change Failure Rate',
-      LeadTime: 'Lead Time',
-      OpenPRs: 'Open PRs',
-      MergedPRs: 'Merged PRs',
-      BlockedItems: 'Blocked Items',
-    };
+    const knownMetrics = [
+      'CycleTime', 'PRReviewTime', 'DeploymentFrequency', 'ChangeFailureRate',
+      'LeadTime', 'OpenPRs', 'MergedPRs', 'BlockedItems',
+    ];
+    return knownMetrics.includes(metricType) ? this.i18n.t(`metrics.${metricType}`) : metricType;
+  }
 
-    return labels[metricType] ?? metricType;
+  categoryLabel(category: string): string {
+    return engineeringCategoryLabel(this.i18n, category);
   }
 }

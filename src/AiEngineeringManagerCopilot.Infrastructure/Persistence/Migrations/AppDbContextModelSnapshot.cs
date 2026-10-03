@@ -667,6 +667,29 @@ namespace AiEngineeringManagerCopilot.Infrastructure.Persistence.Migrations
                     b.ToTable("repositories", (string)null);
                 });
 
+            modelBuilder.Entity("AiEngineeringManagerCopilot.Domain.Entities.SlackWebhookConnection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("WebhookUrlEncrypted")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId")
+                        .IsUnique();
+
+                    b.ToTable("slack_webhook_connections", (string)null);
+                });
+
             modelBuilder.Entity("AiEngineeringManagerCopilot.Domain.Entities.Team", b =>
                 {
                     b.Property<Guid>("Id")

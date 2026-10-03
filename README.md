@@ -86,6 +86,7 @@ The current backend MVP already supports:
 -   Jira connection management;
 -   Jira connection validation;
 -   Jira issue synchronization;
+-   Slack report notifications through per-team Incoming Webhooks;
 -   engineering metric calculation;
 -   engineering health scoring;
 -   engineering reports;
@@ -914,6 +915,27 @@ The Jira synchronization endpoint imports Jira issues into
 
 ------------------------------------------------------------------------
 
+## Slack report notifications
+
+Each team can configure a Slack Incoming Webhook from its team settings.
+The webhook is encrypted before it is stored, is never returned by the API,
+and is restricted to HTTPS URLs hosted on `hooks.slack.com`. Slack receives
+a message after a report is successfully persisted, containing the team,
+reporting period, health score, and health level. A Slack delivery failure is
+logged and does not roll back report generation.
+
+The **Send test** action posts a test message to the configured channel.
+Remove the webhook from team settings to stop notifications. Apply the
+`AddSlackWebhookConnection` EF migration before deploying the feature:
+
+```sh
+dotnet ef database update \
+  --project src/AiEngineeringManagerCopilot.Infrastructure \
+  --startup-project src/AiEngineeringManagerCopilot.Api
+```
+
+------------------------------------------------------------------------
+
 # 🛠️ Technology stack
 
 ## Backend
@@ -928,6 +950,7 @@ The Jira synchronization endpoint imports Jira issues into
 
 -   GitHub REST API
 -   Jira Cloud REST API
+-   Slack Incoming Webhooks
 -   OpenAI
 
 ## Frontend
@@ -1130,6 +1153,76 @@ Frontend commands, run from `frontend/`:
 npm run build
 npm test -- --watch=false
 ```
+
+### Frontend asset loading
+
+The application keeps NG-ZORRO's base styles, animations, and CDK overlay
+styles, but imports component styles selectively through
+`frontend/src/styles/ng-zorro.css` instead of the complete library
+stylesheet. Add the appropriate component stylesheet there when adding
+a new NG-ZORRO component; precompiled entry styles include their library
+dependencies.
+
+ECharts is loaded only when the dashboard health chart is instantiated.
+The module under `features/dashboard/echarts/` registers the line chart,
+axes, tooltip, and canvas renderer; it is not part of the initial bundle.
+
+Production size budgets remain unchanged: 1.5 MB warning / 2 MB error
+for initial assets, and 8 kB warning / 12 kB error per component stylesheet.
+
+The 2026-10-02 production asset measurements are:
+
+| Asset | Before optimization | After optimization |
+|---|---|---|
+| Initial assets, raw | 1.57 MB | 767.42 kB |
+| Initial assets, estimated transfer | 333.55 kB | 151.41 kB |
+| Global stylesheet, raw | 564.76 kB | 300.40 kB |
+| Report detail stylesheet | 12.90 kB | 11.65 kB |
+| Team detail stylesheet | 10.99 kB | 10.53 kB |
+
+The report stylesheet is below the blocking 12 kB limit. Report and team
+stylesheets still exceed the 8 kB warning threshold; further reduction
+remains possible without relaxing the budgets. The deferred ECharts
+chunk is approximately 499 kB raw and is additional to the initial assets
+when the chart is displayed.
+
+### Frontend internationalization
+
+The interface supports **English and French** with an in-app language
+selector in the header. Switching languages does not reload the page or
+change the selected team, form values, API enum values, or stored
+engineering data.
+
+The saved preference (`em-copilot.language` in browser local storage) takes
+precedence over browser language detection. French browser locales select
+French; other browser locales use English. The selection synchronizes
+document language/title, NG-ZORRO controls, date-fns calendar formatting,
+and localized date, number, and percentage display.
+
+Runtime translation dictionaries live under `frontend/public/i18n/`:
+
+| Directory | Content |
+|---|---|
+| `common/` | Navigation, language selection, metric names, statuses, and health levels |
+| `team/` | Team management, members, and GitHub connection forms |
+| `dashboard/` | Dashboard components, chart labels, and tooltips |
+| `management/` | Reports, actions, and risks |
+
+Each directory contains `en.json` and `fr.json`. `@ngx-translate/core`
+loads the selected language through the HTTP loader configured in
+`core/i18n/i18n.providers.ts`. English is the fallback for missing keys;
+a missing dictionary file is surfaced as a load error instead of silently
+serving partial translations. Deploy these JSON assets with the frontend.
+
+Use `TranslatePipe` for template text and `I18nService.t()` for
+imperative messages and derived labels. Use `appDate`, `appNumber`, and
+`appPercent` for displays that must react to language changes without
+changing the underlying value. Keep English API identifiers separate
+from translated display labels.
+
+Backend-generated summaries, insights, recommendations, GitHub/Jira
+content, and user-entered names/descriptions are not translated by this
+frontend layer.
 
 ------------------------------------------------------------------------
 

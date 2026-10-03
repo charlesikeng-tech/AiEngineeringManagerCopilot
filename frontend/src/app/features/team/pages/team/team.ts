@@ -8,7 +8,9 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { DatePipe } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
+import { I18nService } from '@core/i18n/i18n.service';
+import { LocalizedDatePipe, LocalizedNumberPipe } from '@core/i18n/localized-format.pipes';
 
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 
@@ -39,12 +41,15 @@ import { catchError, switchMap, tap } from 'rxjs/operators';
 import { TeamContext } from '@core/team/team-context';
 
 import { CreateGitHubConnectionRequest } from '../../models/create-github-connection-request';
+import { CreateSlackWebhookRequest } from '../../models/create-slack-webhook-request';
 
 import { GitHubConnection, GitHubOwnerType } from '../../models/github-connection';
 
 import { GitHubConnectionTestResponse } from '../../models/github-connection-test-response';
 
 import { GitHubSyncResponse } from '../../models/github-sync-response';
+import { SlackWebhookConnection } from '../../models/slack-webhook-connection';
+import { TestSlackWebhookResponse } from '../../models/test-slack-webhook-response';
 
 import {
   CreateTeamMemberRequest,
@@ -60,6 +65,7 @@ import { EngineeringMetric, MetricDataStatus, MetricType } from '../../models/en
 import { ReportsApi } from '@features/reports/services/reports-api';
 
 import { GitHubApi } from '../../services/github-api';
+import { SlackApi } from '../../services/slack-api';
 
 import { MetricsApi } from '../../services/metrics-api';
 
@@ -71,7 +77,9 @@ import { TeamApi } from '../../services/team-api';
   standalone: true,
 
   imports: [
-    DatePipe,
+    TranslatePipe,
+    LocalizedDatePipe,
+    LocalizedNumberPipe,
 
     NzAlertModule,
 
@@ -103,6 +111,8 @@ import { TeamApi } from '../../services/team-api';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TeamPage {
+  readonly i18n = inject(I18nService);
+
   private readonly teamApi = inject(TeamApi);
 
   private readonly reportsApi = inject(ReportsApi);
@@ -110,6 +120,8 @@ export class TeamPage {
   private readonly metricsApi = inject(MetricsApi);
 
   private readonly githubApi = inject(GitHubApi);
+
+  private readonly slackApi = inject(SlackApi);
 
   private readonly teamContext = inject(TeamContext);
 
@@ -174,19 +186,19 @@ export class TeamPage {
 
     label: string;
   }[] = [
-    { value: 'EngineeringManager', label: 'Engineering Manager' },
+    { value: 'EngineeringManager', label: 'team.roles.EngineeringManager' },
 
-    { value: 'Developer', label: 'Developer' },
+    { value: 'Developer', label: 'team.roles.Developer' },
 
-    { value: 'TechLead', label: 'Tech Lead' },
+    { value: 'TechLead', label: 'team.roles.TechLead' },
 
-    { value: 'QA', label: 'QA' },
+    { value: 'QA', label: 'team.roles.QA' },
 
-    { value: 'ProductManager', label: 'Product Manager' },
+    { value: 'ProductManager', label: 'team.roles.ProductManager' },
 
-    { value: 'DataEngineer', label: 'Data Engineer' },
+    { value: 'DataEngineer', label: 'team.roles.DataEngineer' },
 
-    { value: 'Other', label: 'Other' },
+    { value: 'Other', label: 'team.roles.Other' },
   ];
 
   readonly addMemberForm = new FormGroup({
@@ -249,9 +261,9 @@ export class TeamPage {
 
     label: string;
   }[] = [
-    { value: 'User', label: 'Personal account' },
+    { value: 'User', label: 'team.ownerTypes.User' },
 
-    { value: 'Organization', label: 'Organization' },
+    { value: 'Organization', label: 'team.ownerTypes.Organization' },
   ];
 
   readonly githubConnectionForm = new FormGroup({
@@ -271,6 +283,24 @@ export class TeamPage {
       nonNullable: true,
 
       validators: [Validators.required],
+    }),
+  });
+
+  readonly slackConnection = signal<SlackWebhookConnection | null>(null);
+  readonly slackConnectionLoading = signal(false);
+  readonly slackConnectionError = signal(false);
+  readonly slackConnecting = signal(false);
+  readonly slackTesting = signal(false);
+  readonly slackTestResult = signal<TestSlackWebhookResponse | null>(null);
+  readonly slackDisconnecting = signal(false);
+  readonly slackWebhookForm = new FormGroup({
+    webhookUrl: new FormControl('', {
+      nonNullable: true,
+      validators: [
+        Validators.required,
+        Validators.maxLength(2048),
+        Validators.pattern(/^https:\/\/hooks\.slack\.com\/services\/.+$/),
+      ],
     }),
   });
 
@@ -351,7 +381,7 @@ export class TeamPage {
           }
 
           this.generatingReport.set(false);
-          this.message.success('Engineering report generated successfully.');
+          this.message.success(this.i18n.t('team.notifications.reportGenerated'));
 
           void this.router.navigate(['/reports', report.id]);
         },
@@ -366,7 +396,7 @@ export class TeamPage {
           this.generatingReport.set(false);
           this.reportGenerationError.set(true);
 
-          this.message.error('Unable to generate the engineering report.');
+          this.message.error(this.i18n.t('team.notifications.reportFailed'));
         },
       });
   }
@@ -394,6 +424,7 @@ export class TeamPage {
           this.members.set([]);
 
           this.resetGitHubState();
+          this.resetSlackState();
 
           this.loading.set(!!teamId);
 
@@ -416,6 +447,7 @@ export class TeamPage {
                   this.loading.set(false);
 
                   this.loadGitHubConnection(teamId);
+                  this.loadSlackConnection(teamId);
                 }),
               ),
             ),
@@ -423,7 +455,7 @@ export class TeamPage {
             catchError((error) => {
               console.error('Failed to load team', error);
 
-              this.message.error('Unable to load the team. Please try again.');
+              this.message.error(this.i18n.t('team.notifications.loadFailed'));
 
               this.error.set(true);
 
@@ -447,23 +479,7 @@ export class TeamPage {
   // ---------------------------------------------------------------------------
 
   roleLabel(role: TeamMember['role']): string {
-    const labels: Record<TeamMember['role'], string> = {
-      EngineeringManager: 'Engineering Manager',
-
-      Developer: 'Developer',
-
-      TechLead: 'Tech Lead',
-
-      QA: 'QA',
-
-      ProductManager: 'Product Manager',
-
-      DataEngineer: 'Data Engineer',
-
-      Other: 'Other',
-    };
-
-    return labels[role];
+    return this.i18n.t(`team.roles.${role}`);
   }
 
   openAddMember(): void {
@@ -550,7 +566,9 @@ export class TeamPage {
         });
 
         this.message.success(
-          editingMember ? 'Team member updated successfully.' : 'Team member added successfully.',
+          this.i18n.t(
+            editingMember ? 'team.notifications.memberUpdated' : 'team.notifications.memberAdded',
+          ),
         );
       },
 
@@ -558,7 +576,11 @@ export class TeamPage {
         console.error('Failed to save team member', error);
 
         this.message.error(
-          editingMember ? 'Unable to update the team member.' : 'Unable to add the team member.',
+          this.i18n.t(
+            editingMember
+              ? 'team.notifications.memberUpdateFailed'
+              : 'team.notifications.memberAddFailed',
+          ),
         );
 
         this.creatingMember.set(false);
@@ -603,13 +625,13 @@ export class TeamPage {
 
           this.deletingMemberId.set(null);
 
-          this.message.success('Team member removed successfully.');
+          this.message.success(this.i18n.t('team.notifications.memberRemoved'));
         },
 
         error: (error) => {
           console.error('Failed to remove team member', error);
 
-          this.message.error('Unable to remove the team member.');
+          this.message.error(this.i18n.t('team.notifications.memberRemoveFailed'));
 
           this.deletingMemberId.set(null);
         },
@@ -681,7 +703,7 @@ export class TeamPage {
 
           this.editTeamOpen.set(false);
 
-          this.message.success('Team updated successfully.');
+          this.message.success(this.i18n.t('team.notifications.teamUpdated'));
         },
 
         error: (error) => {
@@ -689,7 +711,7 @@ export class TeamPage {
 
           this.updatingTeam.set(false);
 
-          this.message.error('Unable to update the team.');
+          this.message.error(this.i18n.t('team.notifications.teamUpdateFailed'));
         },
       });
   }
@@ -715,7 +737,7 @@ export class TeamPage {
 
           this.teamContext.clearTeam();
 
-          this.message.success('Team deleted successfully.');
+          this.message.success(this.i18n.t('team.notifications.teamDeleted'));
 
           void this.router.navigate(['/team']);
         },
@@ -725,7 +747,7 @@ export class TeamPage {
 
           this.deletingTeam.set(false);
 
-          this.message.error('Unable to delete the team.');
+          this.message.error(this.i18n.t('team.notifications.teamDeleteFailed'));
         },
       });
   }
@@ -841,7 +863,7 @@ export class TeamPage {
             accessToken: '',
           });
 
-          this.message.success('GitHub connected successfully.');
+          this.message.success(this.i18n.t('team.notifications.githubConnected'));
         },
 
         error: (error) => {
@@ -849,7 +871,7 @@ export class TeamPage {
 
           this.githubConnecting.set(false);
 
-          this.message.error('Unable to connect GitHub.');
+          this.message.error(this.i18n.t('team.notifications.githubConnectFailed'));
         },
       });
   }
@@ -878,12 +900,14 @@ export class TeamPage {
           this.githubTesting.set(false);
 
           if (result.success) {
-            this.message.success(result.message || 'GitHub connection is valid.');
+            this.message.success(result.message || this.i18n.t('team.notifications.githubValid'));
 
             return;
           }
 
-          this.message.warning(result.message || 'GitHub connection test failed.');
+          this.message.warning(
+            result.message || this.i18n.t('team.notifications.githubTestFailed'),
+          );
         },
 
         error: (error) => {
@@ -891,7 +915,7 @@ export class TeamPage {
 
           this.githubTesting.set(false);
 
-          this.message.error('Unable to test GitHub connection.');
+          this.message.error(this.i18n.t('team.notifications.githubTestError'));
         },
       });
   }
@@ -920,9 +944,12 @@ export class TeamPage {
           this.githubSyncing.set(false);
 
           this.message.success(
-            `GitHub synchronized: ${result.synchronized} repository${
-              result.synchronized === 1 ? '' : 'ies'
-            } synchronized.`,
+            this.i18n.t(
+              result.synchronized === 1
+                ? 'team.notifications.githubSyncedOne'
+                : 'team.notifications.githubSyncedMany',
+              { count: this.i18n.formatNumber(result.synchronized) },
+            ),
           );
 
           // Refresh the connection from the backend because
@@ -937,7 +964,7 @@ export class TeamPage {
 
           this.githubSyncing.set(false);
 
-          this.message.error('Unable to synchronize GitHub.');
+          this.message.error(this.i18n.t('team.notifications.githubSyncFailed'));
         },
       });
   }
@@ -967,7 +994,7 @@ export class TeamPage {
 
           this.githubDisconnecting.set(false);
 
-          this.message.success('GitHub disconnected successfully.');
+          this.message.success(this.i18n.t('team.notifications.githubDisconnected'));
         },
 
         error: (error) => {
@@ -975,9 +1002,140 @@ export class TeamPage {
 
           this.githubDisconnecting.set(false);
 
-          this.message.error('Unable to disconnect GitHub.');
+          this.message.error(this.i18n.t('team.notifications.githubDisconnectFailed'));
         },
       });
+  }
+
+  connectSlackWebhook(): void {
+    const teamId = this.teamContext.selectedTeamId();
+    if (!teamId || this.slackWebhookForm.invalid || this.slackConnecting()) {
+      this.slackWebhookForm.markAllAsTouched();
+      return;
+    }
+
+    const webhookUrl = this.slackWebhookForm.controls.webhookUrl.value.trim();
+    if (!webhookUrl) {
+      this.slackWebhookForm.markAllAsTouched();
+      return;
+    }
+
+    const request: CreateSlackWebhookRequest = { webhookUrl };
+    this.slackConnecting.set(true);
+    this.slackApi.createConnection(teamId, request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (connection) => {
+          this.slackConnection.set(connection);
+          this.slackConnecting.set(false);
+          this.slackWebhookForm.reset({ webhookUrl: '' });
+          this.message.success(this.i18n.t('team.notifications.slackConnected'));
+        },
+        error: (error) => {
+          console.error('Failed to connect Slack webhook', error);
+          this.slackConnecting.set(false);
+          this.message.error(this.i18n.t('team.notifications.slackConnectFailed'));
+        },
+      });
+  }
+
+  testSlackWebhook(): void {
+    const teamId = this.teamContext.selectedTeamId();
+    if (!teamId || !this.slackConnection() || this.slackTesting()) {
+      return;
+    }
+
+    this.slackTesting.set(true);
+    this.slackTestResult.set(null);
+    this.slackApi.testConnection(teamId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          this.slackTestResult.set(result);
+          this.slackTesting.set(false);
+          if (result.success) {
+            this.message.success(this.i18n.t('team.notifications.slackTested'));
+          } else {
+            this.message.warning(this.i18n.t('team.notifications.slackTestFailed'));
+          }
+        },
+        error: (error) => {
+          console.error('Failed to test Slack webhook', error);
+          this.slackTesting.set(false);
+          this.message.error(this.i18n.t('team.notifications.slackTestError'));
+        },
+      });
+  }
+
+  disconnectSlackWebhook(): void {
+    const teamId = this.teamContext.selectedTeamId();
+    if (!teamId || !this.slackConnection() || this.slackDisconnecting()) {
+      return;
+    }
+
+    this.slackDisconnecting.set(true);
+    this.slackApi.deleteConnection(teamId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.slackConnection.set(null);
+          this.slackTestResult.set(null);
+          this.slackDisconnecting.set(false);
+          this.message.success(this.i18n.t('team.notifications.slackDisconnected'));
+        },
+        error: (error) => {
+          console.error('Failed to disconnect Slack webhook', error);
+          this.slackDisconnecting.set(false);
+          this.message.error(this.i18n.t('team.notifications.slackDisconnectFailed'));
+        },
+      });
+  }
+
+  reloadSlackConnection(): void {
+    const teamId = this.teamContext.selectedTeamId();
+    if (teamId) {
+      this.loadSlackConnection(teamId);
+    }
+  }
+
+  private loadSlackConnection(teamId: string): void {
+    this.slackConnectionLoading.set(true);
+    this.slackConnectionError.set(false);
+    this.slackConnection.set(null);
+    this.slackTestResult.set(null);
+    this.slackApi.getConnection(teamId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (connection) => {
+          if (this.teamContext.selectedTeamId() !== teamId) {
+            return;
+          }
+          this.slackConnection.set(connection);
+          this.slackConnectionLoading.set(false);
+        },
+        error: (error: HttpErrorResponse) => {
+          if (this.teamContext.selectedTeamId() !== teamId) {
+            return;
+          }
+          this.slackConnectionLoading.set(false);
+          if (error.status === 404) {
+            return;
+          }
+          console.error('Failed to load Slack webhook', error);
+          this.slackConnectionError.set(true);
+        },
+      });
+  }
+
+  private resetSlackState(): void {
+    this.slackConnection.set(null);
+    this.slackConnectionLoading.set(false);
+    this.slackConnectionError.set(false);
+    this.slackConnecting.set(false);
+    this.slackTesting.set(false);
+    this.slackTestResult.set(null);
+    this.slackDisconnecting.set(false);
+    this.slackWebhookForm.reset({ webhookUrl: '' });
   }
 
   // ---------------------------------------------------------------------------
@@ -1002,7 +1160,7 @@ export class TeamPage {
     const { periodStart, periodEnd } = this.metricsPeriodForm.getRawValue();
 
     if (periodStart > periodEnd) {
-      this.message.warning('The start date must be before the end date.');
+      this.message.warning(this.i18n.t('team.notifications.invalidPeriod'));
       return;
     }
 
@@ -1029,7 +1187,10 @@ export class TeamPage {
           const available = metrics.filter((metric) => metric.dataStatus === 'Available').length;
 
           this.message.success(
-            `Metrics calculated successfully. ${available}/${metrics.length} metrics available.`,
+            this.i18n.t('team.notifications.metricsCalculated', {
+              available: this.i18n.formatNumber(available),
+              total: this.i18n.formatNumber(metrics.length),
+            }),
           );
         },
 
@@ -1043,7 +1204,7 @@ export class TeamPage {
           this.calculatingMetrics.set(false);
           this.metricsError.set(true);
 
-          this.message.error('Unable to calculate engineering metrics.');
+          this.message.error(this.i18n.t('team.notifications.metricsFailed'));
         },
       });
   }
@@ -1173,37 +1334,11 @@ export class TeamPage {
   }
 
   metricLabel(metricType: MetricType): string {
-    const labels: Record<MetricType, string> = {
-      CycleTime: 'Cycle Time',
-
-      PRReviewTime: 'PR Review Time',
-
-      DeploymentFrequency: 'Deployment Frequency',
-
-      ChangeFailureRate: 'Change Failure Rate',
-
-      LeadTime: 'Lead Time',
-
-      OpenPRs: 'Open PRs',
-
-      MergedPRs: 'Merged PRs',
-
-      BlockedItems: 'Blocked Items',
-    };
-
-    return labels[metricType];
+    return this.i18n.t(`metrics.${metricType}`);
   }
 
   metricStatusLabel(status: MetricDataStatus): string {
-    const labels: Record<MetricDataStatus, string> = {
-      Available: 'Available',
-
-      NoData: 'No data',
-
-      SourceNotConfigured: 'Source not configured',
-    };
-
-    return labels[status];
+    return this.i18n.t(`team.metricStatuses.${status}`);
   }
 
   metricValue(metric: EngineeringMetric): string {
@@ -1211,16 +1346,18 @@ export class TeamPage {
       return '—';
     }
 
+    const value = this.i18n.formatNumber(metric.value, '1.0-20');
+
     switch (metric.metricType) {
       case 'CycleTime':
 
       case 'PRReviewTime':
 
       case 'LeadTime':
-        return `${metric.value}h`;
+        return this.i18n.t('team.metricHours', { value });
 
       case 'ChangeFailureRate':
-        return `${metric.value}%`;
+        return this.i18n.t('team.metricPercent', { value });
 
       case 'DeploymentFrequency':
 
@@ -1229,7 +1366,7 @@ export class TeamPage {
       case 'MergedPRs':
 
       case 'BlockedItems':
-        return `${metric.value}`;
+        return value;
     }
   }
 

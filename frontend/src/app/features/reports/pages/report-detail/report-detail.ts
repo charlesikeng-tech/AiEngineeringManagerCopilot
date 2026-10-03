@@ -1,4 +1,7 @@
-import { DatePipe, DecimalPipe, PercentPipe } from '@angular/common';
+import { I18nService } from '@core/i18n/i18n.service';
+import { engineeringCategoryLabel } from '@core/i18n/engineering-category-label';
+import { LocalizedDatePipe, LocalizedNumberPipe, LocalizedPercentPipe } from '@core/i18n/localized-format.pipes';
+import { TranslatePipe } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -25,12 +28,13 @@ import { ReportsApi } from '../../services/reports-api';
 @Component({
   selector: 'app-report-detail',
   standalone: true,
-  imports: [PercentPipe, DatePipe, DecimalPipe, RouterLink, NzEmptyModule, NzSkeletonModule],
+  imports: [LocalizedPercentPipe, LocalizedDatePipe, LocalizedNumberPipe, TranslatePipe, RouterLink, NzEmptyModule, NzSkeletonModule],
   templateUrl: './report-detail.html',
   styleUrl: './report-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReportDetail {
+  readonly i18n = inject(I18nService);
   private readonly route = inject(ActivatedRoute);
   private readonly teamContext = inject(TeamContext);
   private readonly reportsApi = inject(ReportsApi);
@@ -175,7 +179,7 @@ export class ReportDetail {
 
           this.report.set(null);
 
-          this.error.set('Unable to load this engineering report.');
+          this.error.set('reports.detailLoadError');
 
           this.loading.set(false);
 
@@ -245,6 +249,28 @@ export class ReportDetail {
       this.teamContext.selectedTeamId() === teamId &&
       this.route.snapshot.paramMap.get('reportId') === reportId
     );
+  }
+
+  metricLabel(metricType: string): string {
+    const knownMetrics = [
+      'CycleTime', 'PRReviewTime', 'DeploymentFrequency', 'ChangeFailureRate',
+      'LeadTime', 'OpenPRs', 'MergedPRs', 'BlockedItems',
+    ];
+    return knownMetrics.includes(metricType) ? this.i18n.t(`metrics.${metricType}`) : metricType;
+  }
+
+  healthLabel(healthLevel: string): string {
+    const knownLevels = [
+      'Healthy', 'Needs Attention', 'At Risk', 'No Data', 'Attention',
+      'Critical', 'Excellent', 'Good', 'Warning', 'Unknown',
+    ];
+    return knownLevels.includes(healthLevel)
+      ? this.i18n.t(`healthLevels.${healthLevel}`)
+      : healthLevel;
+  }
+
+  categoryLabel(category: string): string {
+    return engineeringCategoryLabel(this.i18n, category);
   }
 
   // ---------------------------------------------------------------------------

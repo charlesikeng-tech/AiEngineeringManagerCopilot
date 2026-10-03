@@ -42,7 +42,7 @@ export class DashboardStore {
 
               this.dashboardState.set(null);
 
-              this.errorState.set('Unable to load the engineering dashboard.');
+              this.errorState.set('dashboard.loadError');
 
               return EMPTY;
             }),

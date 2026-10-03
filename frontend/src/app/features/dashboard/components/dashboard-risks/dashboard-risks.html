@@ -1,12 +1,12 @@
 <nz-card class="risks-card">
   <div class="section-header">
     <div>
-      <h2>Risks</h2>
-      <p>Engineering risks requiring attention</p>
+      <h2>{{ 'dashboard.risks.title' | translate }}</h2>
+      <p>{{ 'dashboard.risks.subtitle' | translate }}</p>
     </div>
 
     @if (risks().length > 0) {
-      <nz-tag>{{ risks().length }}</nz-tag>
+      <nz-tag>{{ risks().length | appNumber }}</nz-tag>
     }
   </div>
 
@@ -15,8 +15,8 @@
       <div class="empty-icon">✓</div>
 
       <div>
-        <strong>No active risks</strong>
-        <p>No engineering risks detected for this period.</p>
+        <strong>{{ 'dashboard.risks.emptyTitle' | translate }}</strong>
+        <p>{{ 'dashboard.risks.emptyDescription' | translate }}</p>
       </div>
     </div>
   } @else {
@@ -30,7 +30,7 @@
               <strong>{{ risk.title }}</strong>
 
               <span class="severity">
-                {{ risk.severity }}
+                {{ ('priorities.' + risk.severity) | translate }}
               </span>
             </div>
           </div>
@@ -41,7 +41,7 @@
 
           @if (risk.recommendation) {
             <div class="recommendation">
-              <span>Recommendation</span>
+              <span>{{ 'dashboard.risks.recommendation' | translate }}</span>
               <p>{{ risk.recommendation }}</p>
             </div>
           }

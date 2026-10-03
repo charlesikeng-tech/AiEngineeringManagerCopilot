@@ -1,4 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { I18nService } from '@core/i18n/i18n.service';
+import { LocalizedNumberPipe, LocalizedPercentPipe } from '@core/i18n/localized-format.pipes';
+import { TranslatePipe } from '@ngx-translate/core';
 import { RouterLink } from '@angular/router';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -11,12 +14,13 @@ import { EngineeringReport } from '../../models/engineering-dashboard-response';
 @Component({
   selector: 'app-latest-report',
   standalone: true,
-  imports: [RouterLink, NzCardModule, NzEmptyModule, NzProgressModule, NzTagModule],
+  imports: [TranslatePipe, LocalizedNumberPipe, LocalizedPercentPipe, RouterLink, NzCardModule, NzEmptyModule, NzProgressModule, NzTagModule],
   templateUrl: './latest-report.html',
   styleUrl: './latest-report.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LatestReport {
+  private readonly i18n = inject(I18nService);
   readonly report = input.required<EngineeringReport | null>();
 
   readonly coveragePercentage = computed(() => {
@@ -40,7 +44,7 @@ export class LatestReport {
   });
 
   private formatDate(value: string): string {
-    return new Intl.DateTimeFormat('en', {
+    return new Intl.DateTimeFormat(this.i18n.locale(), {
       month: 'short',
       day: 'numeric',
       year: 'numeric',

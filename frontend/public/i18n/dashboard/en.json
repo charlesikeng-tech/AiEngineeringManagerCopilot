@@ -1,0 +1,72 @@
+{
+  "dashboard": {
+    "loading": "Loading engineering dashboard",
+    "unavailable": "Dashboard unavailable",
+    "loadError": "Unable to load the engineering dashboard.",
+    "eyebrow": "ENGINEERING",
+    "title": "Engineering Overview",
+    "subtitle": "Monitor delivery, quality and engineering health.",
+    "reportingPeriodUpper": "REPORTING PERIOD",
+    "reportingPeriod": "Reporting period",
+    "empty": "No dashboard data available",
+    "healthScore": "Health Score",
+    "overallScore": "Overall score",
+    "dataCoverage": "Data coverage",
+    "coverage": "{{percentage}} coverage",
+    "noData": "No data",
+    "notConnected": "Not connected",
+    "hourUnit": "h",
+    "vsPreviousPeriod": "vs previous period",
+    "noPreviousPeriod": "No previous period",
+    "githubNotConnected": "GitHub not connected",
+    "insufficientData": "Insufficient data",
+    "activeRisks": "Active Risks",
+    "highPriorityCount": "{{count}} high priority",
+    "noHighPriorityRisks": "No high priority risks",
+    "executiveSummary": "Executive summary",
+    "trendChange": "{{direction}} {{percentage}}",
+    "trends": {
+      "Improving": "Improving",
+      "Stable": "Stable",
+      "Degrading": "Degrading"
+    },
+    "performance": {
+      "title": "Engineering Performance",
+      "subtitle": "Delivery, pull requests and quality metrics",
+      "empty": "No engineering metrics available",
+      "delivery": "Delivery",
+      "pullRequests": "Pull Requests",
+      "quality": "Quality"
+    },
+    "ai": {
+      "title": "AI Engineering Analysis",
+      "subtitle": "Insights generated from your engineering data",
+      "insights": "Key insights",
+      "actions": "Recommended actions",
+      "evidence": "Evidence",
+      "confidence": "{{percentage}} confidence",
+      "empty": "No AI analysis available"
+    },
+    "risks": {
+      "title": "Risks",
+      "subtitle": "Engineering risks requiring attention",
+      "emptyTitle": "No active risks",
+      "emptyDescription": "No engineering risks detected for this period.",
+      "recommendation": "Recommendation"
+    },
+    "report": {
+      "title": "Latest Engineering Report",
+      "subtitle": "Engineering health summary for the latest reporting period",
+      "view": "View full report",
+      "actionPlan": "Open action plan",
+      "empty": "No engineering report available"
+    },
+    "history": {
+      "title": "Health Evolution",
+      "subtitle": "Engineering health score over time",
+      "periods": "{{count}} periods",
+      "chartLabel": "Engineering health score by reporting period",
+      "empty": "No health history available"
+    }
+  }
+}

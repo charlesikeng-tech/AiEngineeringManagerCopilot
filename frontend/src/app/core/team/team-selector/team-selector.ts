@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
@@ -14,7 +15,7 @@ import { TeamContext } from '../team-context';
 @Component({
   selector: 'app-team-selector',
   standalone: true,
-  imports: [FormsModule, NzIconModule, NzSelectModule],
+  imports: [FormsModule, NzIconModule, NzSelectModule, TranslatePipe],
   templateUrl: './team-selector.html',
   styleUrl: './team-selector.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

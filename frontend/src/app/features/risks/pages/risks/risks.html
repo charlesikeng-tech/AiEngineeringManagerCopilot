@@ -3,15 +3,15 @@
     <div class="state-container">
       <nz-spin nzSimple nzSize="large"></nz-spin>
 
-      <span> Loading engineering risks... </span>
+      <span> {{ 'risks.loading' | translate }} </span>
     </div>
   } @else if (error()) {
     <div class="state-container">
       <nz-alert
         nzType="error"
         nzShowIcon
-        nzMessage="Unable to load engineering risks"
-        nzDescription="The current risk assessment could not be loaded."
+        [nzMessage]="'risks.loadError' | translate"
+        [nzDescription]="'risks.loadErrorDescription' | translate"
       ></nz-alert>
     </div>
   } @else if (data(); as riskData) {
@@ -19,26 +19,26 @@
 
     <header class="page-header">
       <div class="page-header__content">
-        <span class="page-eyebrow"> ENGINEERING </span>
+        <span class="page-eyebrow"> {{ 'risks.engineering' | translate }} </span>
 
-        <h1>Engineering Risks</h1>
+        <h1>{{ 'risks.title' | translate }}</h1>
 
-        <p>Current engineering risks identified for the latest reporting period.</p>
+        <p>{{ 'risks.description' | translate }}</p>
       </div>
 
       <div class="page-context">
         <div class="reporting-period">
-          <span class="reporting-period__label"> REPORTING PERIOD </span>
+          <span class="reporting-period__label"> {{ 'risks.reportingPeriod' | translate }} </span>
 
           <strong>
-            {{ riskData.periodStart | date: 'MMM d, y' }}
+            {{ riskData.periodStart | appDate: 'mediumDate' }}
             –
-            {{ riskData.periodEnd | date: 'MMM d, y' }}
+            {{ riskData.periodEnd | appDate: 'mediumDate' }}
           </strong>
         </div>
 
         <a class="app-button app-button--secondary" [routerLink]="['/reports', riskData.reportId]">
-          View source report
+          {{ 'risks.viewSourceReport' | translate }}
           <span aria-hidden="true">→</span>
         </a>
       </div>
@@ -47,7 +47,7 @@
     @if (risks().length === 0) {
       <div class="empty-state">
         <nz-empty
-          nzNotFoundContent="No engineering risks detected for this reporting period."
+          [nzNotFoundContent]="'risks.emptyPeriod' | translate"
         ></nz-empty>
       </div>
     } @else {
@@ -59,16 +59,16 @@
             <div class="overview-card__header">
               <span class="risk-level">
                 <span class="severity-dot"></span>
-                CRITICAL
+                {{ 'risks.severities.Critical' | translate | uppercase }}
               </span>
             </div>
 
             <strong>
-              {{ criticalCount() }}
+              {{ criticalCount() | appNumber }}
             </strong>
 
             <p>
-              {{ criticalCount() === 1 ? 'risk' : 'risks' }}
+              {{ (criticalCount() === 1 ? 'risks.risk' : 'risks.risks') | translate }}
             </p>
           </article>
 
@@ -76,16 +76,16 @@
             <div class="overview-card__header">
               <span class="risk-level">
                 <span class="severity-dot"></span>
-                HIGH
+                {{ 'risks.severities.High' | translate | uppercase }}
               </span>
             </div>
 
             <strong>
-              {{ highCount() }}
+              {{ highCount() | appNumber }}
             </strong>
 
             <p>
-              {{ highCount() === 1 ? 'risk' : 'risks' }}
+              {{ (highCount() === 1 ? 'risks.risk' : 'risks.risks') | translate }}
             </p>
           </article>
 
@@ -93,16 +93,16 @@
             <div class="overview-card__header">
               <span class="risk-level">
                 <span class="severity-dot"></span>
-                MEDIUM
+                {{ 'risks.severities.Medium' | translate | uppercase }}
               </span>
             </div>
 
             <strong>
-              {{ mediumCount() }}
+              {{ mediumCount() | appNumber }}
             </strong>
 
             <p>
-              {{ mediumCount() === 1 ? 'risk' : 'risks' }}
+              {{ (mediumCount() === 1 ? 'risks.risk' : 'risks.risks') | translate }}
             </p>
           </article>
 
@@ -110,16 +110,16 @@
             <div class="overview-card__header">
               <span class="risk-level">
                 <span class="severity-dot"></span>
-                LOW
+                {{ 'risks.severities.Low' | translate | uppercase }}
               </span>
             </div>
 
             <strong>
-              {{ lowCount() }}
+              {{ lowCount() | appNumber }}
             </strong>
 
             <p>
-              {{ lowCount() === 1 ? 'risk' : 'risks' }}
+              {{ (lowCount() === 1 ? 'risks.risk' : 'risks.risks') | translate }}
             </p>
           </article>
         </div>
@@ -130,27 +130,26 @@
       <section class="app-section">
         <div class="section-header">
           <div class="section-header__content">
-            <span class="section-eyebrow"> ACTIVE RISKS </span>
+            <span class="section-eyebrow"> {{ 'risks.activeRisks' | translate }} </span>
 
-            <h2>Risk Assessment</h2>
+            <h2>{{ 'risks.assessment' | translate }}</h2>
 
-            <p>Risks currently affecting engineering health.</p>
+            <p>{{ 'risks.assessmentDescription' | translate }}</p>
           </div>
 
           <div class="section-actions">
             <div class="risk-count">
               <strong>
-                {{ totalCount() }}
+                {{ totalCount() | appNumber }}
               </strong>
 
               <span>
-                active
-                {{ totalCount() === 1 ? 'risk' : 'risks' }}
+                {{ (totalCount() === 1 ? 'risks.activeRisk' : 'risks.activeRiskPlural') | translate }}
               </span>
             </div>
 
             <a class="app-button app-button--primary" routerLink="/actions">
-              Open action plan
+              {{ 'risks.openActionPlan' | translate }}
               <span aria-hidden="true">→</span>
             </a>
           </div>
@@ -176,11 +175,11 @@
                   >
                     <span class="severity-dot"></span>
 
-                    {{ risk.severity | uppercase }}
+                    {{ ('risks.severities.' + risk.severity) | translate | uppercase }}
                   </span>
 
                   <span class="risk-category">
-                    {{ risk.category }}
+                    {{ categoryLabel(risk.category) }}
                   </span>
                 </div>
 
@@ -202,7 +201,7 @@
               </div>
 
               <div class="risk-recommendation">
-                <span class="risk-recommendation__label"> RECOMMENDATION </span>
+                <span class="risk-recommendation__label"> {{ 'risks.recommendation' | translate }} </span>
 
                 <p>
                   {{ risk.recommendation }}
@@ -215,7 +214,7 @@
     }
   } @else {
     <div class="empty-state">
-      <nz-empty nzNotFoundContent="No risk assessment is available for this team."></nz-empty>
+      <nz-empty [nzNotFoundContent]="'risks.emptyTeam' | translate"></nz-empty>
     </div>
   }
 </div>

@@ -3,15 +3,15 @@
     <div class="state-container">
       <nz-spin nzSimple nzSize="large"></nz-spin>
 
-      <span> Loading engineering actions... </span>
+      <span> {{ 'actions.loading' | translate }} </span>
     </div>
   } @else if (error()) {
     <div class="state-container">
       <nz-alert
         nzType="error"
         nzShowIcon
-        nzMessage="Unable to load engineering actions"
-        nzDescription="The current action plan could not be loaded."
+        [nzMessage]="'actions.loadError' | translate"
+        [nzDescription]="'actions.loadErrorDescription' | translate"
       ></nz-alert>
     </div>
   } @else if (data(); as actionData) {
@@ -19,21 +19,21 @@
 
     <header class="page-header">
       <div class="page-header__content">
-        <span class="page-eyebrow"> ENGINEERING </span>
+        <span class="page-eyebrow"> {{ 'actions.engineering' | translate }} </span>
 
-        <h1>Engineering Actions</h1>
+        <h1>{{ 'actions.title' | translate }}</h1>
 
-        <p>Track and manage the actions identified from the latest engineering report.</p>
+        <p>{{ 'actions.description' | translate }}</p>
       </div>
 
       <div class="page-context">
         <div class="reporting-period">
-          <span class="reporting-period__label"> REPORTING PERIOD </span>
+          <span class="reporting-period__label"> {{ 'actions.reportingPeriod' | translate }} </span>
 
           <strong>
-            {{ actionData.periodStart | date: 'MMM d, y' }}
+            {{ actionData.periodStart | appDate: 'mediumDate' }}
             –
-            {{ actionData.periodEnd | date: 'MMM d, y' }}
+            {{ actionData.periodEnd | appDate: 'mediumDate' }}
           </strong>
         </div>
 
@@ -41,7 +41,7 @@
           class="app-button app-button--secondary"
           [routerLink]="['/reports', actionData.reportId]"
         >
-          View source report
+          {{ 'actions.viewSourceReport' | translate }}
           <span aria-hidden="true">→</span>
         </a>
       </div>
@@ -49,7 +49,7 @@
 
     @if (actions().length === 0) {
       <div class="empty-state">
-        <nz-empty nzNotFoundContent="No engineering actions for this reporting period."></nz-empty>
+        <nz-empty [nzNotFoundContent]="'actions.emptyPeriod' | translate"></nz-empty>
       </div>
     } @else {
       <!-- Action overview -->
@@ -60,16 +60,16 @@
             <div class="overview-card__header">
               <span class="action-state">
                 <span class="state-dot"></span>
-                TODO
+                {{ 'statuses.Todo' | translate | uppercase }}
               </span>
             </div>
 
             <strong>
-              {{ todoCount() }}
+              {{ todoCount() | appNumber }}
             </strong>
 
             <p>
-              {{ todoCount() === 1 ? 'action' : 'actions' }}
+              {{ (todoCount() === 1 ? 'actions.action' : 'actions.actions') | translate }}
             </p>
           </article>
 
@@ -77,16 +77,16 @@
             <div class="overview-card__header">
               <span class="action-state">
                 <span class="state-dot"></span>
-                IN PROGRESS
+                {{ 'statuses.InProgress' | translate | uppercase }}
               </span>
             </div>
 
             <strong>
-              {{ inProgressCount() }}
+              {{ inProgressCount() | appNumber }}
             </strong>
 
             <p>
-              {{ inProgressCount() === 1 ? 'action' : 'actions' }}
+              {{ (inProgressCount() === 1 ? 'actions.action' : 'actions.actions') | translate }}
             </p>
           </article>
 
@@ -94,16 +94,16 @@
             <div class="overview-card__header">
               <span class="action-state">
                 <span class="state-dot"></span>
-                DONE
+                {{ 'statuses.Done' | translate | uppercase }}
               </span>
             </div>
 
             <strong>
-              {{ doneCount() }}
+              {{ doneCount() | appNumber }}
             </strong>
 
             <p>
-              {{ doneCount() === 1 ? 'action' : 'actions' }}
+              {{ (doneCount() === 1 ? 'actions.action' : 'actions.actions') | translate }}
             </p>
           </article>
 
@@ -111,16 +111,16 @@
             <div class="overview-card__header">
               <span class="action-state">
                 <span class="state-dot"></span>
-                CANCELLED
+                {{ 'statuses.Cancelled' | translate | uppercase }}
               </span>
             </div>
 
             <strong>
-              {{ cancelledCount() }}
+              {{ cancelledCount() | appNumber }}
             </strong>
 
             <p>
-              {{ cancelledCount() === 1 ? 'action' : 'actions' }}
+              {{ (cancelledCount() === 1 ? 'actions.action' : 'actions.actions') | translate }}
             </p>
           </article>
         </div>
@@ -131,27 +131,26 @@
       <section class="app-section">
         <div class="section-header">
           <div class="section-header__content">
-            <span class="section-eyebrow"> ACTION PLAN </span>
+            <span class="section-eyebrow"> {{ 'actions.plan' | translate }} </span>
 
-            <h2>Current Actions</h2>
+            <h2>{{ 'actions.currentActions' | translate }}</h2>
 
-            <p>Actions identified from the latest engineering health assessment.</p>
+            <p>{{ 'actions.planDescription' | translate }}</p>
 
             @if (overdueCount() > 0) {
               <span class="overdue-summary">
-                {{ overdueCount() }}
-                {{ overdueCount() === 1 ? 'overdue action' : 'overdue actions' }}
+                {{ (overdueCount() === 1 ? 'actions.overdueActionCount' : 'actions.overdueActionsCount') | translate: { count: (overdueCount() | appNumber) } }}
               </span>
             }
           </div>
 
           <div class="action-count">
             <strong>
-              {{ totalCount() }}
+              {{ totalCount() | appNumber }}
             </strong>
 
             <span>
-              {{ totalCount() === 1 ? 'action' : 'actions' }}
+              {{ (totalCount() === 1 ? 'actions.action' : 'actions.actions') | translate }}
             </span>
           </div>
         </div>
@@ -178,7 +177,7 @@
                   >
                     <span class="priority-dot"></span>
 
-                    {{ action.priority | uppercase }}
+                    {{ ('priorities.' + action.priority) | translate | uppercase }}
                   </span>
 
                   @if (action.metricType) {
@@ -194,13 +193,13 @@
                   [nzDisabled]="updatingActionId() === action.id"
                   (ngModelChange)="updateStatus(action, $event)"
                 >
-                  <nz-option nzValue="Todo" nzLabel="Todo"></nz-option>
+                  <nz-option nzValue="Todo" [nzLabel]="'statuses.Todo' | translate"></nz-option>
 
-                  <nz-option nzValue="InProgress" nzLabel="In Progress"></nz-option>
+                  <nz-option nzValue="InProgress" [nzLabel]="'statuses.InProgress' | translate"></nz-option>
 
-                  <nz-option nzValue="Done" nzLabel="Done"></nz-option>
+                  <nz-option nzValue="Done" [nzLabel]="'statuses.Done' | translate"></nz-option>
 
-                  <nz-option nzValue="Cancelled" nzLabel="Cancelled"></nz-option>
+                  <nz-option nzValue="Cancelled" [nzLabel]="'statuses.Cancelled' | translate"></nz-option>
                 </nz-select>
               </div>
 
@@ -220,7 +219,7 @@
 
               <div class="action-card__footer">
                 <div class="action-field">
-                  <label class="field-label" [for]="'owner-' + action.id"> OWNER </label>
+                  <label class="field-label" [for]="'owner-' + action.id"> {{ 'actions.owner' | translate }} </label>
 
                   <input
                     nz-input
@@ -228,7 +227,7 @@
                     type="text"
                     [ngModel]="action.owner ?? ''"
                     [disabled]="updatingActionId() === action.id"
-                    placeholder="Unassigned"
+                    [placeholder]="'actions.unassigned' | translate"
                     (blur)="updateOwner(action, $any($event.target).value)"
                     (keyup.enter)="$any($event.target).blur()"
                   />
@@ -240,7 +239,7 @@
                   [class.action-field--due-soon]="dueState(action) === 'soon'"
                 >
                   <div class="field-label-row">
-                    <span class="field-label"> DUE DATE </span>
+                    <span class="field-label"> {{ 'actions.dueDate' | translate }} </span>
                     @if (dueLabel(action); as label) {
                       <span
                         class="due-state"
@@ -252,7 +251,7 @@
                   </div>
 
                   <nz-date-picker
-                    nzFormat="MMM d, yyyy"
+                    nzFormat="PP"
                     [ngModel]="action.dueDateValue"
                     [nzDisabled]="updatingActionId() === action.id"
                     (ngModelChange)="updateDueDate(action, $event)"
@@ -260,7 +259,7 @@
                 </div>
 
                 <div class="action-field action-field--status">
-                  <span class="field-label"> STATUS </span>
+                  <span class="field-label"> {{ 'actions.status' | translate }} </span>
 
                   <strong>
                     {{ statusLabel(action.status) }}
@@ -274,7 +273,7 @@
     }
   } @else {
     <div class="empty-state">
-      <nz-empty nzNotFoundContent="No action plan is available for this team."></nz-empty>
+      <nz-empty [nzNotFoundContent]="'actions.emptyTeam' | translate"></nz-empty>
     </div>
   }
 </div>

@@ -15,6 +15,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<GitHubConnection> GitHubConnections => Set<GitHubConnection>();
     
     public DbSet<JiraConnection> JiraConnections => Set<JiraConnection>();
+
+    public DbSet<SlackWebhookConnection> SlackWebhookConnections => Set<SlackWebhookConnection>();
     
     public DbSet<JiraWorkItem> JiraWorkItems => Set<JiraWorkItem>();
 

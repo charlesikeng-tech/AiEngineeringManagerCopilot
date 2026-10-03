@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@ngx-translate/core';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
@@ -25,12 +27,13 @@ interface MetricViewModel {
 @Component({
   selector: 'app-engineering-metrics',
   standalone: true,
-  imports: [NzCardModule, NzEmptyModule, NzGridModule, NzIconModule],
+  imports: [TranslatePipe, NzCardModule, NzEmptyModule, NzGridModule, NzIconModule],
   templateUrl: './engineering-metrics.html',
   styleUrl: './engineering-metrics.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EngineeringMetrics {
+  private readonly i18n = inject(I18nService);
   readonly metrics = input.required<readonly EngineeringMetric[]>();
   readonly trends = input.required<readonly MetricTrend[]>();
 
@@ -50,14 +53,21 @@ export class EngineeringMetrics {
 
   displayValue(item: MetricViewModel): string {
     if (item.dataStatus === 'SourceNotConfigured') {
-      return 'Not connected';
+      return this.i18n.t('dashboard.notConnected');
     }
 
     if (item.dataStatus === 'NoData' || item.value === null) {
-      return 'No data';
+      return this.i18n.t('dashboard.noData');
     }
 
-    return `${item.value}${item.suffix}`;
+    if (item.type === 'ChangeFailureRate') {
+      return new Intl.NumberFormat(this.i18n.locale(), {
+        style: 'percent',
+        maximumFractionDigits: 20,
+      }).format(item.value / 100);
+    }
+
+    return `${new Intl.NumberFormat(this.i18n.locale(), { maximumFractionDigits: 20 }).format(item.value)}${item.suffix}`;
   }
 
   trendIcon(direction: MetricTrendDirection): string {
@@ -75,12 +85,20 @@ export class EngineeringMetrics {
 
   trendLabel(trend: MetricTrend): string {
     if (trend.changePercentage === null) {
-      return trend.direction;
+      return this.i18n.t(`dashboard.trends.${trend.direction}`);
     }
 
     const percentage = Math.abs(trend.changePercentage);
 
-    return `${trend.direction} ${percentage.toFixed(1)}%`;
+    const formatted = new Intl.NumberFormat(this.i18n.locale(), {
+      style: 'percent',
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(percentage / 100);
+    return this.i18n.t('dashboard.trendChange', {
+      direction: this.i18n.t(`dashboard.trends.${trend.direction}`),
+      percentage: formatted,
+    });
   }
 
   trendClass(direction: MetricTrendDirection): string {
@@ -97,18 +115,7 @@ export class EngineeringMetrics {
   }
 
   private getLabel(metricType: MetricType): string {
-    const labels: Record<MetricType, string> = {
-      CycleTime: 'Cycle Time',
-      PRReviewTime: 'PR Review Time',
-      DeploymentFrequency: 'Deployments',
-      ChangeFailureRate: 'Change Failure Rate',
-      LeadTime: 'Lead Time',
-      OpenPRs: 'Open PRs',
-      MergedPRs: 'Merged PRs',
-      BlockedItems: 'Blocked Items',
-    };
-
-    return labels[metricType];
+    return this.i18n.t(`metrics.${metricType}`);
   }
 
   private getSuffix(metricType: MetricType): string {
@@ -116,7 +123,7 @@ export class EngineeringMetrics {
       case 'CycleTime':
       case 'PRReviewTime':
       case 'LeadTime':
-        return 'h';
+        return this.i18n.t('dashboard.hourUnit');
 
       case 'ChangeFailureRate':
         return '%';

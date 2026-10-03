@@ -1,20 +1,20 @@
 <nz-card class="health-card">
   <div class="health-header">
     <div>
-      <h2>Health Evolution</h2>
-      <p>Engineering health score over time</p>
+      <h2>{{ 'dashboard.history.title' | translate }}</h2>
+      <p>{{ 'dashboard.history.subtitle' | translate }}</p>
     </div>
 
     @if (history().length > 0) {
-      <span class="history-count"> {{ history().length }} periods </span>
+      <span class="history-count">{{ 'dashboard.history.periods' | translate: { count: (history().length | appNumber) } }}</span>
     }
   </div>
 
   @if (history().length > 0) {
-    <div echarts class="health-chart" [options]="chartOptions()"></div>
+    <div echarts class="health-chart" [options]="chartOptions()" role="img" [attr.aria-label]="'dashboard.history.chartLabel' | translate"></div>
   } @else {
     <div class="empty-state">
-      <nz-empty nzNotFoundContent="No health history available" />
+      <nz-empty [nzNotFoundContent]="'dashboard.history.empty' | translate" />
     </div>
   }
 </nz-card>

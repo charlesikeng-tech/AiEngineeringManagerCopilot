@@ -5,6 +5,7 @@ using AiEngineeringManagerCopilot.Application.Metrics;
 using AiEngineeringManagerCopilot.Application.Risks;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace AiEngineeringManagerCopilot.Application.Reports;
 
@@ -23,7 +24,9 @@ public sealed class EngineeringReportService(
     IEngineeringRiskRepository riskRepository,
     PreviousPeriodCalculator previousPeriodCalculator,
     MetricTrendBuilder metricTrendBuilder,
-    EngineeringTrendInsightService trendInsightService)
+    EngineeringTrendInsightService trendInsightService,
+    IEngineeringReportNotifier reportNotifier,
+    ILogger<EngineeringReportService> logger)
     : IEngineeringReportService
 {
     private readonly EngineeringTrendInsightService trendInsightService =
@@ -164,7 +167,7 @@ public sealed class EngineeringReportService(
         await reportRepository.SaveChangesAsync(
             cancellationToken);
 
-        return ToResponse(
+        var response = ToResponse(
             report,
             healthScore.HealthLevel,
             metrics,
@@ -178,6 +181,25 @@ public sealed class EngineeringReportService(
                 .Select(ToRiskResponse)
                 .ToList(),
             trends);
+
+        try
+        {
+            await reportNotifier.NotifyCreatedAsync(
+                teamId,
+                team.Name,
+                response,
+                cancellationToken);
+        }
+        catch (HttpRequestException exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Notification dispatch failed for team {TeamId} and report {ReportId}.",
+                teamId,
+                report.Id);
+        }
+
+        return response;
     }
 
     public async Task<EngineeringReportResponse?> GetByIdAsync(

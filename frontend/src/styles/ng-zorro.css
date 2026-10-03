@@ -1,0 +1,19 @@
+/* Component entry styles include dependencies such as popup and date-picker panels. */
+@import '../../node_modules/ng-zorro-antd/alert/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/button/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/card/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/date-picker/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/drawer/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/empty/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/grid/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/input/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/layout/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/form/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/menu/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/message/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/popconfirm/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/progress/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/select/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/skeleton/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/spin/style/index.min.css';
+@import '../../node_modules/ng-zorro-antd/tag/style/index.min.css';

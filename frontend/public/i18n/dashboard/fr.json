@@ -1,0 +1,72 @@
+{
+  "dashboard": {
+    "loading": "Chargement du tableau de bord d’ingénierie",
+    "unavailable": "Tableau de bord indisponible",
+    "loadError": "Impossible de charger le tableau de bord d’ingénierie.",
+    "eyebrow": "INGÉNIERIE",
+    "title": "Vue d’ensemble de l’ingénierie",
+    "subtitle": "Suivez la livraison, la qualité et la santé de l’ingénierie.",
+    "reportingPeriodUpper": "PÉRIODE DU RAPPORT",
+    "reportingPeriod": "Période du rapport",
+    "empty": "Aucune donnée disponible pour le tableau de bord",
+    "healthScore": "Score de santé",
+    "overallScore": "Score global",
+    "dataCoverage": "Couverture des données",
+    "coverage": "{{percentage}} de couverture",
+    "noData": "Aucune donnée",
+    "notConnected": "Non connecté",
+    "hourUnit": "h",
+    "vsPreviousPeriod": "par rapport à la période précédente",
+    "noPreviousPeriod": "Aucune période précédente",
+    "githubNotConnected": "GitHub non connecté",
+    "insufficientData": "Données insuffisantes",
+    "activeRisks": "Risques actifs",
+    "highPriorityCount": "{{count}} à priorité élevée",
+    "noHighPriorityRisks": "Aucun risque à priorité élevée",
+    "executiveSummary": "Synthèse",
+    "trendChange": "{{direction}} {{percentage}}",
+    "trends": {
+      "Improving": "En amélioration",
+      "Stable": "Stable",
+      "Degrading": "En dégradation"
+    },
+    "performance": {
+      "title": "Performance de l’ingénierie",
+      "subtitle": "Indicateurs de livraison, de demandes de fusion et de qualité",
+      "empty": "Aucun indicateur d’ingénierie disponible",
+      "delivery": "Livraison",
+      "pullRequests": "Demandes de fusion",
+      "quality": "Qualité"
+    },
+    "ai": {
+      "title": "Analyse de l’ingénierie par l’IA",
+      "subtitle": "Observations générées à partir de vos données d’ingénierie",
+      "insights": "Observations clés",
+      "actions": "Actions recommandées",
+      "evidence": "Éléments probants",
+      "confidence": "{{percentage}} de confiance",
+      "empty": "Aucune analyse IA disponible"
+    },
+    "risks": {
+      "title": "Risques",
+      "subtitle": "Risques d’ingénierie nécessitant une attention",
+      "emptyTitle": "Aucun risque actif",
+      "emptyDescription": "Aucun risque d’ingénierie détecté pour cette période.",
+      "recommendation": "Recommandation"
+    },
+    "report": {
+      "title": "Dernier rapport d’ingénierie",
+      "subtitle": "Synthèse de la santé de l’ingénierie pour la dernière période",
+      "view": "Voir le rapport complet",
+      "actionPlan": "Ouvrir le plan d’action",
+      "empty": "Aucun rapport d’ingénierie disponible"
+    },
+    "history": {
+      "title": "Évolution de la santé",
+      "subtitle": "Score de santé de l’ingénierie au fil du temps",
+      "periods": "{{count}} périodes",
+      "chartLabel": "Score de santé de l’ingénierie par période de rapport",
+      "empty": "Aucun historique de santé disponible"
+    }
+  }
+}

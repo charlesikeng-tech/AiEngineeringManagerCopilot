@@ -7,7 +7,9 @@ import { TeamContext } from '@core/team/team-context';
 import { EngineeringReport } from '@features/dashboard/models/engineering-dashboard-response';
 import { ReportsApi } from '../../services/reports-api';
 
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { I18nService } from '@core/i18n/i18n.service';
+import { LocalizedDatePipe, LocalizedNumberPipe } from '@core/i18n/localized-format.pipes';
+import { TranslatePipe } from '@ngx-translate/core';
 import { RouterLink } from '@angular/router';
 
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
@@ -22,12 +24,13 @@ type ReportHistoryItem = EngineeringReport & {
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, RouterLink, NzEmptyModule, NzSkeletonModule],
+  imports: [LocalizedDatePipe, LocalizedNumberPipe, TranslatePipe, RouterLink, NzEmptyModule, NzSkeletonModule],
   templateUrl: './reports.html',
   styleUrl: './reports.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Reports {
+  readonly i18n = inject(I18nService);
   private readonly teamContext = inject(TeamContext);
   private readonly reportsApi = inject(ReportsApi);
 
@@ -80,7 +83,7 @@ export class Reports {
         },
         error: () => {
           this.reports.set([]);
-          this.error.set('Unable to load engineering reports.');
+          this.error.set('reports.loadError');
           this.loading.set(false);
         },
       });
@@ -118,11 +121,17 @@ export class Reports {
       return '—';
     }
 
-    if (delta > 0) {
-      return `+${delta}`;
-    }
-
-    return `${delta}`;
+    const value = this.i18n.formatNumber(delta, '1.0-20');
+    return delta > 0 ? `+${value}` : value;
   }
 
+  healthLabel(healthLevel: string): string {
+    const knownLevels = [
+      'Healthy', 'Needs Attention', 'At Risk', 'No Data', 'Attention',
+      'Critical', 'Excellent', 'Good', 'Warning', 'Unknown',
+    ];
+    return knownLevels.includes(healthLevel)
+      ? this.i18n.t(`healthLevels.${healthLevel}`)
+      : healthLevel;
+  }
 }

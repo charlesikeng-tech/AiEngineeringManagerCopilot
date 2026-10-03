@@ -1,0 +1,62 @@
+{
+  "app": {
+    "documentTitle": "AI Engineering Manager Copilot",
+    "intelligence": "Engineering Intelligence",
+    "platform": "Engineering Intelligence Platform",
+    "workspace": "Workspace",
+    "management": "Management",
+    "overview": "Overview",
+    "reports": "Reports",
+    "risks": "Risks",
+    "actions": "Actions",
+    "teams": "Teams",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "activeTeam": "Active team",
+    "selectTeam": "Select a team",
+    "development": "Development"
+  },
+  "language": {
+    "label": "Language",
+    "loadError": "Unable to load this language. Please try again."
+  },
+  "metrics": {
+    "CycleTime": "Cycle Time",
+    "PRReviewTime": "PR Review Time",
+    "DeploymentFrequency": "Deployment Frequency",
+    "ChangeFailureRate": "Change Failure Rate",
+    "LeadTime": "Lead Time",
+    "OpenPRs": "Open PRs",
+    "MergedPRs": "Merged PRs",
+    "BlockedItems": "Blocked Items"
+  },
+  "statuses": {
+    "Todo": "Todo",
+    "InProgress": "In Progress",
+    "Done": "Done",
+    "Cancelled": "Cancelled"
+  },
+  "priorities": {
+    "Low": "Low",
+    "Medium": "Medium",
+    "High": "High",
+    "Critical": "Critical"
+  },
+  "healthLevels": {
+    "Excellent": "Excellent",
+    "Healthy": "Healthy",
+    "Good": "Good",
+    "Attention": "Attention",
+    "Warning": "Warning",
+    "Critical": "Critical",
+    "Unknown": "Unknown",
+    "Needs Attention": "Needs Attention",
+    "At Risk": "At Risk",
+    "No Data": "No Data"
+  },
+  "metricDataStatus": {
+    "Available": "Available",
+    "NoData": "No data",
+    "SourceNotConfigured": "Not connected"
+  }
+}

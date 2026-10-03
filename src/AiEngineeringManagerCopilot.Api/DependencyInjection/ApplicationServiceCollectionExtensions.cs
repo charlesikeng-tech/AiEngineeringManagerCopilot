@@ -10,6 +10,7 @@ using AiEngineeringManagerCopilot.Application.TeamMembers;
 using AiEngineeringManagerCopilot.Application.TeamMembers.Validation;
 using AiEngineeringManagerCopilot.Application.Teams;
 using AiEngineeringManagerCopilot.Application.Teams.Validation;
+using AiEngineeringManagerCopilot.Application.Slack.Validation;
 using FluentValidation;
 
 namespace AiEngineeringManagerCopilot.Api.DependencyInjection;
@@ -21,6 +22,8 @@ public static class ApplicationServiceCollectionExtensions
     {
         services.AddValidatorsFromAssemblyContaining<
             CreateGitHubConnectionRequestValidator>();
+        services.AddValidatorsFromAssemblyContaining<
+            CreateSlackWebhookRequestValidator>();
 
         services.AddScoped<
             IValidator<CreateTeamRequest>,

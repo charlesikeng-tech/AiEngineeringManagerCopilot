@@ -351,7 +351,7 @@
   transition: margin-left 0.2s;
 }
 
-:host ::ng-deep .sidebar.ant-layout-sider-collapsed+.workspace {
+:host ::ng-deep .sidebar.ant-layout-sider-collapsed + .workspace {
   margin-left: 72px;
 }
 
@@ -548,7 +548,6 @@
    ========================================================= */
 
 @media (max-width: 900px) {
-
   .product-subtitle,
   .topbar-team-context__label {
     display: none;
@@ -580,6 +579,7 @@
     min-width: 0;
 
     margin-left: auto;
+    gap: 8px;
   }
 
   .topbar-team-context {
@@ -588,6 +588,6 @@
 
   :host ::ng-deep .topbar-team-context app-team-selector {
     min-width: 0;
-    max-width: min(240px, calc(100vw - 112px));
+    max-width: min(240px, calc(100vw - 224px));
   }
 }

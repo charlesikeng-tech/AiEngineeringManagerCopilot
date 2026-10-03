@@ -13,29 +13,20 @@ import {
   MenuUnfoldOutline,
   MinusOutline,
   PlusOutline,
+  SlackOutline,
   TeamOutline,
   WarningOutline,
 } from '@ant-design/icons-angular/icons';
 
-import { enUS } from 'date-fns/locale';
-
-import { provideNzDateFnsAdapter } from 'ng-zorro-antd/core/time';
-import { en_US, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 
-import { LineChart } from 'echarts/charts';
-import { GridComponent, TooltipComponent } from 'echarts/components';
-import * as echarts from 'echarts/core';
-import { CanvasRenderer } from 'echarts/renderers';
-
-import { provideEchartsCore } from 'ngx-echarts';
 import { firstValueFrom } from 'rxjs';
 
-import { routes } from './app.routes';
 import { AppInitializer } from '@core/app/app-initializer';
 import { authInterceptor } from '@core/auth/auth-interceptor';
-
-echarts.use([LineChart, GridComponent, TooltipComponent, CanvasRenderer]);
+import { provideFrontendI18n } from '@core/i18n/i18n.providers';
+import { I18nService } from '@core/i18n/i18n.service';
+import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -43,7 +34,7 @@ export const appConfig: ApplicationConfig = {
 
     provideHttpClient(withInterceptors([authInterceptor])),
 
-    provideNzI18n(en_US),
+    ...provideFrontendI18n(),
 
     provideNzIcons([
       DashboardOutline,
@@ -58,21 +49,13 @@ export const appConfig: ApplicationConfig = {
       MinusOutline,
       PlusOutline,
       GithubOutline,
+      SlackOutline,
     ]),
-
-    provideNzDateFnsAdapter({
-      locale: enUS,
-      firstDayOfWeek: 1,
-    }),
-
-    provideEchartsCore({
-      echarts,
-    }),
 
     provideAppInitializer(() => {
       const initializer = inject(AppInitializer);
-
-      return firstValueFrom(initializer.initialize());
+      const i18n = inject(I18nService);
+      return Promise.all([i18n.initialize(), firstValueFrom(initializer.initialize())]);
     }),
   ],
 };

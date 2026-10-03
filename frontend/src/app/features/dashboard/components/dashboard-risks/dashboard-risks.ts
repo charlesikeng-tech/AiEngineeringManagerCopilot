@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { LocalizedNumberPipe } from '@core/i18n/localized-format.pipes';
+import { TranslatePipe } from '@ngx-translate/core';
 
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzTagModule } from 'ng-zorro-antd/tag';
@@ -8,7 +10,7 @@ import { EngineeringRisk, RiskSeverity } from '../../models/engineering-dashboar
 @Component({
   selector: 'app-dashboard-risks',
   standalone: true,
-  imports: [NzCardModule, NzTagModule],
+  imports: [TranslatePipe, LocalizedNumberPipe, NzCardModule, NzTagModule],
   templateUrl: './dashboard-risks.html',
   styleUrl: './dashboard-risks.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

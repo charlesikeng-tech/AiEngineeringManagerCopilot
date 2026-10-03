@@ -4,24 +4,24 @@
     <nz-card class="kpi-card">
       <div class="kpi-content">
         <div class="kpi-header">
-          <span class="kpi-label">Health Score</span>
+          <span class="kpi-label">{{ 'dashboard.healthScore' | translate }}</span>
 
           <span class="status-dot" [class]="healthStatusClass()"></span>
         </div>
 
         <div class="kpi-value">
-          {{ healthScore().overallScore }}
+          {{ healthScore().overallScore | appNumber }}
           <span class="kpi-unit">/ 100</span>
         </div>
 
         <div class="kpi-footer">
           <span class="status-text status-success">
             <span class="status-dot"></span>
-            {{ healthScore().healthLevel }}
+            {{ ('healthLevels.' + healthScore().healthLevel) | translate }}
           </span>
 
           <span class="kpi-context">
-            {{ healthScore().dataCoverage | number: '1.0-0' }}% coverage
+            {{ 'dashboard.coverage' | translate: { percentage: (healthScore().dataCoverage / 100 | appPercent: '1.0-0') } }}
           </span>
         </div>
       </div>
@@ -33,14 +33,14 @@
     <nz-card class="kpi-card">
       <div class="kpi-content">
         <div class="kpi-header">
-          <span class="kpi-label">Cycle Time</span>
+          <span class="kpi-label">{{ 'metrics.CycleTime' | translate }}</span>
         </div>
 
         <div class="kpi-value">
           {{ metricDisplay(cycleTimeMetric()) }}
 
           @if (isAvailable(cycleTimeMetric())) {
-            <span class="kpi-unit">h</span>
+            <span class="kpi-unit">{{ 'dashboard.hourUnit' | translate }}</span>
           }
         </div>
 
@@ -51,19 +51,20 @@
                 class="trend"
                 [class.trend-improving]="trend.direction === 'Improving'"
                 [class.trend-degrading]="trend.direction === 'Degrading'"
+                [attr.aria-label]="('dashboard.trends.' + trend.direction) | translate"
               >
                 <nz-icon [nzType]="trendIcon(trend)" />
                 {{ trendPercentage(trend) }}
               </span>
 
-              <span class="kpi-context"> vs previous period </span>
+              <span class="kpi-context">{{ 'dashboard.vsPreviousPeriod' | translate }}</span>
             } @else {
-              <span class="kpi-context"> No previous period </span>
+              <span class="kpi-context">{{ 'dashboard.noPreviousPeriod' | translate }}</span>
             }
           } @else if (cycleTimeMetric()?.dataStatus === 'SourceNotConfigured') {
-            <span class="kpi-context"> GitHub not connected </span>
+            <span class="kpi-context">{{ 'dashboard.githubNotConnected' | translate }}</span>
           } @else {
-            <span class="kpi-context"> Insufficient data </span>
+            <span class="kpi-context">{{ 'dashboard.insufficientData' | translate }}</span>
           }
         </div>
       </div>
@@ -75,7 +76,7 @@
     <nz-card class="kpi-card">
       <div class="kpi-content">
         <div class="kpi-header">
-          <span class="kpi-label">Deployments</span>
+          <span class="kpi-label">{{ 'metrics.DeploymentFrequency' | translate }}</span>
         </div>
 
         <div class="kpi-value">
@@ -88,14 +89,15 @@
               class="trend"
               [class.trend-improving]="trend.direction === 'Improving'"
               [class.trend-degrading]="trend.direction === 'Degrading'"
+              [attr.aria-label]="('dashboard.trends.' + trend.direction) | translate"
             >
               <nz-icon [nzType]="trendIcon(trend)" />
               {{ trendPercentage(trend) }}
             </span>
 
-            <span class="kpi-context"> vs previous period </span>
+            <span class="kpi-context">{{ 'dashboard.vsPreviousPeriod' | translate }}</span>
           } @else {
-            <span class="kpi-context">No previous period</span>
+            <span class="kpi-context">{{ 'dashboard.noPreviousPeriod' | translate }}</span>
           }
         </div>
       </div>
@@ -107,7 +109,7 @@
     <nz-card class="kpi-card">
       <div class="kpi-content">
         <div class="kpi-header">
-          <span class="kpi-label">Active Risks</span>
+          <span class="kpi-label">{{ 'dashboard.activeRisks' | translate }}</span>
 
           @if (highRiskCount() > 0) {
             <span class="status-dot status-danger"></span>
@@ -117,19 +119,19 @@
         </div>
 
         <div class="kpi-value">
-          {{ risks().length }}
+          {{ risks().length | appNumber }}
         </div>
 
         <div class="kpi-footer">
           @if (highRiskCount() > 0) {
             <span class="status-text status-danger-text">
               <span class="status-dot"></span>
-              {{ highRiskCount() }} high priority
+              {{ 'dashboard.highPriorityCount' | translate: { count: (highRiskCount() | appNumber) } }}
             </span>
           } @else {
             <span class="status-text status-success">
               <span class="status-dot"></span>
-              No high priority risks
+              {{ 'dashboard.noHighPriorityRisks' | translate }}
             </span>
           }
         </div>

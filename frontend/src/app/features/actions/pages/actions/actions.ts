@@ -1,4 +1,7 @@
-import { DatePipe, UpperCasePipe } from '@angular/common';
+import { UpperCasePipe } from '@angular/common';
+import { I18nService } from '@core/i18n/i18n.service';
+import { LocalizedDatePipe, LocalizedNumberPipe } from '@core/i18n/localized-format.pipes';
+import { TranslatePipe } from '@ngx-translate/core';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -41,7 +44,9 @@ type EngineeringActionView = EngineeringAction & {
   imports: [
     FormsModule,
     RouterLink,
-    DatePipe,
+    LocalizedDatePipe,
+    LocalizedNumberPipe,
+    TranslatePipe,
     UpperCasePipe,
     NzAlertModule,
     NzDatePickerModule,
@@ -55,6 +60,7 @@ type EngineeringActionView = EngineeringAction & {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Actions {
+  readonly i18n = inject(I18nService);
   private readonly actionsApi = inject(ActionsApi);
   private readonly teamContext = inject(TeamContext);
   private readonly destroyRef = inject(DestroyRef);
@@ -194,35 +200,21 @@ export class Actions {
 
   dueLabel(action: EngineeringActionView): string | null {
     const state = this.dueState(action);
-    if (state === 'overdue') return 'Overdue';
-    if (state === 'soon') return 'Due soon';
+    if (state === 'overdue') return this.i18n.t('actions.overdue');
+    if (state === 'soon') return this.i18n.t('actions.dueSoon');
     return null;
   }
 
   metricLabel(metricType: string): string {
-    const labels: Record<string, string> = {
-      CycleTime: 'Cycle Time',
-      PRReviewTime: 'PR Review Time',
-      DeploymentFrequency: 'Deployment Frequency',
-      ChangeFailureRate: 'Change Failure Rate',
-      LeadTime: 'Lead Time',
-      OpenPRs: 'Open PRs',
-      MergedPRs: 'Merged PRs',
-      BlockedItems: 'Blocked Items',
-    };
-
-    return labels[metricType] ?? metricType;
+    const knownMetrics = [
+      'CycleTime', 'PRReviewTime', 'DeploymentFrequency', 'ChangeFailureRate',
+      'LeadTime', 'OpenPRs', 'MergedPRs', 'BlockedItems',
+    ];
+    return knownMetrics.includes(metricType) ? this.i18n.t(`metrics.${metricType}`) : metricType;
   }
 
   statusLabel(status: ActionStatus): string {
-    const labels: Record<ActionStatus, string> = {
-      Todo: 'Todo',
-      InProgress: 'In Progress',
-      Done: 'Done',
-      Cancelled: 'Cancelled',
-    };
-
-    return labels[status];
+    return this.i18n.t(`statuses.${status}`);
   }
 
   private updateAction(
@@ -257,13 +249,13 @@ export class Actions {
           );
 
           this.updatingActionId.set(null);
-          this.message.success('Action updated');
+          this.message.success(this.i18n.t('actions.updated'));
         },
         error: (error) => {
           console.error('Failed to update engineering action', error);
 
           this.updatingActionId.set(null);
-          this.message.error('Unable to update this action');
+          this.message.error(this.i18n.t('actions.updateError'));
         },
       });
   }

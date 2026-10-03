@@ -1,4 +1,5 @@
-import { DatePipe } from '@angular/common';
+import { LocalizedDatePipe } from '@core/i18n/localized-format.pipes';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -19,7 +20,8 @@ import { DashboardStore } from '../../state/dashboard-store';
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    DatePipe,
+    LocalizedDatePipe,
+    TranslatePipe,
     AiAnalysis,
     DashboardKpis,
     DashboardRisks,

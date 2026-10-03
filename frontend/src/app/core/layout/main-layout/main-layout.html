@@ -20,7 +20,7 @@
         <div class="brand-content">
           <strong> EM Copilot </strong>
 
-          <span> Engineering Intelligence </span>
+          <span>{{ 'app.intelligence' | translate }}</span>
         </div>
       }
     </div>
@@ -32,7 +32,7 @@
 
       <div class="navigation-section">
         @if (!isCollapsed()) {
-          <span class="navigation-label"> WORKSPACE </span>
+          <span class="navigation-label">{{ 'app.workspace' | translate }}</span>
         }
 
         <ul
@@ -52,25 +52,25 @@
           >
             <nz-icon nzType="dashboard" />
 
-            <span class="navigation-item-label">Overview</span>
+            <span class="navigation-item-label">{{ 'app.overview' | translate }}</span>
           </li>
 
           <li nz-menu-item routerLink="/reports" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="file-text" />
 
-            <span class="navigation-item-label">Reports</span>
+            <span class="navigation-item-label">{{ 'app.reports' | translate }}</span>
           </li>
 
           <li nz-menu-item routerLink="/risks" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="warning" />
 
-            <span class="navigation-item-label">Risks</span>
+            <span class="navigation-item-label">{{ 'app.risks' | translate }}</span>
           </li>
 
           <li nz-menu-item routerLink="/actions" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="check-square" />
 
-            <span class="navigation-item-label">Actions</span>
+            <span class="navigation-item-label">{{ 'app.actions' | translate }}</span>
           </li>
         </ul>
       </div>
@@ -79,7 +79,7 @@
 
       <div class="navigation-section navigation-section--management">
         @if (!isCollapsed()) {
-          <span class="navigation-label"> MANAGEMENT </span>
+          <span class="navigation-label">{{ 'app.management' | translate }}</span>
         }
 
         <ul
@@ -92,7 +92,7 @@
           <li nz-menu-item routerLink="/team" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="team" />
 
-            <span class="navigation-item-label">Teams</span>
+            <span class="navigation-item-label">{{ 'app.teams' | translate }}</span>
           </li>
         </ul>
       </div>
@@ -104,7 +104,7 @@
       <div class="sidebar-footer">
         <span class="sidebar-footer__label"> K&M ENGINEERING </span>
 
-        <span class="sidebar-footer__version"> Engineering Intelligence Platform </span>
+        <span class="sidebar-footer__version">{{ 'app.platform' | translate }}</span>
       </div>
     }
   </nz-sider>
@@ -129,7 +129,9 @@
             type="button"
             class="sidebar-toggle"
             (click)="toggleSidebar()"
-            [attr.aria-label]="isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+            [attr.aria-label]="
+              (isCollapsed() ? 'app.expandSidebar' : 'app.collapseSidebar') | translate
+            "
           >
             <nz-icon [nzType]="isCollapsed() ? 'menu-unfold' : 'menu-fold'" />
           </button>
@@ -137,7 +139,7 @@
           <div class="product-context">
             <div class="product-name">AI Engineering Manager</div>
 
-            <div class="product-subtitle">Engineering Intelligence Platform</div>
+            <div class="product-subtitle">{{ 'app.platform' | translate }}</div>
           </div>
         </div>
 
@@ -145,15 +147,17 @@
 
         <div class="topbar-right">
           <div class="topbar-team-context">
-            <span class="topbar-team-context__label">ACTIVE TEAM</span>
+            <span class="topbar-team-context__label">{{ 'app.activeTeam' | translate }}</span>
             <app-team-selector />
           </div>
+
+          <app-language-selector />
 
           <div class="topbar-divider" aria-hidden="true"></div>
 
           <span class="environment-badge">
             <span class="environment-dot"></span>
-            Development
+            {{ 'app.development' | translate }}
           </span>
         </div>
       </div>

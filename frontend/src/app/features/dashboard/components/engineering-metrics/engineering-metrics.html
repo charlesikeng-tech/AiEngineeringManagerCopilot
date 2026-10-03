@@ -1,20 +1,20 @@
 <nz-card class="metrics-card">
   <div class="section-header">
     <div>
-      <h3>Engineering Performance</h3>
-      <p>Delivery, pull requests and quality metrics</p>
+      <h3>{{ 'dashboard.performance.title' | translate }}</h3>
+      <p>{{ 'dashboard.performance.subtitle' | translate }}</p>
     </div>
   </div>
 
   @if (items().length === 0) {
-    <nz-empty nzNotFoundContent="No engineering metrics available" />
+    <nz-empty [nzNotFoundContent]="'dashboard.performance.empty' | translate" />
   } @else {
     <nz-row [nzGutter]="[32, 24]">
       <!-- Delivery -->
 
       <nz-col [nzXs]="24" [nzLg]="8">
         <div class="metric-group">
-          <div class="group-title">Delivery</div>
+          <div class="group-title">{{ 'dashboard.performance.delivery' | translate }}</div>
 
           @for (item of items(); track item.type) {
             @if (
@@ -50,7 +50,7 @@
 
       <nz-col [nzXs]="24" [nzLg]="8">
         <div class="metric-group">
-          <div class="group-title">Pull Requests</div>
+          <div class="group-title">{{ 'dashboard.performance.pullRequests' | translate }}</div>
 
           @for (item of items(); track item.type) {
             @if (
@@ -84,7 +84,7 @@
 
       <nz-col [nzXs]="24" [nzLg]="8">
         <div class="metric-group">
-          <div class="group-title">Quality</div>
+          <div class="group-title">{{ 'dashboard.performance.quality' | translate }}</div>
 
           @for (item of items(); track item.type) {
             @if (item.type === 'ChangeFailureRate' || item.type === 'BlockedItems') {
