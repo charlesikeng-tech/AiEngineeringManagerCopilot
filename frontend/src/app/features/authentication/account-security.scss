@@ -1,0 +1,386 @@
+:host {
+  display: block;
+}
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.account-security-page {
+  min-height: 100%;
+}
+
+/* =========================================================
+   FEEDBACK / LOADING
+   ========================================================= */
+
+.feedback-section+.feedback-section {
+  margin-top: calc(var(--app-space-md) * -1);
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 160px;
+}
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.security-card,
+.link-card {
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+
+  padding: 20px 24px;
+
+  border-bottom: 1px solid var(--app-border);
+
+  h2 {
+    margin: 0;
+
+    color: var(--app-text-primary);
+
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  p {
+    margin: 4px 0 0;
+
+    color: var(--app-text-secondary);
+
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+.card-content {
+  padding: 24px;
+}
+
+/* =========================================================
+   IDENTITIES
+   ========================================================= */
+
+.identity-list {
+  display: grid;
+}
+
+.identity-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  padding: 20px 24px;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--app-border);
+  }
+}
+
+.identity-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+
+  flex: 0 0 44px;
+
+  color: var(--app-primary);
+
+  background: var(--app-primary-soft, #f0efff);
+
+  border-radius: 9px;
+
+  font-size: 19px;
+}
+
+.identity-content {
+  flex: 1;
+
+  min-width: 0;
+}
+
+.identity-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  margin-bottom: 4px;
+}
+
+.identity-title {
+  color: var(--app-text-primary);
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.identity-issuer {
+  display: block;
+
+  overflow: hidden;
+
+  color: var(--app-text-secondary);
+
+  font-size: 12px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.administrator-access {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 8px;
+
+  color: #16a36a;
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 200px;
+
+  padding: 32px;
+}
+
+/* =========================================================
+   LOCAL AUTHENTICATION
+   ========================================================= */
+
+.local-auth-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  padding: 22px 24px;
+}
+
+.local-auth-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+
+  flex: 0 0 44px;
+
+  color: var(--app-primary);
+
+  background: var(--app-primary-soft, #f0efff);
+
+  border-radius: 9px;
+
+  font-size: 18px;
+}
+
+.local-auth-content {
+  flex: 1;
+
+  min-width: 0;
+
+  h2 {
+    margin: 0;
+
+    color: var(--app-text-primary);
+
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 4px 0 0;
+
+    color: var(--app-text-secondary);
+
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 24px;
+}
+
+.form-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+
+  label {
+    color: var(--app-text-secondary);
+
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  nz-select {
+    width: 100%;
+  }
+}
+
+.field-hint {
+  color: var(--app-text-tertiary);
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.consent-field {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: flex-start;
+  gap: 10px;
+
+  padding: 14px;
+
+  color: var(--app-text-secondary);
+
+  background: var(--app-bg);
+
+  border: 1px solid var(--app-border);
+  border-radius: 7px;
+
+  font-size: 12px;
+  line-height: 1.5;
+
+  cursor: pointer;
+
+  input {
+    width: 15px;
+    height: 15px;
+
+    margin: 2px 0 0;
+
+    flex: 0 0 15px;
+
+    accent-color: var(--app-primary);
+  }
+}
+
+/* =========================================================
+   SECURITY NOTICE
+   ========================================================= */
+
+.security-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  margin-top: 22px;
+  padding-top: 18px;
+
+  color: var(--app-text-secondary);
+
+  border-top: 1px solid var(--app-border);
+
+  font-size: 12px;
+  line-height: 1.6;
+
+  nz-icon {
+    margin-top: 3px;
+
+    color: var(--app-primary);
+  }
+}
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  padding: 16px 24px;
+
+  background: #fafbfc;
+
+  border-top: 1px solid var(--app-border);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .identity-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+
+    button {
+      margin-left: 60px;
+    }
+  }
+
+  .local-auth-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+
+    a {
+      width: 100%;
+      margin-left: 62px;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+
+  .identity-row,
+  .card-header,
+  .card-content,
+  .card-actions,
+  .local-auth-card {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .identity-row button,
+  .local-auth-card a {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .card-actions button {
+    width: 100%;
+  }
+}

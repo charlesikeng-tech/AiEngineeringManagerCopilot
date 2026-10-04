@@ -7,10 +7,12 @@ import {
   Component,
   DestroyRef,
   computed,
+  effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
@@ -22,14 +24,16 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 
-import { EMPTY } from 'rxjs';
-import { catchError, switchMap, tap } from 'rxjs/operators';
+import { EMPTY, Subject } from 'rxjs';
+import { catchError, switchMap, takeUntil } from 'rxjs/operators';
+import { PaginationState } from '@core/models/pagination-state';
+import { TablePagination } from '@core/components/table-pagination/table-pagination';
+import { PagedActionsResponse } from '../../models/paged-actions-response';
 
 import { TeamContext } from '@core/team/team-context';
 import {
   ActionStatus,
   EngineeringAction,
-  EngineeringActionsResponse,
   UpdateEngineeringActionRequest,
 } from '@features/dashboard/models/engineering-dashboard-response';
 import { ActionsApi } from '../../services/actions-api';
@@ -42,6 +46,7 @@ type EngineeringActionView = EngineeringAction & {
   selector: 'app-actions',
   standalone: true,
   imports: [
+    TablePagination,
     FormsModule,
     RouterLink,
     LocalizedDatePipe,
@@ -70,79 +75,103 @@ export class Actions {
   readonly error = signal(false);
   readonly updatingActionId = signal<string | null>(null);
 
-  readonly data = signal<EngineeringActionsResponse | null>(null);
+  readonly data = signal<PagedActionsResponse | null>(null);
   readonly actions = signal<readonly EngineeringActionView[]>([]);
+  readonly pagination = new PaginationState();
+  private readonly loadActions$ = new Subject<{ teamId: string; version: number } | null>();
+  private readonly cancelMutations$ = new Subject<void>();
+  private loadedSelectionVersion: number | null = null;
 
-  readonly todoCount = computed(
-    () => this.actions().filter((action) => action.status === 'Todo').length,
-  );
+  readonly todoCount = computed(() => this.data()?.summary.todoCount ?? 0);
 
-  readonly inProgressCount = computed(
-    () => this.actions().filter((action) => action.status === 'InProgress').length,
-  );
+  readonly inProgressCount = computed(() => this.data()?.summary.inProgressCount ?? 0);
 
-  readonly doneCount = computed(
-    () => this.actions().filter((action) => action.status === 'Done').length,
-  );
+  readonly doneCount = computed(() => this.data()?.summary.doneCount ?? 0);
 
-  readonly cancelledCount = computed(
-    () => this.actions().filter((action) => action.status === 'Cancelled').length,
-  );
+  readonly cancelledCount = computed(() => this.data()?.summary.cancelledCount ?? 0);
 
-  readonly totalCount = computed(() => this.actions().length);
+  readonly totalCount = this.pagination.totalCount;
+  readonly sortedActions = this.actions;
 
-  readonly sortedActions = computed(() => {
-    const priorityOrder: Record<string, number> = { Critical: 0, High: 1, Medium: 2, Low: 3 };
-    const statusOrder: Record<ActionStatus, number> = { InProgress: 0, Todo: 1, Done: 2, Cancelled: 3 };
-
-    return [...this.actions()].sort((left, right) => {
-      const priorityDifference =
-        (priorityOrder[left.priority] ?? 99) - (priorityOrder[right.priority] ?? 99);
-
-      return priorityDifference !== 0
-        ? priorityDifference
-        : statusOrder[left.status] - statusOrder[right.status];
-    });
-  });
-
-  readonly overdueCount = computed(
-    () => this.actions().filter((action) => this.dueState(action) === 'overdue').length,
-  );
+  readonly overdueCount = computed(() => this.data()?.summary.overdueCount ?? 0);
 
   constructor() {
-    toObservable(this.teamContext.selectedTeamId)
+    this.loadActions$
       .pipe(
-        tap((teamId) => {
+        switchMap((request) => {
+          if (!request) return EMPTY;
           this.error.set(false);
           this.data.set(null);
           this.actions.set([]);
-          this.loading.set(!!teamId);
-        }),
+          this.loadedSelectionVersion = null;
+          this.loading.set(true);
 
-        switchMap((teamId) => {
-          if (!teamId) {
-            return EMPTY;
-          }
-
-          return this.actionsApi.getCurrentActions(teamId).pipe(
-            catchError((error) => {
-              console.error('Failed to load engineering actions', error);
-
-              this.error.set(true);
-              this.loading.set(false);
-
-              return EMPTY;
-            }),
-          );
+          return this.actionsApi
+            .getActionsPage(
+              request.teamId,
+              this.pagination.pageNumber(),
+              this.pagination.pageSize(),
+            )
+            .pipe(
+              switchMap((response) => {
+                if (request.version !== this.teamContext.selectionVersion()) return EMPTY;
+                if (this.pagination.acceptTotal(response.page.totalCount)) {
+                  this.retry();
+                  return EMPTY;
+                }
+                this.data.set(response);
+                this.loadedSelectionVersion = request.version;
+                this.actions.set(response.page.items.map((action) => this.toActionView(action)));
+                this.loading.set(false);
+                return EMPTY;
+              }),
+              catchError((error) => {
+                if (request.version === this.teamContext.selectionVersion()) {
+                  this.data.set(null);
+                  this.actions.set([]);
+                  if (error.status === 404) this.pagination.acceptTotal(0);
+                  this.error.set(error.status !== 404);
+                  this.loading.set(false);
+                }
+                return EMPTY;
+              }),
+            );
         }),
 
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((response) => {
-        this.data.set(response);
-        this.actions.set(response.actions.map((action) => this.toActionView(action)));
+      .subscribe();
+
+    effect(() => {
+      const teamId = this.teamContext.selectedTeamId();
+      const version = this.teamContext.selectionVersion();
+      untracked(() => {
+        this.cancelMutations$.next();
+        this.loadedSelectionVersion = null;
+        this.updatingActionId.set(null);
+        this.pagination.reset();
+        this.error.set(false);
+        this.data.set(null);
+        this.actions.set([]);
         this.loading.set(false);
+        this.loadActions$.next(teamId ? { teamId, version } : null);
       });
+    });
+  }
+
+  retry(): void {
+    const teamId = this.teamContext.selectedTeamId();
+    this.loadActions$.next(
+      teamId ? { teamId, version: this.teamContext.selectionVersion() } : null,
+    );
+  }
+
+  changePage(page: number): void {
+    if (this.pagination.changePage(page)) this.retry();
+  }
+
+  changePageSize(size: number): void {
+    if (this.pagination.changePageSize(size)) this.retry();
   }
 
   updateStatus(action: EngineeringAction, status: ActionStatus): void {
@@ -187,11 +216,14 @@ export class Actions {
   }
 
   dueState(action: EngineeringActionView): 'overdue' | 'soon' | 'scheduled' | null {
-    if (!action.dueDateValue || action.status === 'Done' || action.status === 'Cancelled') return null;
+    if (!action.dueDateValue || action.status === 'Done' || action.status === 'Cancelled')
+      return null;
 
-    const today = this.startOfDay(new Date());
-    const dueDate = this.startOfDay(action.dueDateValue);
-    const days = Math.ceil((dueDate.getTime() - today.getTime()) / 86_400_000);
+    const asOfDate = this.data()?.summary.asOfDate;
+    if (!asOfDate || !action.dueDate) return null;
+    const days =
+      (Date.parse(`${action.dueDate}T00:00:00Z`) - Date.parse(`${asOfDate}T00:00:00Z`)) /
+      86_400_000;
 
     if (days < 0) return 'overdue';
     if (days <= 3) return 'soon';
@@ -207,8 +239,14 @@ export class Actions {
 
   metricLabel(metricType: string): string {
     const knownMetrics = [
-      'CycleTime', 'PRReviewTime', 'DeploymentFrequency', 'ChangeFailureRate',
-      'LeadTime', 'OpenPRs', 'MergedPRs', 'BlockedItems',
+      'CycleTime',
+      'PRReviewTime',
+      'DeploymentFrequency',
+      'ChangeFailureRate',
+      'LeadTime',
+      'OpenPRs',
+      'MergedPRs',
+      'BlockedItems',
     ];
     return knownMetrics.includes(metricType) ? this.i18n.t(`metrics.${metricType}`) : metricType;
   }
@@ -222,13 +260,20 @@ export class Actions {
     action: EngineeringAction,
     request: UpdateEngineeringActionRequest,
   ): void {
+    if (
+      this.updatingActionId() ||
+      this.loadedSelectionVersion !== this.teamContext.selectionVersion()
+    )
+      return;
+    const version = this.teamContext.selectionVersion();
     this.updatingActionId.set(action.id);
 
     this.actionsApi
       .updateAction(teamId, action.id, request)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(takeUntil(this.cancelMutations$), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (updatedAction) => {
+          if (version !== this.teamContext.selectionVersion()) return;
           const updatedActionView = this.toActionView(updatedAction);
 
           this.actions.update((actions) =>
@@ -237,31 +282,18 @@ export class Actions {
             ),
           );
 
-          this.data.update((data) =>
-            data
-              ? {
-                  ...data,
-                  actions: data.actions.map((current) =>
-                    current.id === updatedAction.id ? updatedAction : current,
-                  ),
-                }
-              : null,
-          );
-
           this.updatingActionId.set(null);
           this.message.success(this.i18n.t('actions.updated'));
+          this.retry();
         },
         error: (error) => {
+          if (version !== this.teamContext.selectionVersion()) return;
           console.error('Failed to update engineering action', error);
 
           this.updatingActionId.set(null);
           this.message.error(this.i18n.t('actions.updateError'));
         },
       });
-  }
-
-  private startOfDay(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
 
   private formatDateOnly(date: Date): string {

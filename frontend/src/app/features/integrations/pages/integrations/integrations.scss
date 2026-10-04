@@ -11,21 +11,6 @@
   }
 }
 
-.overview-panel {
-  padding: 0;
-  overflow: hidden;
-}
-
-.overview-toolbar {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--app-space-md);
-  padding: var(--app-space-md) 20px;
-  border-bottom: 1px solid var(--app-border);
-}
-
 .team-filter {
   display: grid;
   gap: 6px;
@@ -38,60 +23,14 @@
   }
 }
 
-.overview-table-wrapper {
-  overflow-x: auto;
-
-  &:focus-visible {
-    outline: 2px solid var(--app-primary);
-    outline-offset: -2px;
-  }
-}
-
 .overview-table {
-  width: 100%;
   min-width: 860px;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 13px;
 
-  .table-caption {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    clip-path: inset(50%);
-  }
-
-  th,
-  td {
-    padding: 13px 16px;
-    border-bottom: 1px solid var(--app-border);
-    vertical-align: middle;
-  }
-
-  thead th {
-    background: var(--app-surface-secondary);
-    white-space: nowrap;
-  }
-  tbody th {
-    font-weight: 600;
-  }
-  tbody tr:last-child th,
-  tbody tr:last-child td {
-    border-bottom: 0;
-  }
-  tbody tr:hover {
-    background: #fafbff;
-  }
   tbody tr {
     height: 68px;
   }
-
   .team-column {
     width: 22%;
-    padding-left: 20px;
   }
   .source-column {
     width: 19%;
@@ -102,81 +41,39 @@
   .actions-column {
     width: 12%;
     text-align: right;
-    padding-right: 20px;
   }
   tbody th {
-    padding-left: 20px;
     max-width: 220px;
   }
   tbody td:last-child {
     text-align: right;
-    padding-right: 20px;
   }
-}
 
-.table-groups th {
-  padding-top: 12px;
-  padding-bottom: 6px;
-  color: var(--app-text-secondary);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.03em;
+  .table-groups th {
+    padding-top: 12px;
+    padding-bottom: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
 
-  &[rowspan] {
-    border-bottom: 1px solid var(--app-border);
+    &[rowspan] {
+      padding-bottom: 12px;
+    }
+    &[colspan] {
+      border-bottom: 0;
+    }
+  }
+  .table-providers th {
+    padding-top: 4px;
     padding-bottom: 12px;
   }
-  &[colspan] {
-    border-bottom: 0;
-  }
-}
-
-.table-providers th {
-  padding-top: 4px;
-  padding-bottom: 12px;
-  font-size: 12px;
-  font-weight: 600;
 }
 
 .team-name {
-  display: block;
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.connection-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
-  border: 1px solid var(--app-border);
-  border-radius: 6px;
-  background: var(--app-surface-secondary);
-  color: var(--app-text-secondary);
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 18px;
-  white-space: nowrap;
-}
-
-.status-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: currentColor;
-  flex-shrink: 0;
-}
-.connection-status--connected {
-  background: #ecfdf3;
-  border-color: #abefc6;
-  color: #067647;
-}
-.connection-status--error {
-  background: #fef3f2;
-  border-color: #fecdca;
-  color: #b42318;
 }
 
 .sync-date {
@@ -202,34 +99,6 @@
   font-weight: 500;
 }
 
-.overview-pagination {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--app-space-md);
-  padding: 14px 20px;
-  border-top: 1px solid var(--app-border);
-
-  nz-pagination {
-    margin-left: auto;
-  }
-}
-
-.pagination-size {
-  display: flex;
-  align-items: center;
-  gap: var(--app-space-sm);
-
-  label {
-    color: var(--app-text-secondary);
-    font-size: 12px;
-  }
-  nz-select {
-    min-width: 72px;
-  }
-}
-
 .overview-note {
   color: var(--app-text-secondary);
   font-size: 12px;
@@ -246,17 +115,7 @@
 }
 
 @media (max-width: 640px) {
-  .overview-toolbar {
-    padding: var(--app-space-md);
-  }
   .team-filter {
     width: 100%;
-  }
-  .overview-pagination {
-    padding: var(--app-space-md);
-  }
-  .overview-pagination nz-pagination {
-    width: 100%;
-    margin-left: 0;
   }
 }

@@ -1,0 +1,313 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* =========================================================
+   TOPBAR TRIGGER
+   ========================================================= */
+
+.account-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  height: 44px;
+  padding: 4px 8px 4px 5px;
+
+  border: 0;
+  border-radius: 8px;
+
+  transition: background-color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: #f7f8fa;
+  }
+}
+
+.account-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  flex: 0 0 34px;
+
+  color: #fff;
+  background: var(--app-primary);
+
+  border-radius: 7px;
+
+  font-size: 18px;
+}
+
+.account-trigger__identity {
+  display: flex;
+  min-width: 0;
+  max-width: 160px;
+  flex-direction: column;
+
+  text-align: left;
+}
+
+.account-trigger__name {
+  overflow: hidden;
+
+  color: #172033;
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 17px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-trigger__role {
+  overflow: hidden;
+
+  color: #98a2b3;
+
+  font-size: 10px;
+  line-height: 14px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-trigger__chevron {
+  margin-left: 2px;
+
+  color: #98a2b3;
+
+  font-size: 11px;
+}
+
+/* =========================================================
+   DROPDOWN
+   ========================================================= */
+
+.account-dropdown {
+  width: 268px;
+  overflow: hidden;
+
+  background: #fff;
+
+  border: 1px solid #e7eaf0;
+  border-radius: 10px;
+
+  box-shadow:
+    0 4px 12px rgb(15 23 42 / 6%),
+    0 12px 28px rgb(15 23 42 / 10%);
+}
+
+/* =========================================================
+   PROFILE
+   ========================================================= */
+
+.account-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 16px;
+}
+
+.account-profile__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 44px;
+
+  color: #fff;
+  background: var(--app-primary);
+
+  border-radius: 8px;
+
+  font-size: 23px;
+}
+
+.account-profile__content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+
+  line-height: 1;
+}
+
+.account-profile__name,
+.account-profile__email,
+.account-profile__role {
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-profile__name {
+  color: #172033;
+
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 19px;
+}
+
+.account-profile__email {
+  margin-top: 2px;
+
+  color: #667085;
+
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.account-profile__role {
+  margin-top: 2px;
+
+  color: #98a2b3;
+
+  font-size: 10px;
+  line-height: 15px;
+}
+
+/* =========================================================
+   SECTIONS
+   ========================================================= */
+
+.account-section {
+  padding: 8px;
+
+  border-top: 1px solid #eef0f3;
+}
+
+.account-section__label {
+  display: block;
+
+  padding: 4px 8px 6px;
+
+  color: #98a2b3;
+
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 14px;
+
+  letter-spacing: 0.08em;
+}
+
+.account-section--logout {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+/* =========================================================
+   ITEMS
+   ========================================================= */
+
+.account-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: 100%;
+  height: 36px;
+
+  padding: 0 8px;
+
+  color: #475467;
+  background: transparent;
+
+  border: 0;
+  border-radius: 6px;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 36px;
+  text-align: left;
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  nz-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 18px;
+    height: 18px;
+
+    flex: 0 0 18px;
+
+    color: #98a2b3;
+
+    font-size: 14px;
+  }
+
+  span {
+    min-width: 0;
+
+    overflow: hidden;
+
+    line-height: 18px;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: #172033;
+    background: #f7f8fa;
+
+    nz-icon {
+      color: var(--app-primary);
+    }
+  }
+}
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+.account-item--danger {
+  color: #d92d20;
+
+  nz-icon {
+    color: #d92d20;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: #b42318;
+    background: #fef3f2;
+
+    nz-icon {
+      color: #b42318;
+    }
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .account-trigger__identity {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .account-trigger__chevron {
+    display: none;
+  }
+}

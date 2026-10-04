@@ -32,11 +32,13 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 
-import { EMPTY } from 'rxjs';
+import { EMPTY, merge, Subject, Subscription } from 'rxjs';
 
 import { catchError, switchMap, tap } from 'rxjs/operators';
 
 import { TeamContext } from '@core/team/team-context';
+import { PaginationState } from '@core/models/pagination-state';
+import { TablePagination } from '@core/components/table-pagination/table-pagination';
 
 import {
   CreateTeamMemberRequest,
@@ -61,6 +63,7 @@ import { TeamApi } from '../../services/team-api';
   standalone: true,
 
   imports: [
+    TablePagination,
     TranslatePipe,
     LocalizedDatePipe,
     LocalizedNumberPipe,
@@ -126,6 +129,12 @@ export class TeamPage {
   readonly team = signal<Team | null>(null);
 
   readonly members = signal<readonly TeamMember[]>([]);
+  readonly memberPagination = new PaginationState();
+  readonly membersLoading = signal(false);
+  readonly membersError = signal(false);
+  private memberLoadSubscription?: Subscription;
+  private loadedSelectionVersion = -1;
+  private readonly reloadSelection = new Subject<number>();
 
   readonly editTeamOpen = signal(false);
 
@@ -263,10 +272,12 @@ export class TeamPage {
 
   generateReport(): void {
     const teamId = this.teamContext.selectedTeamId();
+    const version = this.teamContext.selectionVersion();
     const calculatedPeriod = this.calculatedMetricsPeriod();
 
     if (
       !teamId ||
+      this.loadedSelectionVersion !== version ||
       !calculatedPeriod ||
       !this.hasValidCalculatedMetrics() ||
       this.generatingReport()
@@ -282,7 +293,7 @@ export class TeamPage {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (report) => {
-          if (this.teamContext.selectedTeamId() !== teamId) {
+          if (!this.isCurrentSelection(teamId, version)) {
             return;
           }
 
@@ -293,7 +304,7 @@ export class TeamPage {
         },
 
         error: (error) => {
-          if (this.teamContext.selectedTeamId() !== teamId) {
+          if (!this.isCurrentSelection(teamId, version)) {
             return;
           }
 
@@ -320,39 +331,49 @@ export class TeamPage {
       this.teamContext.selectTeam(routeTeamId);
     }
 
-    toObservable(this.teamContext.selectedTeamId)
+    merge(toObservable(this.teamContext.selectionVersion), this.reloadSelection)
       .pipe(
-        tap((teamId) => {
+        tap(() => {
+          this.loadedSelectionVersion = -1;
+          this.memberLoadSubscription?.unsubscribe();
+          this.memberPagination.reset();
+          this.membersLoading.set(false);
+          this.membersError.set(false);
+          this.addMemberOpen.set(false);
+          this.editingMember.set(null);
+          this.creatingMember.set(false);
+          this.deletingMemberId.set(null);
+          this.editTeamOpen.set(false);
+          this.updatingTeam.set(false);
+          this.deletingTeam.set(false);
           this.error.set(false);
 
           this.team.set(null);
 
           this.members.set([]);
 
-          this.loading.set(!!teamId);
+          this.loading.set(!!this.teamContext.selectedTeamId());
 
           this.resetMetricsState();
         }),
 
-        switchMap((teamId) => {
+        switchMap((version) => {
+          const teamId = this.teamContext.selectedTeamId();
           if (!teamId) {
             return EMPTY;
           }
 
           return this.teamApi.getTeam(teamId).pipe(
-            switchMap((team) =>
-              this.teamApi.getMembers(teamId).pipe(
-                tap((members) => {
-                  this.team.set(team);
-
-                  this.members.set(members);
-
-                  this.loading.set(false);
-                }),
-              ),
-            ),
+            tap((team) => {
+              if (!this.isCurrentSelection(teamId, version)) return;
+              this.loadedSelectionVersion = version;
+              this.team.set(team);
+              this.loading.set(false);
+              this.loadMembers();
+            }),
 
             catchError((error) => {
+              if (!this.isCurrentSelection(teamId, version)) return EMPTY;
               console.error('Failed to load team', error);
 
               this.message.error(this.i18n.t('team.notifications.loadFailed'));
@@ -372,6 +393,63 @@ export class TeamPage {
       .subscribe();
   }
 
+  retryTeam(): void {
+    this.reloadSelection.next(this.teamContext.selectionVersion());
+  }
+
+  loadMembers(): void {
+    const teamId = this.teamContext.selectedTeamId();
+    const version = this.teamContext.selectionVersion();
+    if (!teamId || this.team()?.id !== teamId || this.loadedSelectionVersion !== version) return;
+    this.memberLoadSubscription?.unsubscribe();
+    this.membersLoading.set(true);
+    this.membersError.set(false);
+    const subscription = new Subscription();
+    this.memberLoadSubscription = subscription;
+    subscription.add(
+      this.teamApi
+        .getMembersPage(
+          teamId,
+          this.memberPagination.pageNumber(),
+          this.memberPagination.pageSize(),
+        )
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (page) => {
+            if (!this.isCurrentSelection(teamId, version)) return;
+            if (this.memberPagination.acceptTotal(page.totalCount)) {
+              this.loadMembers();
+              return;
+            }
+            this.members.set(page.items);
+            this.membersLoading.set(false);
+          },
+          error: (error) => {
+            if (!this.isCurrentSelection(teamId, version)) return;
+            console.error('Failed to load team members', error);
+            this.membersLoading.set(false);
+            this.membersError.set(true);
+            this.message.error(this.i18n.t('team.notifications.loadFailed'));
+          },
+        }),
+    );
+  }
+
+  changeMemberPage(pageNumber: number): void {
+    if (this.memberPagination.changePage(pageNumber)) this.loadMembers();
+  }
+
+  changeMemberPageSize(pageSize: number): void {
+    if (this.memberPagination.changePageSize(pageSize)) this.loadMembers();
+  }
+
+  private isCurrentSelection(teamId: string, version: number): boolean {
+    return (
+      this.teamContext.selectedTeamId() === teamId &&
+      this.teamContext.selectionVersion() === version
+    );
+  }
+
   // ---------------------------------------------------------------------------
 
   // Members
@@ -383,6 +461,11 @@ export class TeamPage {
   }
 
   openAddMember(): void {
+    if (
+      this.team()?.id !== this.teamContext.selectedTeamId() ||
+      this.loadedSelectionVersion !== this.teamContext.selectionVersion()
+    )
+      return;
     this.editingMember.set(null);
 
     this.addMemberForm.reset({
@@ -410,8 +493,15 @@ export class TeamPage {
 
   saveMember(): void {
     const teamId = this.teamContext.selectedTeamId();
+    const version = this.teamContext.selectionVersion();
 
-    if (!teamId || this.addMemberForm.invalid) {
+    if (
+      !teamId ||
+      this.team()?.id !== teamId ||
+      this.loadedSelectionVersion !== version ||
+      this.memberMutationInProgress() ||
+      this.addMemberForm.invalid
+    ) {
       this.addMemberForm.markAllAsTouched();
 
       return;
@@ -432,6 +522,7 @@ export class TeamPage {
     };
 
     const editingMember = this.editingMember();
+    if (editingMember && editingMember.teamId !== teamId) return;
 
     this.creatingMember.set(true);
 
@@ -440,14 +531,9 @@ export class TeamPage {
       : this.teamApi.createMember(teamId, request);
 
     operation$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (savedMember) => {
-        if (editingMember) {
-          this.members.update((members) =>
-            members.map((member) => (member.id === savedMember.id ? savedMember : member)),
-          );
-        } else {
-          this.members.update((members) => [...members, savedMember]);
-        }
+      next: () => {
+        if (!this.isCurrentSelection(teamId, version)) return;
+        this.loadMembers();
 
         this.creatingMember.set(false);
 
@@ -473,6 +559,7 @@ export class TeamPage {
       },
 
       error: (error) => {
+        if (!this.isCurrentSelection(teamId, version)) return;
         console.error('Failed to save team member', error);
 
         this.message.error(
@@ -489,6 +576,12 @@ export class TeamPage {
   }
 
   openEditMember(member: TeamMember): void {
+    if (
+      member.teamId !== this.teamContext.selectedTeamId() ||
+      this.team()?.id !== member.teamId ||
+      this.loadedSelectionVersion !== this.teamContext.selectionVersion()
+    )
+      return;
     this.editingMember.set(member);
 
     this.addMemberForm.reset({
@@ -506,8 +599,15 @@ export class TeamPage {
 
   deleteMember(member: TeamMember): void {
     const teamId = this.teamContext.selectedTeamId();
+    const version = this.teamContext.selectionVersion();
 
-    if (!teamId) {
+    if (
+      !teamId ||
+      this.team()?.id !== teamId ||
+      this.loadedSelectionVersion !== version ||
+      member.teamId !== teamId ||
+      this.memberMutationInProgress()
+    ) {
       return;
     }
 
@@ -521,7 +621,8 @@ export class TeamPage {
 
       .subscribe({
         next: () => {
-          this.members.update((members) => members.filter((current) => current.id !== member.id));
+          if (!this.isCurrentSelection(teamId, version)) return;
+          this.loadMembers();
 
           this.deletingMemberId.set(null);
 
@@ -529,6 +630,7 @@ export class TeamPage {
         },
 
         error: (error) => {
+          if (!this.isCurrentSelection(teamId, version)) return;
           console.error('Failed to remove team member', error);
 
           this.message.error(this.i18n.t('team.notifications.memberRemoveFailed'));
@@ -570,8 +672,15 @@ export class TeamPage {
 
   updateTeam(): void {
     const teamId = this.teamContext.selectedTeamId();
+    const version = this.teamContext.selectionVersion();
 
-    if (!teamId || this.editTeamForm.invalid) {
+    if (
+      !teamId ||
+      this.team()?.id !== teamId ||
+      this.loadedSelectionVersion !== version ||
+      this.updatingTeam() ||
+      this.editTeamForm.invalid
+    ) {
       this.editTeamForm.markAllAsTouched();
 
       return;
@@ -597,6 +706,7 @@ export class TeamPage {
 
       .subscribe({
         next: (updatedTeam) => {
+          if (!this.isCurrentSelection(teamId, version)) return;
           this.team.set(updatedTeam);
 
           this.updatingTeam.set(false);
@@ -607,6 +717,7 @@ export class TeamPage {
         },
 
         error: (error) => {
+          if (!this.isCurrentSelection(teamId, version)) return;
           console.error('Failed to update team', error);
 
           this.updatingTeam.set(false);
@@ -618,8 +729,14 @@ export class TeamPage {
 
   deleteTeam(): void {
     const currentTeam = this.team();
+    const version = this.teamContext.selectionVersion();
 
-    if (!currentTeam) {
+    if (
+      !currentTeam ||
+      !this.isCurrentSelection(currentTeam.id, version) ||
+      this.loadedSelectionVersion !== version ||
+      this.deletingTeam()
+    ) {
       return;
     }
 
@@ -633,6 +750,7 @@ export class TeamPage {
 
       .subscribe({
         next: () => {
+          if (!this.isCurrentSelection(currentTeam.id, version)) return;
           this.deletingTeam.set(false);
 
           this.teamContext.clearTeam();
@@ -643,6 +761,7 @@ export class TeamPage {
         },
 
         error: (error) => {
+          if (!this.isCurrentSelection(currentTeam.id, version)) return;
           console.error('Failed to delete team', error);
 
           this.deletingTeam.set(false);
@@ -660,9 +779,11 @@ export class TeamPage {
 
   calculateMetrics(): void {
     const teamId = this.teamContext.selectedTeamId();
+    const version = this.teamContext.selectionVersion();
 
     if (
       !teamId ||
+      this.loadedSelectionVersion !== version ||
       this.metricsPeriodForm.invalid ||
       this.calculatingMetrics() ||
       this.generatingReport()
@@ -687,7 +808,7 @@ export class TeamPage {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (metrics) => {
-          if (this.teamContext.selectedTeamId() !== teamId) {
+          if (!this.isCurrentSelection(teamId, version)) {
             return;
           }
 
@@ -709,7 +830,7 @@ export class TeamPage {
         },
 
         error: (error) => {
-          if (this.teamContext.selectedTeamId() !== teamId) {
+          if (!this.isCurrentSelection(teamId, version)) {
             return;
           }
 

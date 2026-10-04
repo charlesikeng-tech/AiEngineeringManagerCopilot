@@ -13,6 +13,9 @@
         [nzMessage]="'actions.loadError' | translate"
         [nzDescription]="'actions.loadErrorDescription' | translate"
       ></nz-alert>
+      <button type="button" class="app-button app-button--secondary" (click)="retry()">
+        {{ 'tables.retry' | translate }}
+      </button>
     </div>
   } @else if (data(); as actionData) {
     <!-- Page header -->
@@ -139,7 +142,12 @@
 
             @if (overdueCount() > 0) {
               <span class="overdue-summary">
-                {{ (overdueCount() === 1 ? 'actions.overdueActionCount' : 'actions.overdueActionsCount') | translate: { count: (overdueCount() | appNumber) } }}
+                {{
+                  (overdueCount() === 1
+                    ? 'actions.overdueActionCount'
+                    : 'actions.overdueActionsCount'
+                  ) | translate: { count: (overdueCount() | appNumber) }
+                }}
               </span>
             }
           </div>
@@ -155,119 +163,136 @@
           </div>
         </div>
 
-        <div class="actions-list">
-          @for (action of sortedActions(); track action.id) {
-            <article
-              class="app-card action-card"
-              [class.action-card--critical]="action.priority === 'Critical'"
-              [class.action-card--high]="action.priority === 'High'"
-              [class.action-card--medium]="action.priority === 'Medium'"
-              [class.action-card--low]="action.priority === 'Low'"
-            >
-              <!-- Header -->
+        <div class="app-card app-data-panel">
+          <div class="actions-list">
+            @for (action of sortedActions(); track action.id) {
+              <article
+                class="app-card action-card"
+                [class.action-card--critical]="action.priority === 'Critical'"
+                [class.action-card--high]="action.priority === 'High'"
+                [class.action-card--medium]="action.priority === 'Medium'"
+                [class.action-card--low]="action.priority === 'Low'"
+              >
+                <!-- Header -->
 
-              <div class="action-card__header">
-                <div class="action-metadata">
-                  <span
-                    class="action-priority"
-                    [class.action-priority--critical]="action.priority === 'Critical'"
-                    [class.action-priority--high]="action.priority === 'High'"
-                    [class.action-priority--medium]="action.priority === 'Medium'"
-                    [class.action-priority--low]="action.priority === 'Low'"
-                  >
-                    <span class="priority-dot"></span>
+                <div class="action-card__header">
+                  <div class="action-metadata">
+                    <span
+                      class="action-priority"
+                      [class.action-priority--critical]="action.priority === 'Critical'"
+                      [class.action-priority--high]="action.priority === 'High'"
+                      [class.action-priority--medium]="action.priority === 'Medium'"
+                      [class.action-priority--low]="action.priority === 'Low'"
+                    >
+                      <span class="priority-dot"></span>
 
-                    {{ ('priorities.' + action.priority) | translate | uppercase }}
-                  </span>
-
-                  @if (action.metricType) {
-                    <span class="action-metric">
-                      {{ metricLabel(action.metricType) }}
+                      {{ 'priorities.' + action.priority | translate | uppercase }}
                     </span>
-                  }
-                </div>
 
-                <nz-select
-                  class="status-select"
-                  [ngModel]="action.status"
-                  [nzDisabled]="updatingActionId() === action.id"
-                  (ngModelChange)="updateStatus(action, $event)"
-                >
-                  <nz-option nzValue="Todo" [nzLabel]="'statuses.Todo' | translate"></nz-option>
-
-                  <nz-option nzValue="InProgress" [nzLabel]="'statuses.InProgress' | translate"></nz-option>
-
-                  <nz-option nzValue="Done" [nzLabel]="'statuses.Done' | translate"></nz-option>
-
-                  <nz-option nzValue="Cancelled" [nzLabel]="'statuses.Cancelled' | translate"></nz-option>
-                </nz-select>
-              </div>
-
-              <!-- Content -->
-
-              <div class="action-card__content">
-                <h3>
-                  {{ action.title }}
-                </h3>
-
-                <p>
-                  {{ action.description }}
-                </p>
-              </div>
-
-              <!-- Management -->
-
-              <div class="action-card__footer">
-                <div class="action-field">
-                  <label class="field-label" [for]="'owner-' + action.id"> {{ 'actions.owner' | translate }} </label>
-
-                  <input
-                    nz-input
-                    [id]="'owner-' + action.id"
-                    type="text"
-                    [ngModel]="action.owner ?? ''"
-                    [disabled]="updatingActionId() === action.id"
-                    [placeholder]="'actions.unassigned' | translate"
-                    (blur)="updateOwner(action, $any($event.target).value)"
-                    (keyup.enter)="$any($event.target).blur()"
-                  />
-                </div>
-
-                <div
-                  class="action-field action-field--due"
-                  [class.action-field--overdue]="dueState(action) === 'overdue'"
-                  [class.action-field--due-soon]="dueState(action) === 'soon'"
-                >
-                  <div class="field-label-row">
-                    <span class="field-label"> {{ 'actions.dueDate' | translate }} </span>
-                    @if (dueLabel(action); as label) {
-                      <span
-                        class="due-state"
-                        [class.due-state--overdue]="dueState(action) === 'overdue'"
-                        [class.due-state--soon]="dueState(action) === 'soon'"
-                        >{{ label }}</span
-                      >
+                    @if (action.metricType) {
+                      <span class="action-metric">
+                        {{ metricLabel(action.metricType) }}
+                      </span>
                     }
                   </div>
+                  <nz-select
+                    class="status-select"
+                    [ngModel]="action.status"
+                    [nzDisabled]="updatingActionId() !== null"
+                    (ngModelChange)="updateStatus(action, $event)"
+                  >
+                    <nz-option nzValue="Todo" [nzLabel]="'statuses.Todo' | translate"></nz-option>
 
-                  <nz-date-picker
-                    nzFormat="PP"
-                    [ngModel]="action.dueDateValue"
-                    [nzDisabled]="updatingActionId() === action.id"
-                    (ngModelChange)="updateDueDate(action, $event)"
-                  ></nz-date-picker>
+                    <nz-option
+                      nzValue="InProgress"
+                      [nzLabel]="'statuses.InProgress' | translate"
+                    ></nz-option>
+
+                    <nz-option nzValue="Done" [nzLabel]="'statuses.Done' | translate"></nz-option>
+
+                    <nz-option
+                      nzValue="Cancelled"
+                      [nzLabel]="'statuses.Cancelled' | translate"
+                    ></nz-option>
+                  </nz-select>
                 </div>
 
-                <div class="action-field action-field--status">
-                  <span class="field-label"> {{ 'actions.status' | translate }} </span>
+                <!-- Content -->
 
-                  <strong>
-                    {{ statusLabel(action.status) }}
-                  </strong>
+                <div class="action-card__content">
+                  <h3>
+                    {{ action.title }}
+                  </h3>
+
+                  <p>
+                    {{ action.description }}
+                  </p>
                 </div>
-              </div>
-            </article>
-          }
+
+                <!-- Management -->
+
+                <div class="action-card__footer">
+                  <div class="action-field">
+                    <label class="field-label" [for]="'owner-' + action.id">
+                      {{ 'actions.owner' | translate }}
+                    </label>
+
+                    <input
+                      nz-input
+                      [id]="'owner-' + action.id"
+                      type="text"
+                      [ngModel]="action.owner ?? ''"
+                      [disabled]="updatingActionId() !== null"
+                      [placeholder]="'actions.unassigned' | translate"
+                      (blur)="updateOwner(action, $any($event.target).value)"
+                      (keyup.enter)="$any($event.target).blur()"
+                    />
+                  </div>
+
+                  <div
+                    class="action-field action-field--due"
+                    [class.action-field--overdue]="dueState(action) === 'overdue'"
+                    [class.action-field--due-soon]="dueState(action) === 'soon'"
+                  >
+                    <div class="field-label-row">
+                      <span class="field-label"> {{ 'actions.dueDate' | translate }} </span>
+                      @if (dueLabel(action); as label) {
+                        <span
+                          class="due-state"
+                          [class.due-state--overdue]="dueState(action) === 'overdue'"
+                          [class.due-state--soon]="dueState(action) === 'soon'"
+                          >{{ label }}</span
+                        >
+                      }
+                    </div>
+
+                    <nz-date-picker
+                      nzFormat="PP"
+                      [ngModel]="action.dueDateValue"
+                      [nzDisabled]="updatingActionId() !== null"
+                      (ngModelChange)="updateDueDate(action, $event)"
+                    ></nz-date-picker>
+                  </div>
+
+                  <div class="action-field action-field--status">
+                    <span class="field-label"> {{ 'actions.status' | translate }} </span>
+
+                    <strong>
+                      {{ statusLabel(action.status) }}
+                    </strong>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+          <app-table-pagination
+            [pageNumber]="pagination.pageNumber()"
+            [pageSize]="pagination.pageSize()"
+            [totalCount]="pagination.totalCount()"
+            [disabled]="loading() || updatingActionId() !== null"
+            (pageChange)="changePage($event)"
+            (pageSizeChange)="changePageSize($event)"
+          />
         </div>
       </section>
     }

@@ -1,0 +1,38 @@
+@if (totalCount() > 0) {
+  <div class="app-table-footer">
+    <div class="pagination-size">
+      <label [for]="pageSizeId">{{ 'tables.pagination.pageSize' | translate }}</label>
+      <nz-select
+        [attr.id]="pageSizeId"
+        [ngModel]="pageSize()"
+        (ngModelChange)="pageSizeChange.emit($event)"
+        [nzDisabled]="disabled()"
+        [attr.aria-label]="'tables.pagination.pageSize' | translate"
+      >
+        @for (size of pageSizeOptions; track size) {
+          <nz-option [nzValue]="size" [nzLabel]="size.toString()" />
+        }
+      </nz-select>
+    </div>
+    <nz-pagination
+      [nzPageIndex]="pageNumber()"
+      [nzPageSize]="pageSize()"
+      [nzTotal]="totalCount()"
+      nzShowQuickJumper
+      [nzDisabled]="disabled()"
+      [nzShowTotal]="pageTotal"
+      (nzPageIndexChange)="pageChange.emit($event)"
+    />
+    <ng-template #pageTotal let-total let-range="range">
+      {{
+        'tables.pagination.range'
+          | translate
+            : {
+                from: (range[0] | appNumber),
+                to: (range[1] | appNumber),
+                total: (total | appNumber),
+              }
+      }}
+    </ng-template>
+  </div>
+}

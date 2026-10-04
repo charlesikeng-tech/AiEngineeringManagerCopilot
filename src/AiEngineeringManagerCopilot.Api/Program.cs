@@ -39,6 +39,7 @@ app.UseAuthorization();
 app.MapLocalAuthenticationEndpoints();
 app.MapTeamEndpoints();
 app.MapTeamMemberEndpoints();
+app.MapTeamCollectionPageEndpoints();
 app.MapGitHubEndpoints();
 app.MapJiraConnectionEndpoints();
 app.MapSlackEndpoints();

@@ -1,4 +1,5 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
+using AiEngineeringManagerCopilot.Application.Reports;
 
 namespace AiEngineeringManagerCopilot.IntegrationTests.Fakes;
 
@@ -11,6 +12,13 @@ public sealed class FakeMicrosoftTeamsWebhookClient : IMicrosoftTeamsWebhookClie
     public Uri? LastWebhookUri { get; private set; }
 
     public string? LastMessage { get; private set; }
+    public ReportNotification? LastReport { get; private set; }
+
+    public Task<bool> SendReportAsync(Uri webhookUri, ReportNotification notification, CancellationToken cancellationToken)
+    {
+        LastReport = notification;
+        return SendAsync(webhookUri, notification.FallbackText, cancellationToken);
+    }
 
     public Task<bool> SendAsync(
         Uri webhookUri, string message, CancellationToken cancellationToken)
@@ -32,5 +40,6 @@ public sealed class FakeMicrosoftTeamsWebhookClient : IMicrosoftTeamsWebhookClie
         Failure = null;
         LastWebhookUri = null;
         LastMessage = null;
+        LastReport = null;
     }
 }

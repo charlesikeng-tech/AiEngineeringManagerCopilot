@@ -138,6 +138,11 @@ public sealed class SlackWebhookEndpointsTests(
         _slackClient.LastMessage.Should().Contain(team.Name);
         _slackClient.LastMessage.Should().Contain("2026-09-01");
         _slackClient.LastMessage.Should().Contain("Health score");
+        var report = await response.Content.ReadApiJsonAsync<AiEngineeringManagerCopilot.Application.Reports.EngineeringReportResponse>();
+        _slackClient.LastReport.Should().NotBeNull();
+        _slackClient.LastReport!.ReportUrl.AbsoluteUri.Should()
+            .Be($"http://localhost:4200/reports/{report!.Id}?teamId={team.Id}");
+        _slackClient.LastReport.ExecutiveSummary.Should().Be(report.ExecutiveSummary);
     }
 
     [Fact]

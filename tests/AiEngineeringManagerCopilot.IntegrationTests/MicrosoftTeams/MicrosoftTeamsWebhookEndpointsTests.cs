@@ -209,6 +209,10 @@ public sealed class MicrosoftTeamsWebhookEndpointsTests(CustomWebApplicationFact
         _teamsClient.LastWebhookUri!.AbsoluteUri.Should().Be(WebhookUrl);
         _teamsClient.LastMessage.Should().Contain(team.Name).And.Contain("2026-09-01")
             .And.Contain("Health score");
+        _teamsClient.LastReport.Should().NotBeNull();
+        _teamsClient.LastReport!.ReportUrl.Query.Should().Be($"?teamId={team.Id}");
+        _teamsClient.LastReport.Risks.Count.Should().BeLessThanOrEqualTo(3);
+        _teamsClient.LastReport.Actions.Count.Should().BeLessThanOrEqualTo(3);
         if (!slackFails)
         {
             _slackClient.LastMessage.Should().Contain(team.Name);

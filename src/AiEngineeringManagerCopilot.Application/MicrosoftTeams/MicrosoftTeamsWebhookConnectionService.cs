@@ -12,6 +12,7 @@ public sealed class MicrosoftTeamsWebhookConnectionService(
     IMicrosoftTeamsWebhookConnectionRepository connectionRepository,
     ISecretProtector secretProtector,
     IMicrosoftTeamsWebhookClient webhookClient,
+    ReportNotificationFactory notificationFactory,
     ILogger<MicrosoftTeamsWebhookConnectionService> logger)
     : IMicrosoftTeamsWebhookConnectionService, IEngineeringReportNotifier
 {
@@ -110,13 +111,8 @@ public sealed class MicrosoftTeamsWebhookConnectionService(
             return;
         }
 
-        var message =
-            "Engineering report generated\n\n" +
-            $"Team: {EscapeMarkdown(teamName)}\n\n" +
-            $"Period: {report.PeriodStart:yyyy-MM-dd} - {report.PeriodEnd:yyyy-MM-dd}\n\n" +
-            $"Health score: {report.OverallScore}/100 ({EscapeMarkdown(report.HealthLevel)})";
-
-        if (!await TrySendAsync(connection, message, cancellationToken))
+        var notification = notificationFactory.Create(teamId, teamName, report);
+        if (!await TrySendAsync(connection, notification.FallbackText, cancellationToken, notification))
         {
             logger.LogWarning(
                 "Microsoft Teams report notification failed for team {TeamId} and report {ReportId}.",
@@ -127,7 +123,8 @@ public sealed class MicrosoftTeamsWebhookConnectionService(
     private async Task<bool> TrySendAsync(
         MicrosoftTeamsWebhookConnection connection,
         string message,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        ReportNotification? notification = null)
     {
         var url = secretProtector.Unprotect(connection.WebhookUrlEncrypted);
         if (!MicrosoftTeamsWebhookAddress.TryParse(url, out var webhookUri))
@@ -138,7 +135,9 @@ public sealed class MicrosoftTeamsWebhookConnectionService(
 
         try
         {
-            return await webhookClient.SendAsync(webhookUri!, message, cancellationToken);
+            return notification is null
+                ? await webhookClient.SendAsync(webhookUri!, message, cancellationToken)
+                : await webhookClient.SendReportAsync(webhookUri!, notification, cancellationToken);
         }
         catch (HttpRequestException)
         {
@@ -158,12 +157,4 @@ public sealed class MicrosoftTeamsWebhookConnectionService(
     private static MicrosoftTeamsWebhookConnectionResponse ToResponse(
         MicrosoftTeamsWebhookConnection connection) => new(connection.TeamId, connection.CreatedAt);
 
-    private static string EscapeMarkdown(string value) =>
-        value.Replace("\\", "\\\\", StringComparison.Ordinal)
-            .Replace("*", "\\*", StringComparison.Ordinal)
-            .Replace("_", "\\_", StringComparison.Ordinal)
-            .Replace("[", "\\[", StringComparison.Ordinal)
-            .Replace("]", "\\]", StringComparison.Ordinal)
-            .Replace("<", "&lt;", StringComparison.Ordinal)
-            .Replace(">", "&gt;", StringComparison.Ordinal);
 }

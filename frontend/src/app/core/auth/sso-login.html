@@ -1,0 +1,126 @@
+<div class="auth-page">
+  <div class="auth-shell">
+    <header class="auth-brand">
+      <div class="auth-brand__icon">
+        <nz-icon nzType="safety-certificate" />
+      </div>
+
+      <div>
+        <span class="auth-brand__product"> AI Engineering Manager </span>
+
+        <span class="auth-brand__subtitle"> Engineering Intelligence Platform </span>
+      </div>
+    </header>
+
+    <main class="auth-card">
+      <div class="auth-card__header">
+        <div class="auth-card__icon">
+          <nz-icon nzType="login" />
+        </div>
+
+        <h1>
+          {{ 'sso.login.title' | translate }}
+        </h1>
+
+        <p>
+          {{ 'sso.login.policy' | translate }}
+        </p>
+      </div>
+
+      @if (error()) {
+        <nz-alert
+          class="auth-alert"
+          nzType="error"
+          nzShowIcon
+          [nzMessage]="'sso.login.errors.' + error() | translate"
+        />
+      }
+
+      @if (error() === 'email_collision') {
+        <div class="collision-notice">
+          <nz-icon nzType="warning" />
+
+          <div>
+            <p>
+              {{ 'accountLink.collision' | translate }}
+            </p>
+
+            <a routerLink="/account/security">
+              {{ 'accountLink.title' | translate }}
+              <nz-icon nzType="arrow-right" />
+            </a>
+          </div>
+        </div>
+      }
+
+      @if (diagnosticId()) {
+        <div class="diagnostic">
+          <span class="diagnostic__label">
+            {{ 'sso.login.diagnostic' | translate }}
+          </span>
+
+          <code>{{ diagnosticId() }}</code>
+        </div>
+      }
+
+      <div class="provider-content">
+        @if (loading()) {
+          <div class="loading-state" role="status">
+            <nz-spin nzSimple />
+
+            <span>
+              {{ 'sso.login.loading' | translate }}
+            </span>
+          </div>
+        } @else if (!providers().length) {
+          <div class="empty-state">
+            <nz-empty [nzNotFoundContent]="'sso.login.empty' | translate" />
+          </div>
+        } @else {
+          <div class="provider-list">
+            @for (provider of providers(); track provider.id) {
+              <button
+                class="provider-button"
+                nz-button
+                type="button"
+                [nzLoading]="busy() === provider.id"
+                [disabled]="busy() !== null"
+                (click)="login(provider.id)"
+              >
+                <span class="provider-icon">
+                  <nz-icon nzType="safety-certificate" />
+                </span>
+
+                <span class="provider-content__text">
+                  <strong>{{ provider.name }}</strong>
+
+                  <small>
+                    {{ provider.type }}
+                  </small>
+                </span>
+
+                <nz-icon class="provider-arrow" nzType="arrow-right" />
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <footer class="auth-card__footer">
+        <span>
+          {{ 'sso.login.recovery' | translate }}
+        </span>
+
+        <a routerLink="/admin/login">
+          Administrator access
+          <nz-icon nzType="arrow-right" />
+        </a>
+      </footer>
+    </main>
+
+    <p class="auth-security">
+      <nz-icon nzType="lock" />
+      Secure authentication via your organization's identity provider
+    </p>
+  </div>
+</div>

@@ -48,6 +48,7 @@
       "empty": "Aucune analyse IA disponible"
     },
     "risks": {
+      "viewAll": "Voir tous les risques",
       "title": "Risques",
       "subtitle": "Risques d’ingénierie nécessitant une attention",
       "emptyTitle": "Aucun risque actif",

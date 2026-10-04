@@ -1,97 +1,419 @@
-<section>
-  <h1>{{ 'sso.title' | translate }}</h1>
-  <nz-alert nzType="info" [nzMessage]="'sso.scope' | translate" nzShowIcon />
-  @if (error()) {
-    <nz-alert nzType="error" [nzMessage]="error() | translate" nzShowIcon />
-  }
-  @if (feedback()) {
-    <nz-alert nzType="success" [nzMessage]="feedback() | translate" nzShowIcon />
-  }
-  <div class="toolbar">
-    <button nz-button type="button" [disabled]="pending()" (click)="load()">{{ 'sso.refresh' | translate }}</button>
-    <button nz-button nzType="primary" type="button" [disabled]="pending() || !loaded() || editing()" (click)="edit()">
-      {{ 'sso.add' | translate }}
-    </button>
-  </div>
+<div class="app-page authentication-page">
+  <header class="page-header">
+    <div class="page-header__content">
+      <h1>{{ 'sso.title' | translate }}</h1>
+      <p>Configure and manage installation-wide SSO authentication providers.</p>
+    </div>
+
+    <div class="page-header__actions">
+      <button
+        nz-button
+        type="button"
+        [nzLoading]="pending()"
+        [disabled]="pending()"
+        (click)="load()"
+      >
+        {{ 'sso.refresh' | translate }}
+      </button>
+
+      <button
+        nz-button
+        nzType="primary"
+        type="button"
+        [disabled]="pending() || !loaded() || editing()"
+        (click)="edit()"
+      >
+        {{ 'sso.add' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <section class="app-section">
+    <div class="feedback-stack">
+      <nz-alert nzType="info" [nzMessage]="'sso.scope' | translate" nzShowIcon />
+
+      @if (error()) {
+        <nz-alert nzType="error" [nzMessage]="error() | translate" nzShowIcon />
+      }
+
+      @if (feedback()) {
+        <nz-alert nzType="success" [nzMessage]="feedback() | translate" nzShowIcon />
+      }
+    </div>
+  </section>
+
   @if (loaded()) {
-    <p>{{ 'sso.callback' | translate }} <code>{{ callbackUrl() }}</code></p>
-    <p>{{ 'sso.loginCallback' | translate }}
-      <code>{{ callbackUrl().replace('/auth/sso/callback', '/auth/sso/login/callback') }}</code>
-    </p>
-    <p>{{ 'sso.domains' | translate }}</p>
+    <section class="app-section">
+      <div class="app-card callback-card">
+        <div class="card-header">
+          <div>
+            <h2>Callback URLs</h2>
+            <p>Register these exact URLs in your identity provider application.</p>
+          </div>
+        </div>
+
+        <div class="card-content callback-list">
+          <div class="callback-item">
+            <span class="callback-label">SSO callback</span>
+
+            <code class="callback-value">
+              {{ callbackUrl() }}
+            </code>
+          </div>
+
+          <div class="callback-item">
+            <span class="callback-label">User login callback</span>
+
+            <code class="callback-value">
+              {{ callbackUrl().replace('/auth/sso/callback', '/auth/sso/login/callback') }}
+            </code>
+          </div>
+
+          <div class="provider-guidance">
+            <nz-icon nzType="info-circle" />
+
+            <span>{{ 'sso.domains' | translate }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
   }
+
   <nz-spin [nzSpinning]="pending()">
     @if (editing()) {
-      <form #providerForm="ngForm" (ngSubmit)="save()">
-        <fieldset [disabled]="pending()">
-          <legend>{{ 'sso.draft' | translate }}</legend>
-          <label for="sso-type">{{ 'sso.type' | translate }}</label>
-          <nz-select id="sso-type" name="type" [(ngModel)]="draft.type" [nzDisabled]="pending()">
-            <nz-option nzValue="Auth0" nzLabel="Auth0" />
-            <nz-option nzValue="Okta" nzLabel="Okta" />
-            <nz-option nzValue="EntraId" nzLabel="Microsoft Entra ID" />
-          </nz-select>
-          <label for="sso-name">{{ 'sso.name' | translate }}</label>
-          <input nz-input id="sso-name" name="name" [(ngModel)]="draft.name" required maxlength="200" />
-          <label for="sso-tenant">{{ (draft.type === 'EntraId' ? 'sso.tenant' : 'sso.domain') | translate }}</label>
-          <input nz-input id="sso-tenant" name="tenant" [(ngModel)]="draft.tenant" required maxlength="253" />
-          @if (draft.type === 'Okta') {
-            <label for="sso-server">{{ 'sso.server' | translate }}</label>
-            <input nz-input id="sso-server" name="server" [(ngModel)]="draft.authorizationServer" required maxlength="100" />
-          }
-          <label for="sso-client">{{ 'sso.clientId' | translate }}</label>
-          <input nz-input id="sso-client" name="client" [(ngModel)]="draft.clientId" required maxlength="256" autocomplete="off" />
-          <p>{{ (hasSecret() ? 'sso.secretPresent' : 'sso.secretAbsent') | translate }}</p>
-          <label for="sso-secret-action">{{ 'sso.secretAction' | translate }}</label>
-          <nz-select id="sso-secret-action" name="secretAction" [(ngModel)]="draft.secretAction" [nzDisabled]="pending()">
-            <nz-option nzValue="retain" [nzLabel]="'sso.retain' | translate" />
-            <nz-option nzValue="replace" [nzLabel]="'sso.replace' | translate" />
-            <nz-option nzValue="clear" [nzLabel]="'sso.clear' | translate" />
-          </nz-select>
-          @if (draft.secretAction === 'replace') {
-            <label for="sso-secret">{{ 'sso.clientSecret' | translate }}</label>
-            <input nz-input id="sso-secret" name="secret" type="password" [(ngModel)]="clientSecret" required maxlength="4096" autocomplete="new-password" />
-          }
-          <div class="toolbar">
-            <button nz-button nzType="primary" type="submit" [disabled]="pending() || providerForm.invalid">{{ 'sso.save' | translate }}</button>
-            <button nz-button type="button" [disabled]="pending()" (click)="cancel()">{{ 'sso.cancel' | translate }}</button>
-          </div>
-        </fieldset>
-      </form>
+      <section class="app-section">
+        <form #providerForm="ngForm" class="app-card provider-form" (ngSubmit)="save()">
+          <fieldset [disabled]="pending()">
+            <div class="card-header">
+              <div>
+                <h2>{{ 'sso.draft' | translate }}</h2>
+                <p>Configure the identity provider used for SSO authentication.</p>
+              </div>
+            </div>
+
+            <div class="card-content form-grid">
+              <div class="form-field">
+                <label for="sso-type">
+                  {{ 'sso.type' | translate }}
+                </label>
+
+                <nz-select
+                  id="sso-type"
+                  name="type"
+                  [(ngModel)]="draft.type"
+                  [nzDisabled]="pending()"
+                >
+                  <nz-option nzValue="Auth0" nzLabel="Auth0" />
+                  <nz-option nzValue="Okta" nzLabel="Okta" />
+                  <nz-option nzValue="EntraId" nzLabel="Microsoft Entra ID" />
+                </nz-select>
+              </div>
+
+              <div class="form-field">
+                <label for="sso-name">
+                  {{ 'sso.name' | translate }}
+                </label>
+
+                <input
+                  nz-input
+                  id="sso-name"
+                  name="name"
+                  [(ngModel)]="draft.name"
+                  required
+                  maxlength="200"
+                />
+              </div>
+
+              <div class="form-field">
+                <label for="sso-tenant">
+                  {{ (draft.type === 'EntraId' ? 'sso.tenant' : 'sso.domain') | translate }}
+                </label>
+
+                <input
+                  nz-input
+                  id="sso-tenant"
+                  name="tenant"
+                  [(ngModel)]="draft.tenant"
+                  required
+                  maxlength="253"
+                />
+              </div>
+
+              @if (draft.type === 'Okta') {
+                <div class="form-field">
+                  <label for="sso-server">
+                    {{ 'sso.server' | translate }}
+                  </label>
+
+                  <input
+                    nz-input
+                    id="sso-server"
+                    name="server"
+                    [(ngModel)]="draft.authorizationServer"
+                    required
+                    maxlength="100"
+                  />
+                </div>
+              }
+
+              <div class="form-field">
+                <label for="sso-client">
+                  {{ 'sso.clientId' | translate }}
+                </label>
+
+                <input
+                  nz-input
+                  id="sso-client"
+                  name="client"
+                  [(ngModel)]="draft.clientId"
+                  required
+                  maxlength="256"
+                  autocomplete="off"
+                />
+              </div>
+
+              <div class="form-field">
+                <label for="sso-secret-action">
+                  {{ 'sso.secretAction' | translate }}
+                </label>
+
+                <nz-select
+                  id="sso-secret-action"
+                  name="secretAction"
+                  [(ngModel)]="draft.secretAction"
+                  [nzDisabled]="pending()"
+                >
+                  <nz-option nzValue="retain" [nzLabel]="'sso.retain' | translate" />
+
+                  <nz-option nzValue="replace" [nzLabel]="'sso.replace' | translate" />
+
+                  <nz-option nzValue="clear" [nzLabel]="'sso.clear' | translate" />
+                </nz-select>
+
+                <span class="field-hint">
+                  {{ (hasSecret() ? 'sso.secretPresent' : 'sso.secretAbsent') | translate }}
+                </span>
+              </div>
+
+              @if (draft.secretAction === 'replace') {
+                <div class="form-field form-field--full">
+                  <label for="sso-secret">
+                    {{ 'sso.clientSecret' | translate }}
+                  </label>
+
+                  <input
+                    nz-input
+                    id="sso-secret"
+                    name="secret"
+                    type="password"
+                    [(ngModel)]="clientSecret"
+                    required
+                    maxlength="4096"
+                    autocomplete="new-password"
+                  />
+                </div>
+              }
+            </div>
+
+            <div class="card-actions">
+              <button
+                nz-button
+                nzType="primary"
+                type="submit"
+                [disabled]="pending() || providerForm.invalid"
+              >
+                {{ 'sso.save' | translate }}
+              </button>
+
+              <button nz-button type="button" [disabled]="pending()" (click)="cancel()">
+                {{ 'sso.cancel' | translate }}
+              </button>
+            </div>
+          </fieldset>
+        </form>
+      </section>
     }
-    @for (provider of providers(); track provider.id) {
-      <article>
-        <h2>{{ provider.name }} — {{ provider.type }}</h2>
-        <p><code>{{ provider.authority }}</code></p>
-        <p>{{ 'sso.clientId' | translate }}: {{ provider.clientId }}</p>
-        <p>{{ 'sso.revision' | translate }}: {{ provider.revision }} —
-          {{ (provider.testedRevision === provider.revision ? 'sso.verified' : 'sso.notVerified') | translate }}
-        </p>
-        @if (provider.active) {
-          <p>{{ 'sso.active' | translate }}: {{ provider.active.name }} — {{ provider.active.authority }}
-            ({{ 'sso.revision' | translate }} {{ provider.activeRevision }})
-          </p>
-        } @else {
-          <p>{{ 'sso.inactive' | translate }}</p>
-        }
-        @if (provider.lastTestError) {
-          <nz-alert nzType="warning" [nzMessage]="'sso.errors.connection_failed' | translate" />
-        }
-        <div class="toolbar">
-          <button nz-button type="button" [disabled]="pending() || editing()" (click)="edit(provider)">{{ 'sso.edit' | translate }}</button>
-          <button nz-button type="button" [disabled]="pending() || editing()" (click)="test(provider)">{{ 'sso.test' | translate }}</button>
-          <button nz-button nzType="primary" type="button"
-            [disabled]="pending() || editing() || provider.testedRevision !== provider.revision || provider.activeRevision === provider.revision"
-            (click)="activate(provider)">{{ 'sso.activate' | translate }}</button>
-          @if (provider.activeRevision !== null) {
-            <button nz-button nzDanger type="button" [disabled]="pending() || editing()" (click)="deactivate(provider)">{{ 'sso.deactivate' | translate }}</button>
-          } @else {
-            <button nz-button nzDanger type="button" [disabled]="pending() || editing()" (click)="delete(provider)">{{ 'sso.delete' | translate }}</button>
-          }
+
+    <section class="app-section providers-section">
+      <div class="section-heading">
+        <div>
+          <h2>Configured providers</h2>
+          <p>Identity providers available for administrator and user authentication.</p>
         </div>
-      </article>
-    } @empty {
-      @if (loaded()) { <p>{{ 'sso.empty' | translate }}</p> }
-    }
+      </div>
+
+      <div class="providers-list">
+        @for (provider of providers(); track provider.id) {
+          <article class="app-card provider-card">
+            <div class="provider-card__header">
+              <div class="provider-identity">
+                <div class="provider-icon">
+                  <nz-icon nzType="safety-certificate" />
+                </div>
+
+                <div>
+                  <div class="provider-title-row">
+                    <h3>{{ provider.name }}</h3>
+
+                    @if (provider.activeRevision !== null) {
+                      <span class="app-status-pill app-status-pill--success">
+                        <span class="app-status-dot" aria-hidden="true"></span>
+
+                        Active
+                      </span>
+                    }
+                  </div>
+
+                  <span class="provider-type">
+                    {{ provider.type }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="provider-card__content">
+              <div class="authority">
+                <span class="detail-label">Authority</span>
+                <code>{{ provider.authority }}</code>
+              </div>
+
+              <div class="provider-details">
+                <div class="provider-detail">
+                  <span class="detail-label">
+                    {{ 'sso.clientId' | translate }}
+                  </span>
+
+                  <span class="detail-value">
+                    {{ provider.clientId }}
+                  </span>
+                </div>
+
+                <div class="provider-detail">
+                  <span class="detail-label">
+                    {{ 'sso.revision' | translate }}
+                  </span>
+
+                  <span class="detail-value">
+                    {{ provider.revision }}
+                  </span>
+                </div>
+
+                <div class="provider-detail">
+                  <span class="detail-label">Status</span>
+
+                  @if (provider.testedRevision === provider.revision) {
+                    <span class="verification verification--success">
+                      <span class="verification-dot"></span>
+                      {{ 'sso.verified' | translate }}
+                    </span>
+                  } @else {
+                    <span class="verification">
+                      <span class="verification-dot"></span>
+                      {{ 'sso.notVerified' | translate }}
+                    </span>
+                  }
+                </div>
+              </div>
+
+              @if (provider.active) {
+                <div class="active-configuration">
+                  <nz-icon nzType="check-circle" />
+
+                  <div>
+                    <strong>{{ 'sso.active' | translate }}</strong>
+
+                    <span>
+                      {{ provider.active.name }} —
+                      {{ provider.active.authority }}
+                      ({{ 'sso.revision' | translate }} {{ provider.activeRevision }})
+                    </span>
+                  </div>
+                </div>
+              } @else {
+                <div class="inactive-configuration">
+                  {{ 'sso.inactive' | translate }}
+                </div>
+              }
+
+              @if (provider.lastTestError) {
+                <nz-alert
+                  class="connection-warning"
+                  nzType="warning"
+                  nzShowIcon
+                  [nzMessage]="'sso.errors.connection_failed' | translate"
+                />
+              }
+            </div>
+
+            <div class="provider-card__actions">
+              <div class="provider-card__actions-primary">
+                <button
+                  nz-button
+                  type="button"
+                  [disabled]="pending() || editing()"
+                  (click)="edit(provider)"
+                >
+                  {{ 'sso.edit' | translate }}
+                </button>
+
+                <button
+                  nz-button
+                  type="button"
+                  [disabled]="pending() || editing()"
+                  (click)="test(provider)"
+                >
+                  {{ 'sso.test' | translate }}
+                </button>
+
+                <button
+                  nz-button
+                  nzType="primary"
+                  type="button"
+                  [disabled]="
+                    pending() ||
+                    editing() ||
+                    provider.testedRevision !== provider.revision ||
+                    provider.activeRevision === provider.revision
+                  "
+                  (click)="activate(provider)"
+                >
+                  {{ 'sso.activate' | translate }}
+                </button>
+              </div>
+
+              <div>
+                @if (provider.activeRevision !== null) {
+                  <button
+                    nz-button
+                    nzDanger
+                    type="button"
+                    [disabled]="pending() || editing()"
+                    (click)="deactivate(provider)"
+                  >
+                    {{ 'sso.deactivate' | translate }}
+                  </button>
+                } @else {
+                  <button
+                    nz-button
+                    nzDanger
+                    type="button"
+                    [disabled]="pending() || editing()"
+                    (click)="delete(provider)"
+                  >
+                    {{ 'sso.delete' | translate }}
+                  </button>
+                }
+              </div>
+            </div>
+          </article>
+        } @empty {
+          @if (loaded()) {
+            <div class="app-card empty-providers">
+              <nz-empty [nzNotFoundContent]="'sso.empty' | translate" />
+            </div>
+          }
+        }
+      </div>
+    </section>
   </nz-spin>
-</section>
+</div>

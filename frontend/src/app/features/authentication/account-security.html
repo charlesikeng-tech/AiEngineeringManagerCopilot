@@ -1,0 +1,239 @@
+<div class="app-page account-security-page">
+  <header class="page-header">
+    <div class="page-header__content">
+      <h1>{{ 'accountLink.title' | translate }}</h1>
+
+      <p>
+        {{ 'accountLink.explanation' | translate }}
+      </p>
+    </div>
+  </header>
+
+  @if (!administrator()) {
+    <section class="app-section">
+      <nz-alert nzType="warning" nzShowIcon [nzMessage]="'accountLink.unsupported' | translate" />
+    </section>
+  } @else {
+    @if (outcome()) {
+      <section class="app-section feedback-section">
+        <nz-alert
+          nzType="success"
+          nzShowIcon
+          [nzMessage]="'accountLink.outcomes.' + outcome() | translate"
+        />
+      </section>
+    }
+
+    @if (error()) {
+      <section class="app-section feedback-section">
+        <nz-alert
+          nzType="error"
+          nzShowIcon
+          [nzMessage]="'accountLink.errors.' + error() | translate"
+        />
+      </section>
+    }
+
+    @if (loading()) {
+      <div class="loading-state">
+        <nz-spin nzSimple />
+      </div>
+    }
+
+    @if (state(); as account) {
+      <!-- =====================================================
+           LINKED IDENTITIES
+           ===================================================== -->
+
+      <section class="app-section">
+        <div class="app-card security-card">
+          <div class="card-header">
+            <div>
+              <h2>{{ 'accountLink.identities' | translate }}</h2>
+
+              <p>External identities linked to your administrator account.</p>
+            </div>
+          </div>
+
+          @if (account.identities.length) {
+            <div class="identity-list">
+              @for (identity of account.identities; track identity.id) {
+                <div class="identity-row">
+                  <div class="identity-icon">
+                    <nz-icon nzType="safety-certificate" />
+                  </div>
+
+                  <div class="identity-content">
+                    <div class="identity-title-row">
+                      <strong class="identity-title">
+                        {{ identity.providerName || identity.issuer }}
+                      </strong>
+
+                      <span class="app-status-pill app-status-pill--success">
+                        <span class="app-status-dot" aria-hidden="true"></span>
+
+                        Connected
+                      </span>
+                    </div>
+
+                    <span class="identity-issuer" [title]="identity.issuer">
+                      {{ identity.issuer }}
+                    </span>
+
+                    @if (identity.administratorAccessApproved) {
+                      <div class="administrator-access">
+                        <nz-icon nzType="check-circle" />
+
+                        <span>
+                          {{ 'accountLink.approved' | translate }}
+                        </span>
+                      </div>
+                    }
+                  </div>
+
+                  @if (account.canLink) {
+                    <button
+                      nz-button
+                      nzDanger
+                      type="button"
+                      [disabled]="busy() || !password"
+                      (click)="unlink(identity.id)"
+                    >
+                      {{ 'accountLink.unlink' | translate }}
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-state">
+              <nz-empty [nzNotFoundContent]="'accountLink.empty' | translate" />
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- =====================================================
+           LOCAL AUTHENTICATION REQUIRED
+           ===================================================== -->
+
+      @if (!account.canLink) {
+        <section class="app-section">
+          <div class="app-card local-auth-card">
+            <div class="local-auth-icon">
+              <nz-icon nzType="lock" />
+            </div>
+
+            <div class="local-auth-content">
+              <h2>Local authentication required</h2>
+
+              <p>
+                {{ 'accountLink.localRequired' | translate }}
+              </p>
+            </div>
+
+            <a nz-button nzType="primary" routerLink="/admin/login">
+              {{ 'accountLink.localLogin' | translate }}
+            </a>
+          </div>
+        </section>
+      } @else {
+        <!-- ===================================================
+             LINK NEW IDENTITY
+             =================================================== -->
+
+        <section class="app-section">
+          <form class="app-card link-card" (ngSubmit)="start()">
+            <div class="card-header">
+              <div>
+                <h2>Link an identity</h2>
+
+                <p>Connect an SSO identity to your existing administrator account.</p>
+              </div>
+            </div>
+
+            <div class="card-content">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="provider">
+                    {{ 'accountLink.provider' | translate }}
+                  </label>
+
+                  <nz-select
+                    id="provider"
+                    name="provider"
+                    [(ngModel)]="providerId"
+                    [nzDisabled]="busy()"
+                    [nzPlaceHolder]="'accountLink.select' | translate"
+                  >
+                    @for (provider of providers(); track provider.id) {
+                      <nz-option
+                        [nzValue]="provider.id"
+                        [nzLabel]="provider.name + ' (' + provider.type + ')'"
+                      />
+                    }
+                  </nz-select>
+
+                  @if (!providers().length) {
+                    <span class="field-hint">
+                      {{ 'accountLink.noProviders' | translate }}
+                    </span>
+                  }
+                </div>
+
+                <div class="form-field">
+                  <label for="password">
+                    {{ 'accountLink.password' | translate }}
+                  </label>
+
+                  <input
+                    nz-input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    maxlength="128"
+                    [(ngModel)]="password"
+                    [disabled]="busy()"
+                  />
+
+                  <span class="field-hint">
+                    Your local password is required to confirm this security-sensitive operation.
+                  </span>
+                </div>
+
+                <label class="consent-field">
+                  <input type="checkbox" name="consent" [(ngModel)]="consent" [disabled]="busy()" />
+
+                  <span>
+                    {{ 'accountLink.consent' | translate }}
+                  </span>
+                </label>
+              </div>
+
+              <div class="security-notice">
+                <nz-icon nzType="info-circle" />
+
+                <span>
+                  {{ 'accountLink.unlinkExplanation' | translate }}
+                </span>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <button
+                nz-button
+                nzType="primary"
+                type="submit"
+                [nzLoading]="busy()"
+                [disabled]="busy() || !providerId || !password || !consent"
+              >
+                {{ (busy() ? 'accountLink.pending' : 'accountLink.start') | translate }}
+              </button>
+            </div>
+          </form>
+        </section>
+      }
+    }
+  }
+</div>

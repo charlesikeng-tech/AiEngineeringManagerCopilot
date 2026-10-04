@@ -22,8 +22,8 @@
     <app-integration-settings />
   } @else {
     <section class="app-section">
-      <div class="app-card overview-panel">
-        <div class="overview-toolbar">
+      <div class="app-card app-data-panel overview-panel">
+        <div class="app-table-toolbar overview-toolbar">
           <div class="team-filter">
             <label for="integration-team-filter">{{
               'integrations.overview.filter' | translate
@@ -78,13 +78,13 @@
           </div>
         } @else {
           <div
-            class="overview-table-wrapper"
+            class="app-table-wrapper overview-table-wrapper"
             tabindex="0"
             role="region"
             [attr.aria-label]="'integrations.overview.caption' | translate"
           >
-            <table class="overview-table">
-              <caption class="table-caption">
+            <table class="app-data-table overview-table">
+              <caption class="app-table-caption table-caption">
                 {{
                   'integrations.overview.caption' | translate
                 }}
@@ -113,16 +113,20 @@
                 @for (row of rows(); track row.team.id) {
                   <tr>
                     <th scope="row">
-                      <span class="team-name" [title]="row.team.name">{{ row.team.name }}</span>
+                      <span class="app-table-name team-name" [title]="row.team.name">{{
+                        row.team.name
+                      }}</span>
                     </th>
                     @for (source of [row.github, row.jira]; track $index) {
                       <td>
                         <span
-                          class="connection-status"
+                          class="app-status-pill connection-status"
                           [class.connection-status--connected]="source.status === 'connected'"
                           [class.connection-status--error]="source.status === 'error'"
+                          [class.app-status-pill--success]="source.status === 'connected'"
+                          [class.app-status-pill--error]="source.status === 'error'"
                         >
-                          <span class="status-dot" aria-hidden="true"></span>
+                          <span class="app-status-dot status-dot" aria-hidden="true"></span>
                           {{ 'integrations.overview.status.' + source.status | translate }}
                         </span>
                         @if (source.status === 'connected') {
@@ -155,11 +159,13 @@
                     @for (notification of [row.slack, row.microsoftTeams]; track $index) {
                       <td>
                         <span
-                          class="connection-status"
+                          class="app-status-pill connection-status"
                           [class.connection-status--connected]="notification.status === 'connected'"
                           [class.connection-status--error]="notification.status === 'error'"
+                          [class.app-status-pill--success]="notification.status === 'connected'"
+                          [class.app-status-pill--error]="notification.status === 'error'"
                         >
-                          <span class="status-dot" aria-hidden="true"></span>
+                          <span class="app-status-dot status-dot" aria-hidden="true"></span>
                           {{
                             'integrations.overview.notificationStatus.' + notification.status
                               | translate
@@ -188,39 +194,15 @@
           </div>
         }
         @if (!loadError() && totalCount() > 0) {
-          <div class="overview-pagination">
-            <div class="pagination-size">
-              <label for="integration-page-size">{{
-                'integrations.overview.pageSize' | translate
-              }}</label>
-              <nz-select
-                id="integration-page-size"
-                [ngModel]="pageSize()"
-                (ngModelChange)="changePageSize($event)"
-                [nzDisabled]="loadingTeams()"
-                [attr.aria-label]="'integrations.overview.pageSize' | translate"
-              >
-                @for (size of pageSizeOptions; track size) {
-                  <nz-option [nzValue]="size" [nzLabel]="size.toString()" />
-                }
-              </nz-select>
-            </div>
-            <nz-pagination
-              [nzPageIndex]="pageNumber()"
-              [nzPageSize]="pageSize()"
-              [nzTotal]="totalCount()"
-              nzShowQuickJumper
-              [nzDisabled]="loadingTeams()"
-              [nzShowTotal]="pageTotal"
-              (nzPageIndexChange)="changePage($event)"
-            />
-            <ng-template #pageTotal let-total let-range="range">
-              {{
-                'integrations.overview.pageTotal'
-                  | translate: { from: range[0], to: range[1], total: total }
-              }}
-            </ng-template>
-          </div>
+          <app-table-pagination
+            class="overview-pagination"
+            [pageNumber]="pageNumber()"
+            [pageSize]="pageSize()"
+            [totalCount]="totalCount()"
+            [disabled]="loadingTeams()"
+            (pageChange)="changePage($event)"
+            (pageSizeChange)="changePageSize($event)"
+          />
         }
       </div>
       @if (!loadError() && !loadingTeams() && rows().length > 0) {

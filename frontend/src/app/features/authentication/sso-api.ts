@@ -37,23 +37,33 @@ export class SsoApi {
   private readonly url = `${environment.apiUrl}/auth/sso/providers`;
 
   list() {
-    return this.http.get<{ callbackUrl: string; providers: SsoProvider[] }>(this.url).pipe(timeout(15000));
+    return this.http
+      .get<{ callbackUrl: string; providers: SsoProvider[] }>(this.url)
+      .pipe(timeout(15000));
   }
   save(id: string | null, draft: SsoDraft) {
-    return (id
-      ? this.http.put<SsoProvider>(`${this.url}/${id}`, draft)
-      : this.http.post<SsoProvider>(this.url, draft)).pipe(timeout(15000));
+    return (
+      id
+        ? this.http.put<SsoProvider>(`${this.url}/${id}`, draft)
+        : this.http.post<SsoProvider>(this.url, draft)
+    ).pipe(timeout(15000));
   }
   test(provider: SsoProvider) {
-    return this.http.post<{ authorizationUrl: string }>(`${this.url}/${provider.id}/test`,
-      { revision: provider.revision }).pipe(timeout(60000));
+    return this.http
+      .post<{ authorizationUrl: string }>(`${this.url}/${provider.id}/test`, {
+        revision: provider.revision,
+      })
+      .pipe(timeout(60000));
   }
   activate(provider: SsoProvider) {
-    return this.http.post<SsoProvider>(`${this.url}/${provider.id}/activate`,
-      { revision: provider.revision }).pipe(timeout(15000));
+    return this.http
+      .post<SsoProvider>(`${this.url}/${provider.id}/activate`, { revision: provider.revision })
+      .pipe(timeout(15000));
   }
   deactivate(provider: SsoProvider) {
-    return this.http.post<SsoProvider>(`${this.url}/${provider.id}/deactivate`, {}).pipe(timeout(15000));
+    return this.http
+      .post<SsoProvider>(`${this.url}/${provider.id}/deactivate`, {})
+      .pipe(timeout(15000));
   }
   delete(provider: SsoProvider) {
     return this.http.delete<void>(`${this.url}/${provider.id}`).pipe(timeout(15000));

@@ -138,6 +138,7 @@ public sealed class MicrosoftTeamsWebhookConnectionServiceTests
             Service = new MicrosoftTeamsWebhookConnectionService(
                 new CurrentUser(Team.OwnerUserId), new TeamRepository(Team),
                 Connections, new SecretProtector(), Client,
+                new ReportNotificationFactory(new ReportNotificationOptions()),
                 NullLogger<MicrosoftTeamsWebhookConnectionService>.Instance);
         }
 

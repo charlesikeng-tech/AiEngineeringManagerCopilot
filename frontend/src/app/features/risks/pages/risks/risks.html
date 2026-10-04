@@ -13,6 +13,9 @@
         [nzMessage]="'risks.loadError' | translate"
         [nzDescription]="'risks.loadErrorDescription' | translate"
       ></nz-alert>
+      <button type="button" class="app-button app-button--secondary" (click)="retry()">
+        {{ 'tables.retry' | translate }}
+      </button>
     </div>
   } @else if (data(); as riskData) {
     <!-- Page header -->
@@ -46,9 +49,7 @@
 
     @if (risks().length === 0) {
       <div class="empty-state">
-        <nz-empty
-          [nzNotFoundContent]="'risks.emptyPeriod' | translate"
-        ></nz-empty>
+        <nz-empty [nzNotFoundContent]="'risks.emptyPeriod' | translate"></nz-empty>
       </div>
     } @else {
       <!-- Risk overview -->
@@ -144,7 +145,9 @@
               </strong>
 
               <span>
-                {{ (totalCount() === 1 ? 'risks.activeRisk' : 'risks.activeRiskPlural') | translate }}
+                {{
+                  (totalCount() === 1 ? 'risks.activeRisk' : 'risks.activeRiskPlural') | translate
+                }}
               </span>
             </div>
 
@@ -155,60 +158,71 @@
           </div>
         </div>
 
-        <div class="risks-list">
-          @for (risk of sortedRisks(); track risk.id) {
-            <article
-              class="app-card risk-card"
-              [class.risk-card--critical]="risk.severity === 'Critical'"
-              [class.risk-card--high]="risk.severity === 'High'"
-              [class.risk-card--medium]="risk.severity === 'Medium'"
-              [class.risk-card--low]="risk.severity === 'Low'"
-            >
-              <div class="risk-card__header">
-                <div class="risk-card__metadata">
-                  <span
-                    class="risk-severity"
-                    [class.risk-severity--critical]="risk.severity === 'Critical'"
-                    [class.risk-severity--high]="risk.severity === 'High'"
-                    [class.risk-severity--medium]="risk.severity === 'Medium'"
-                    [class.risk-severity--low]="risk.severity === 'Low'"
-                  >
-                    <span class="severity-dot"></span>
+        <div class="app-card app-data-panel">
+          <div class="risks-list">
+            @for (risk of sortedRisks(); track risk.id) {
+              <article
+                class="app-card risk-card"
+                [class.risk-card--critical]="risk.severity === 'Critical'"
+                [class.risk-card--high]="risk.severity === 'High'"
+                [class.risk-card--medium]="risk.severity === 'Medium'"
+                [class.risk-card--low]="risk.severity === 'Low'"
+              >
+                <div class="risk-card__header">
+                  <div class="risk-card__metadata">
+                    <span
+                      class="risk-severity"
+                      [class.risk-severity--critical]="risk.severity === 'Critical'"
+                      [class.risk-severity--high]="risk.severity === 'High'"
+                      [class.risk-severity--medium]="risk.severity === 'Medium'"
+                      [class.risk-severity--low]="risk.severity === 'Low'"
+                    >
+                      <span class="severity-dot"></span>
 
-                    {{ ('risks.severities.' + risk.severity) | translate | uppercase }}
-                  </span>
+                      {{ 'risks.severities.' + risk.severity | translate | uppercase }}
+                    </span>
 
-                  <span class="risk-category">
-                    {{ categoryLabel(risk.category) }}
-                  </span>
+                    <span class="risk-category">
+                      {{ categoryLabel(risk.category) }}
+                    </span>
+                  </div>
+                  @if (risk.metricType) {
+                    <span class="risk-metric">
+                      {{ metricLabel(risk.metricType) }}
+                    </span>
+                  }
                 </div>
 
-                @if (risk.metricType) {
-                  <span class="risk-metric">
-                    {{ metricLabel(risk.metricType) }}
+                <div class="risk-card__content">
+                  <h3>
+                    {{ risk.title }}
+                  </h3>
+
+                  <p class="risk-description">
+                    {{ risk.description }}
+                  </p>
+                </div>
+
+                <div class="risk-recommendation">
+                  <span class="risk-recommendation__label">
+                    {{ 'risks.recommendation' | translate }}
                   </span>
-                }
-              </div>
 
-              <div class="risk-card__content">
-                <h3>
-                  {{ risk.title }}
-                </h3>
-
-                <p class="risk-description">
-                  {{ risk.description }}
-                </p>
-              </div>
-
-              <div class="risk-recommendation">
-                <span class="risk-recommendation__label"> {{ 'risks.recommendation' | translate }} </span>
-
-                <p>
-                  {{ risk.recommendation }}
-                </p>
-              </div>
-            </article>
-          }
+                  <p>
+                    {{ risk.recommendation }}
+                  </p>
+                </div>
+              </article>
+            }
+          </div>
+          <app-table-pagination
+            [pageNumber]="pagination.pageNumber()"
+            [pageSize]="pagination.pageSize()"
+            [totalCount]="pagination.totalCount()"
+            [disabled]="loading()"
+            (pageChange)="changePage($event)"
+            (pageSizeChange)="changePageSize($event)"
+          />
         </div>
       </section>
     }

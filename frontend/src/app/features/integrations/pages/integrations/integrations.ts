@@ -7,13 +7,13 @@ import { LocalizedDatePipe } from '@core/i18n/localized-format.pipes';
 import { Team } from '@core/team/models/team';
 import { TeamApi } from '@core/team/team-api';
 import { TeamContext } from '@core/team/team-context';
+import { PaginationState } from '@core/models/pagination-state';
+import { TablePagination } from '@core/components/table-pagination/table-pagination';
 import { TranslatePipe } from '@ngx-translate/core';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzPaginationModule } from 'ng-zorro-antd/pagination';
-import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import {
   EMPTY,
@@ -67,8 +67,7 @@ interface TeamIntegrationSummary {
     NzButtonModule,
     NzEmptyModule,
     NzInputModule,
-    NzPaginationModule,
-    NzSelectModule,
+    TablePagination,
     NzSpinModule,
     IntegrationSettings,
   ],
@@ -92,10 +91,10 @@ export class IntegrationsPage {
   readonly loadError = signal(false);
   readonly searchText = signal('');
   readonly search = signal('');
-  readonly pageNumber = signal(1);
-  readonly pageSize = signal(10);
-  readonly totalCount = signal(0);
-  readonly pageSizeOptions = [10, 20, 50];
+  readonly pagination = new PaginationState();
+  readonly pageNumber = this.pagination.pageNumber;
+  readonly pageSize = this.pagination.pageSize;
+  readonly totalCount = this.pagination.totalCount;
   readonly configuring = signal(false);
   readonly configuredTeamName = computed(
     () =>
@@ -122,10 +121,12 @@ export class IntegrationsPage {
               .getTeamsPage(this.pageNumber(), this.pageSize(), this.search())
               .pipe(
                 switchMap((page) => {
-                  const lastPage = Math.max(1, Math.ceil(page.totalCount / this.pageSize()));
-                  if (this.pageNumber() > lastPage) {
-                    this.pageNumber.set(lastPage);
-                    return this.teamApi.getTeamsPage(lastPage, this.pageSize(), this.search());
+                  if (this.pagination.acceptTotal(page.totalCount)) {
+                    return this.teamApi.getTeamsPage(
+                      this.pageNumber(),
+                      this.pageSize(),
+                      this.search(),
+                    );
                   }
                   return of(page);
                 }),
@@ -180,20 +181,15 @@ export class IntegrationsPage {
   }
 
   changePage(page: number): void {
-    if (page === this.pageNumber()) {
-      return;
+    if (this.pagination.changePage(page)) {
+      this.refresh();
     }
-    this.pageNumber.set(page);
-    this.refresh();
   }
 
   changePageSize(size: number): void {
-    if (size === this.pageSize()) {
-      return;
+    if (this.pagination.changePageSize(size)) {
+      this.refresh();
     }
-    this.pageSize.set(size);
-    this.pageNumber.set(1);
-    this.refresh();
   }
 
   configure(teamId: string): void {

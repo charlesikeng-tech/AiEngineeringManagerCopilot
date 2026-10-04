@@ -1,10 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, switchMap } from 'rxjs';
 
 import { TeamContext } from '@core/team/team-context';
-import { EngineeringReport } from '@features/dashboard/models/engineering-dashboard-response';
+import { ReportHistoryItem } from '../../models/report-history-item';
+import { PaginationState } from '@core/models/pagination-state';
+import { TablePagination } from '@core/components/table-pagination/table-pagination';
 import { ReportsApi } from '../../services/reports-api';
 
 import { I18nService } from '@core/i18n/i18n.service';
@@ -15,16 +24,18 @@ import { RouterLink } from '@angular/router';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
 
-
-type ReportHistoryItem = EngineeringReport & {
-  scoreDelta: number | null;
-  coverageDelta: number | null;
-};
-
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [LocalizedDatePipe, LocalizedNumberPipe, TranslatePipe, RouterLink, NzEmptyModule, NzSkeletonModule],
+  imports: [
+    TablePagination,
+    LocalizedDatePipe,
+    LocalizedNumberPipe,
+    TranslatePipe,
+    RouterLink,
+    NzEmptyModule,
+    NzSkeletonModule,
+  ],
   templateUrl: './reports.html',
   styleUrl: './reports.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,70 +45,79 @@ export class Reports {
   private readonly teamContext = inject(TeamContext);
   private readonly reportsApi = inject(ReportsApi);
 
-  private readonly loadReports$ = new Subject<string>();
+  private readonly loadReports$ = new Subject<{ teamId: string; version: number } | null>();
+  readonly pagination = new PaginationState();
 
-  readonly reports = signal<readonly EngineeringReport[]>([]);
+  readonly reports = signal<readonly ReportHistoryItem[]>([]);
+  readonly reportHistory = this.reports;
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
-
-  readonly reportHistory = computed<readonly ReportHistoryItem[]>(() => {
-    const reports = this.reports();
-
-    return reports.map((report, index) => {
-      // Reports are sorted newest -> oldest. The next item is therefore
-      // the previous reporting period.
-      const previousReport = reports[index + 1];
-
-      return {
-        ...report,
-        scoreDelta: previousReport
-          ? report.overallScore - previousReport.overallScore
-          : null,
-        coverageDelta: previousReport
-          ? report.dataCoverage - previousReport.dataCoverage
-          : null,
-      };
-    });
-  });
 
   constructor() {
     this.loadReports$
       .pipe(
-        switchMap((teamId) => {
+        switchMap((request) => {
+          if (!request) return EMPTY;
           this.loading.set(true);
           this.error.set(null);
-
-          return this.reportsApi.getReports(teamId);
+          return this.reportsApi
+            .getReportsPage(
+              request.teamId,
+              this.pagination.pageNumber(),
+              this.pagination.pageSize(),
+            )
+            .pipe(
+              switchMap((page) => {
+                if (request.version !== this.teamContext.selectionVersion()) return EMPTY;
+                if (this.pagination.acceptTotal(page.totalCount)) {
+                  this.retry();
+                  return EMPTY;
+                }
+                this.reports.set(page.items);
+                this.loading.set(false);
+                return EMPTY;
+              }),
+              catchError((error) => {
+                if (request.version === this.teamContext.selectionVersion()) {
+                  this.reports.set([]);
+                  if (error.status === 404) this.pagination.acceptTotal(0);
+                  this.error.set(error.status === 404 ? null : 'reports.loadError');
+                  this.loading.set(false);
+                }
+                return EMPTY;
+              }),
+            );
         }),
         takeUntilDestroyed(),
       )
-      .subscribe({
-        next: (reports) => {
-          this.reports.set(
-            [...reports].sort(
-              (a, b) => new Date(b.periodEnd).getTime() - new Date(a.periodEnd).getTime(),
-            ),
-          );
-
-          this.loading.set(false);
-        },
-        error: () => {
-          this.reports.set([]);
-          this.error.set('reports.loadError');
-          this.loading.set(false);
-        },
-      });
+      .subscribe();
 
     effect(() => {
       const teamId = this.teamContext.selectedTeamId();
-
-      if (!teamId) {
+      const version = this.teamContext.selectionVersion();
+      untracked(() => {
+        this.pagination.reset();
         this.reports.set([]);
-        return;
-      }
-
-      this.loadReports$.next(teamId);
+        this.error.set(null);
+        this.loading.set(false);
+        this.loadReports$.next(teamId ? { teamId, version } : null);
+      });
     });
+  }
+
+  retry(): void {
+    const teamId = this.teamContext.selectedTeamId();
+    this.loadReports$.next(
+      teamId ? { teamId, version: this.teamContext.selectionVersion() } : null,
+    );
+  }
+
+  changePage(page: number): void {
+    if (this.pagination.changePage(page)) this.retry();
+  }
+
+  changePageSize(size: number): void {
+    if (this.pagination.changePageSize(size)) this.retry();
   }
 
   deltaDirection(delta: number | null): 'up' | 'down' | 'flat' | 'none' {
@@ -127,8 +147,16 @@ export class Reports {
 
   healthLabel(healthLevel: string): string {
     const knownLevels = [
-      'Healthy', 'Needs Attention', 'At Risk', 'No Data', 'Attention',
-      'Critical', 'Excellent', 'Good', 'Warning', 'Unknown',
+      'Healthy',
+      'Needs Attention',
+      'At Risk',
+      'No Data',
+      'Attention',
+      'Critical',
+      'Excellent',
+      'Good',
+      'Warning',
+      'Unknown',
     ];
     return knownLevels.includes(healthLevel)
       ? this.i18n.t(`healthLevels.${healthLevel}`)

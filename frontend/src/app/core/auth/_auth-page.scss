@@ -1,0 +1,312 @@
+.auth-page {
+  display: flex;
+  justify-content: center;
+
+  min-height: 100vh;
+  padding: 64px 24px;
+
+  background:
+    radial-gradient(circle at top,
+      rgb(91 71 234 / 7%),
+      transparent 420px),
+    #f5f7fa;
+}
+
+.auth-shell {
+  width: 100%;
+  max-width: 480px;
+}
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  margin-bottom: 28px;
+}
+
+.auth-brand__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  flex: 0 0 42px;
+
+  color: #fff;
+  background: var(--app-primary);
+
+  border-radius: 10px;
+
+  font-size: 20px;
+}
+
+.auth-brand__product,
+.auth-brand__subtitle {
+  display: block;
+}
+
+.auth-brand__product {
+  color: var(--app-text-primary);
+
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.auth-brand__subtitle {
+  margin-top: 2px;
+
+  color: var(--app-text-tertiary);
+
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.auth-card {
+  overflow: hidden;
+
+  background: #fff;
+
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+
+  box-shadow:
+    0 1px 3px rgb(15 23 42 / 4%),
+    0 12px 32px rgb(15 23 42 / 6%);
+}
+
+.auth-card__header {
+  padding: 32px 32px 24px;
+
+  text-align: center;
+
+  h1 {
+    margin: 16px 0 0;
+
+    color: var(--app-text-primary);
+
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  p {
+    max-width: 380px;
+
+    margin: 8px auto 0;
+
+    color: var(--app-text-secondary);
+
+    font-size: 13px;
+    line-height: 1.6;
+  }
+}
+
+.auth-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 48px;
+  height: 48px;
+
+  color: var(--app-primary);
+  background: var(--app-primary-soft, #f0efff);
+
+  border-radius: 10px;
+
+  font-size: 21px;
+}
+
+/* =========================================================
+   ALERT
+   ========================================================= */
+
+.auth-alert {
+  display: block;
+
+  margin: 20px 32px 0;
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.auth-form {
+  display: grid;
+  gap: 18px;
+
+  padding: 28px 32px 32px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  label {
+    color: var(--app-text-secondary);
+
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  input {
+    height: 40px;
+  }
+}
+
+.field-hint {
+  color: var(--app-text-tertiary);
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.submit-button {
+  width: 100%;
+  height: 40px;
+
+  margin-top: 4px;
+}
+
+/* =========================================================
+   ALTERNATIVE LOGIN
+   ========================================================= */
+
+.auth-alternative {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  margin: 0 32px;
+  padding: 12px 14px;
+
+  color: var(--app-text-secondary);
+  background: var(--app-bg);
+
+  border: 1px solid var(--app-border);
+  border-radius: 7px;
+
+  font-size: 12px;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    flex-shrink: 0;
+
+    color: var(--app-primary);
+
+    font-weight: 500;
+  }
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.auth-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  min-height: 150px;
+
+  color: var(--app-text-secondary);
+
+  font-size: 12px;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.auth-card__footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  padding: 16px 32px;
+
+  color: var(--app-text-tertiary);
+  background: #fafbfc;
+
+  border-top: 1px solid var(--app-border);
+
+  font-size: 11px;
+  line-height: 1.5;
+
+  nz-icon {
+    margin-top: 2px;
+
+    color: var(--app-text-secondary);
+  }
+
+  a {
+    color: var(--app-primary);
+
+    font-weight: 500;
+  }
+}
+
+/* =========================================================
+   SECURITY FOOTNOTE
+   ========================================================= */
+
+.auth-security {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  margin: 18px 0 0;
+
+  color: var(--app-text-tertiary);
+
+  font-size: 10px;
+  text-align: center;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 540px) {
+  .auth-page {
+    padding: 32px 16px;
+  }
+
+  .auth-card__header,
+  .auth-form,
+  .auth-card__footer {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .auth-alert,
+  .auth-alternative {
+    margin-right: 20px;
+    margin-left: 20px;
+  }
+
+  .auth-alternative {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

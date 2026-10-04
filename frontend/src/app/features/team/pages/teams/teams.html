@@ -13,6 +13,9 @@
         [nzMessage]="'teams.loadError' | translate"
         [nzDescription]="'teams.loadErrorDescription' | translate"
       ></nz-alert>
+      <button nz-button type="button" (click)="loadTeams()">
+        {{ 'tables.retry' | translate }}
+      </button>
     </div>
   } @else {
     <!-- Page header -->
@@ -31,7 +34,7 @@
           <span class="page-summary__label">{{ 'teams.countLabel' | translate }}</span>
 
           <strong class="page-summary__value">
-            {{ teams().length | appNumber }}
+            {{ pagination.totalCount() | appNumber }}
           </strong>
         </div>
 
@@ -88,6 +91,14 @@
         </div>
       </section>
     }
+    <app-table-pagination
+      [pageNumber]="pagination.pageNumber()"
+      [pageSize]="pagination.pageSize()"
+      [totalCount]="pagination.totalCount()"
+      [disabled]="loading()"
+      (pageChange)="changePage($event)"
+      (pageSizeChange)="changePageSize($event)"
+    />
   }
 
   <!-- Create team drawer -->

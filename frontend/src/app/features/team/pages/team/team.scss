@@ -24,8 +24,7 @@
   gap: var(--app-space-md);
 }
 
-.overview-card__actions,
-.member-actions {
+.overview-card__actions {
   display: flex;
   align-items: center;
 
@@ -37,11 +36,6 @@
   line-height: 1.2;
 }
 
-
-.members-card {
-  padding: 0;
-  overflow: hidden;
-}
 
 .metric-status--available {
   color: var(--app-success);
@@ -426,175 +420,6 @@
 
 
 /* ---------------------------------------------------------
-   Member list
-   --------------------------------------------------------- */
-
-.members-list {
-  display: flex;
-
-  flex-direction: column;
-}
-
-.member-card {
-  display: flex;
-  align-items: center;
-
-  gap: var(--app-space-md);
-
-  padding:
-    18px 20px;
-
-  border-bottom:
-    1px solid var(--app-border);
-
-  transition:
-    background 160ms ease;
-
-  &:last-child {
-    border-bottom: 0;
-  }
-
-  &:hover {
-    background:
-      var(--app-surface-secondary);
-  }
-}
-
-
-/* ---------------------------------------------------------
-   Avatar
-   --------------------------------------------------------- */
-
-.member-avatar {
-  display: flex;
-
-  width: 42px;
-  height: 42px;
-
-  flex: 0 0 42px;
-
-  align-items: center;
-  justify-content: center;
-
-  color: var(--app-primary);
-
-  background:
-    var(--app-primary-soft);
-
-  border-radius: 50%;
-
-  font-size: 14px;
-  font-weight: 700;
-}
-
-
-/* ---------------------------------------------------------
-   Member content
-   --------------------------------------------------------- */
-
-.member-main {
-  display: grid;
-
-  grid-template-columns:
-    minmax(180px, 1.5fr) minmax(180px, 1fr) auto;
-
-  min-width: 0;
-
-  flex: 1;
-
-  align-items: center;
-
-  gap: var(--app-space-lg);
-}
-
-.member-identity {
-  display: flex;
-
-  min-width: 0;
-
-  flex-direction: column;
-
-  gap: 3px;
-
-  strong,
-  span {
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  strong {
-    color: var(--app-text-primary);
-
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  span {
-    color: var(--app-text-secondary);
-
-    font-size: 12px;
-  }
-}
-
-
-/* ---------------------------------------------------------
-   Member metadata
-   --------------------------------------------------------- */
-
-.member-metadata {
-  display: flex;
-
-  align-items: center;
-
-  gap: var(--app-space-md);
-}
-
-.member-role {
-  padding:
-    3px 8px;
-
-  color: var(--app-text-primary);
-
-  background:
-    var(--app-surface-secondary);
-
-  border:
-    1px solid var(--app-border);
-
-  border-radius: 999px;
-
-  font-size: 11px;
-  font-weight: 600;
-
-  white-space: nowrap;
-}
-
-.provider-id {
-  max-width: 220px;
-
-  overflow: hidden;
-
-  color: var(--app-text-tertiary);
-
-  font-size: 11px;
-
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-
-/* ---------------------------------------------------------
-   Member actions
-   --------------------------------------------------------- */
-
-.member-actions {
-  flex-shrink: 0;
-}
-
-
-/* ---------------------------------------------------------
    Responsive - Tablet
    --------------------------------------------------------- */
 
@@ -629,17 +454,6 @@
   }
 
 
-  /* Members */
-
-  .member-main {
-    grid-template-columns: 1fr;
-
-    gap: var(--app-space-sm);
-  }
-
-  .member-metadata {
-    justify-content: flex-start;
-  }
 }
 
 
@@ -696,20 +510,6 @@
     min-height: 130px;
   }
 
-
-  /* Members */
-
-  .member-card {
-    align-items: flex-start;
-  }
-
-  .member-metadata {
-    align-items: flex-start;
-
-    flex-direction: column;
-
-    gap: var(--app-space-xs);
-  }
 
   .overview-card__header {
     align-items: flex-start;

@@ -353,7 +353,7 @@ describe('all-team integrations overview', () => {
     page.changePage(3);
     fixture.detectChanges();
     fixture.debugElement
-      .query(By.css('#integration-page-size'))
+      .query(By.css('.app-table-footer nz-select'))
       .triggerEventHandler('ngModelChange', 20);
     fixture.detectChanges();
     expect(getTeamsPage).toHaveBeenLastCalledWith(1, 20, '');

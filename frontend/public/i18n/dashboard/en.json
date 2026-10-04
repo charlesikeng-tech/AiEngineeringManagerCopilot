@@ -48,6 +48,7 @@
       "empty": "No AI analysis available"
     },
     "risks": {
+      "viewAll": "View all risks",
       "title": "Risks",
       "subtitle": "Engineering risks requiring attention",
       "emptyTitle": "No active risks",

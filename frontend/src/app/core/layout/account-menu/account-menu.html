@@ -1,0 +1,89 @@
+@if (user(); as currentUser) {
+  <button
+    nz-button
+    nzType="text"
+    type="button"
+    class="account-trigger"
+    nz-dropdown
+    nzTrigger="click"
+    nzPlacement="bottomRight"
+    [nzDropdownMenu]="accountDropdown"
+    aria-label="Open account menu"
+  >
+    <nz-avatar class="account-avatar" nzIcon="user" />
+
+    <div class="account-trigger__identity">
+      <span class="account-trigger__name">
+        {{ currentUser.name }}
+      </span>
+
+      <span class="account-trigger__role">
+        {{ roleLabel() }}
+      </span>
+    </div>
+
+    <nz-icon class="account-trigger__chevron" nzType="down" />
+  </button>
+
+  <nz-dropdown-menu #accountDropdown="nzDropdownMenu">
+    <div class="account-dropdown">
+      <!-- Profile -->
+
+      <div class="account-profile">
+        <nz-avatar class="account-profile__avatar" nzIcon="user" [nzSize]="44" />
+
+        <div class="account-profile__content">
+          <strong class="account-profile__name">
+            {{ currentUser.name }}
+          </strong>
+
+          @if (currentUser.email) {
+            <span class="account-profile__email">
+              {{ currentUser.email }}
+            </span>
+          }
+
+          <span class="account-profile__role">
+            {{ roleLabel() }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+
+      @if (currentUser.role === 'PlatformAdministrator') {
+        <div class="account-section">
+          <span class="account-section__label"> ACCOUNT </span>
+
+          <a class="account-item" routerLink="/account/security">
+            <nz-icon nzType="safety-certificate" />
+
+            <span>
+              {{ 'accountLink.title' | translate }}
+            </span>
+          </a>
+
+          <a class="account-item" routerLink="/admin/authentication">
+            <nz-icon nzType="lock" />
+
+            <span>
+              {{ 'sso.title' | translate }}
+            </span>
+          </a>
+        </div>
+      }
+
+      <!-- Logout -->
+
+      <div class="account-section account-section--logout">
+        <button class="account-item account-item--danger" type="button" (click)="logout()">
+          <nz-icon nzType="poweroff" />
+
+          <span>
+            {{ 'sso.login.logout' | translate }}
+          </span>
+        </button>
+      </div>
+    </div>
+  </nz-dropdown-menu>
+}

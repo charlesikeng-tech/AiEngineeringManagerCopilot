@@ -1,4 +1,5 @@
 using FluentValidation;
+using AiEngineeringManagerCopilot.Application.Common;
 
 namespace AiEngineeringManagerCopilot.Application.Teams.Validation;
 
@@ -6,11 +7,7 @@ public sealed class GetTeamsPageRequestValidator : AbstractValidator<GetTeamsPag
 {
     public GetTeamsPageRequestValidator()
     {
-        RuleFor(request => request.PageNumber).GreaterThanOrEqualTo(1);
-        RuleFor(request => request.PageSize).InclusiveBetween(1, 100);
+        this.AddPaginationRules(request => request.PageNumber, request => request.PageSize);
         RuleFor(request => request.Search).MaximumLength(200);
-        RuleFor(request => request)
-            .Must(request => ((long)request.PageNumber - 1) * request.PageSize <= int.MaxValue)
-            .WithMessage("The requested page offset is too large.");
     }
 }

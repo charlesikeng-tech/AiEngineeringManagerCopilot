@@ -1,4 +1,5 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
+using AiEngineeringManagerCopilot.Application.Common;
 using AiEngineeringManagerCopilot.Application.AI;
 using AiEngineeringManagerCopilot.Application.Risks;
 using AiEngineeringManagerCopilot.Infrastructure.Development;
@@ -32,6 +33,7 @@ public static class PersistenceServiceCollectionExtensions
 
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<ITeamMemberRepository, TeamMemberRepository>();
+        services.AddScoped<ITeamCollectionPageReader, TeamCollectionPageReader>();
         services.AddScoped<
             IGitHubConnectionRepository,
             GitHubConnectionRepository>();

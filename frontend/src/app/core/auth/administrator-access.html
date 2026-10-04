@@ -1,0 +1,166 @@
+<div class="auth-page">
+  <div class="auth-shell">
+    <header class="auth-brand">
+      <div class="auth-brand__icon">
+        <nz-icon nzType="safety-certificate" />
+      </div>
+
+      <div>
+        <span class="auth-brand__product"> AI Engineering Manager </span>
+
+        <span class="auth-brand__subtitle"> Engineering Intelligence Platform </span>
+      </div>
+    </header>
+
+    <main class="auth-card">
+      <div class="auth-card__header">
+        <div class="auth-card__icon">
+          <nz-icon [nzType]="setupMode ? 'setting' : 'lock'" />
+        </div>
+
+        <h1>
+          {{ setupMode ? 'Installation initiale — Administrateur' : 'Connexion Administrateur' }}
+        </h1>
+
+        <p>
+          {{
+            setupMode
+              ? 'Configurez le compte administrateur local utilisé pour administrer la plateforme.'
+              : 'Accédez au compte administrateur local de récupération, indépendant du SSO.'
+          }}
+        </p>
+      </div>
+
+      @if (!setupMode) {
+        <div class="auth-alternative">
+          <span>Vous souhaitez utiliser votre compte entreprise ?</span>
+
+          <a routerLink="/login">
+            Connexion SSO
+            <nz-icon nzType="arrow-right" />
+          </a>
+        </div>
+      }
+
+      @if (error()) {
+        <nz-alert class="auth-alert" nzType="error" [nzMessage]="error()" nzShowIcon />
+      }
+
+      @if (!ready()) {
+        <div class="auth-loading">
+          <nz-spin nzSimple />
+
+          <span> Vérification de la configuration… </span>
+        </div>
+      }
+
+      @if (ready()) {
+        <form class="auth-form" (ngSubmit)="submit()">
+          @if (setupMode) {
+            <div class="form-field">
+              <label for="secret"> Secret d’installation </label>
+
+              <input
+                nz-input
+                id="secret"
+                name="secret"
+                type="password"
+                [(ngModel)]="secret"
+                required
+                maxlength="512"
+                autocomplete="off"
+                placeholder="Secret fourni par l’exploitant"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="name"> Nom de l’administrateur </label>
+
+              <input
+                nz-input
+                id="name"
+                name="name"
+                [(ngModel)]="name"
+                required
+                maxlength="200"
+                autocomplete="name"
+                placeholder="Nom complet"
+              />
+            </div>
+          }
+
+          <div class="form-field">
+            <label for="email"> Adresse e-mail </label>
+
+            <input
+              nz-input
+              id="email"
+              name="email"
+              type="email"
+              [(ngModel)]="email"
+              required
+              maxlength="254"
+              autocomplete="username"
+              placeholder="admin@company.com"
+            />
+          </div>
+
+          <div class="form-field">
+            <label for="password"> Mot de passe </label>
+
+            <input
+              nz-input
+              id="password"
+              name="password"
+              type="password"
+              [(ngModel)]="password"
+              required
+              maxlength="128"
+              [attr.autocomplete]="setupMode ? 'new-password' : 'current-password'"
+            />
+
+            @if (setupMode) {
+              <span class="field-hint">
+                12 caractères minimum, avec majuscule, minuscule, chiffre et symbole.
+              </span>
+            }
+          </div>
+
+          @if (setupMode) {
+            <div class="form-field">
+              <label for="confirmation"> Confirmer le mot de passe </label>
+
+              <input
+                nz-input
+                id="confirmation"
+                name="confirmation"
+                type="password"
+                [(ngModel)]="confirmation"
+                required
+                maxlength="128"
+                autocomplete="new-password"
+              />
+            </div>
+          }
+
+          <button
+            class="submit-button"
+            nz-button
+            nzType="primary"
+            type="submit"
+            [nzLoading]="busy()"
+            [disabled]="busy()"
+          >
+            {{ setupMode ? 'Installer et se connecter' : 'Se connecter' }}
+          </button>
+        </form>
+      }
+
+      <footer class="auth-card__footer">
+        <nz-icon nzType="info-circle" />
+
+        <span> Récupération du compte : contactez l’exploitant de la plateforme. </span>
+      </footer>
+    </main>
+  </div>
+</div>

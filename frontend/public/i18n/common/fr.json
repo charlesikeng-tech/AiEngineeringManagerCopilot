@@ -1,6 +1,6 @@
 {
   "app": {
-    "documentTitle": "Copilote IA pour les Engineering Managers",
+    "documentTitle": "AI EM Copilot",
     "intelligence": "Intelligence d'ingénierie",
     "platform": "Plateforme d'intelligence d'ingénierie",
     "workspace": "Espace de travail",
@@ -16,6 +16,14 @@
     "activeTeam": "Équipe active",
     "selectTeam": "Sélectionner une équipe",
     "development": "Développement"
+  },
+  "tables": {
+    "retry": "Réessayer",
+    "refresh": "Actualiser",
+    "pagination": {
+      "pageSize": "Éléments par page",
+      "range": "{{from}}–{{to}} sur {{total}} éléments"
+    }
   },
   "integrations": {
     "overview": {

@@ -12,6 +12,7 @@ public sealed class SlackWebhookConnectionService(
     ISlackWebhookConnectionRepository connectionRepository,
     ISecretProtector secretProtector,
     ISlackWebhookClient slackWebhookClient,
+    ReportNotificationFactory notificationFactory,
     ILogger<SlackWebhookConnectionService> logger)
     : ISlackWebhookConnectionService, IEngineeringReportNotifier
 {
@@ -110,14 +111,14 @@ public sealed class SlackWebhookConnectionService(
                 "Slack webhook test successful.",
                 cancellationToken);
         }
-        catch (HttpRequestException exception)
+        catch (HttpRequestException)
         {
-            logger.LogWarning(exception, "Slack webhook test failed for team {TeamId}.", teamId);
+            logger.LogWarning("Slack webhook test failed for team {TeamId}.", teamId);
             sent = false;
         }
-        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            logger.LogWarning(exception, "Slack webhook test timed out for team {TeamId}.", teamId);
+            logger.LogWarning("Slack webhook test timed out for team {TeamId}.", teamId);
             sent = false;
         }
 
@@ -138,15 +139,11 @@ public sealed class SlackWebhookConnectionService(
             return;
         }
 
-        var message =
-            ":bar_chart: *Engineering report generated*\n" +
-            $"*Team:* {EscapeSlackText(teamName)}\n" +
-            $"*Period:* {report.PeriodStart:yyyy-MM-dd} – {report.PeriodEnd:yyyy-MM-dd}\n" +
-            $"*Health score:* {report.OverallScore}/100 ({EscapeSlackText(report.HealthLevel)})";
+        var notification = notificationFactory.Create(teamId, teamName, report);
 
         try
         {
-            if (!await SendAsync(connection, message, cancellationToken))
+            if (!await slackWebhookClient.SendReportAsync(GetWebhookUri(connection), notification, cancellationToken))
             {
                 logger.LogWarning(
                     "Slack report notification was rejected for team {TeamId} and report {ReportId}.",
@@ -154,18 +151,16 @@ public sealed class SlackWebhookConnectionService(
                     report.Id);
             }
         }
-        catch (HttpRequestException exception)
+        catch (HttpRequestException)
         {
             logger.LogWarning(
-                exception,
                 "Slack report notification failed for team {TeamId} and report {ReportId}.",
                 teamId,
                 report.Id);
         }
-        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(
-                exception,
                 "Slack report notification timed out for team {TeamId} and report {ReportId}.",
                 teamId,
                 report.Id);
@@ -177,6 +172,11 @@ public sealed class SlackWebhookConnectionService(
         string message,
         CancellationToken cancellationToken)
     {
+        return await slackWebhookClient.SendAsync(GetWebhookUri(connection), message, cancellationToken);
+    }
+
+    private Uri GetWebhookUri(SlackWebhookConnection connection)
+    {
         var url = secretProtector.Unprotect(connection.WebhookUrlEncrypted);
         if (!SlackWebhookAddress.TryParse(url, out var webhookUri))
         {
@@ -184,18 +184,11 @@ public sealed class SlackWebhookConnectionService(
                 $"Stored Slack webhook URL for team {connection.TeamId} is invalid.");
         }
 
-        return await slackWebhookClient.SendAsync(
-            webhookUri!,
-            message,
-            cancellationToken);
+        return webhookUri!;
     }
 
     private static SlackWebhookConnectionResponse ToResponse(
         SlackWebhookConnection connection) =>
         new(connection.TeamId, connection.CreatedAt);
 
-    private static string EscapeSlackText(string value) =>
-        value.Replace("&", "&amp;", StringComparison.Ordinal)
-            .Replace("<", "&lt;", StringComparison.Ordinal)
-            .Replace(">", "&gt;", StringComparison.Ordinal);
 }

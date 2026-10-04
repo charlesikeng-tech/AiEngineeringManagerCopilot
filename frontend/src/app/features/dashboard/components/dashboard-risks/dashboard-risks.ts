@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { LocalizedNumberPipe } from '@core/i18n/localized-format.pipes';
 import { TranslatePipe } from '@ngx-translate/core';
 
@@ -10,13 +11,19 @@ import { EngineeringRisk, RiskSeverity } from '../../models/engineering-dashboar
 @Component({
   selector: 'app-dashboard-risks',
   standalone: true,
-  imports: [TranslatePipe, LocalizedNumberPipe, NzCardModule, NzTagModule],
+  imports: [TranslatePipe, LocalizedNumberPipe, NzCardModule, NzTagModule, RouterLink],
   templateUrl: './dashboard-risks.html',
   styleUrl: './dashboard-risks.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardRisks {
   readonly risks = input.required<readonly EngineeringRisk[]>();
+  readonly visibleRisks = computed(() => {
+    const severityOrder: Record<RiskSeverity, number> = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+    return [...this.risks()]
+      .sort((left, right) => severityOrder[left.severity] - severityOrder[right.severity])
+      .slice(0, 5);
+  });
 
   severityColor(severity: RiskSeverity): 'default' | 'blue' | 'orange' | 'red' | 'magenta' {
     switch (severity) {

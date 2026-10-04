@@ -133,6 +133,36 @@ execution status.
 user's teams. Pages are ordered by team name and ID; page size is limited to
 100. The existing `GET /teams` array response is unchanged for other screens.
 
+Growing collections use the same lazy-loading pagination controls: teams,
+team members, report history, current risks, current actions, and the
+integrations overview. The default page size is 10, with choices of 20 and 50.
+Team-scoped lists reset to the first page on team changes; changing page size
+also resets the page. Requests for previous pages are cancelled, and a deleted
+last page is clamped to the last available page.
+
+New paged endpoints preserve the existing unpaged contracts:
+
+```text
+GET /teams/{teamId}/members/paged
+GET /teams/{teamId}/reports/paged
+GET /teams/{teamId}/risks/paged
+GET /teams/{teamId}/actions/paged
+```
+
+All accept `pageNumber` and `pageSize` and enforce owner-based team isolation.
+Risk/action summary counters cover the full latest report, not just the
+displayed page. Report-history deltas include the previous report even when
+it is on the next page. Small report metric summaries remain unpaginated;
+dashboard risk previews show the five highest-priority risks and link to the
+complete list.
+
+Native table layout, row spacing, headers, status badges, scrolling and footer
+styles live in `frontend/src/styles/_tables.scss`. The shared Angular
+`TablePagination` component and `PaginationState` centralize controls,
+localization, defaults and page-clamping behavior. Feature SCSS only defines
+resource-specific columns and content; risk/action cards retain their detailed
+presentation and use the same pagination footer.
+
 ## Production readiness
 
 The application is an MVP with a local development frontend, not a
@@ -940,8 +970,10 @@ Each team can configure a Slack Incoming Webhook from **Integrations >
 Notifications**, after selecting the team.
 The webhook is encrypted before it is stored, is never returned by the API,
 and is restricted to HTTPS URLs hosted on `hooks.slack.com`. Slack receives
-a message after a report is successfully persisted, containing the team,
-reporting period, health score, and health level. A Slack delivery failure is
+a Block Kit card after a report is successfully persisted, containing the
+team, reporting period, color-coded health score, data coverage, executive
+summary, up to three prioritized risks and three open recommended actions.
+A **View report** button opens the report in the application. A Slack delivery failure is
 logged and does not roll back report generation.
 
 The **Send test** action posts a test message to the configured channel.
@@ -972,11 +1004,36 @@ Supported addresses are HTTPS Workflows URLs on
 `outlook.office.com` and `*.webhook.office.com` are also accepted; prefer
 Workflows for new connections. Redirects are disabled.
 
-Teams receives an Adaptive Card after a report is saved, including the team,
-reporting period, health score, and health level. When both Slack and Teams
+Teams receives a styled Adaptive Card after a report is saved, including the
+team, reporting period, color-coded health score, data coverage, executive
+summary, up to three prioritized risks and three open recommended actions,
+and a **View report** button. When both Slack and Teams
 are configured, both are notified. Delivery failures are logged without
 rolling back report generation or preventing delivery to the other integration.
 Removing the Teams connection stops only Teams notifications.
+
+### Report notification links
+
+Set `ReportNotifications:FrontendBaseUrl` to the frontend's public address,
+not the API address. It defaults to `http://localhost:4200` for local
+development and supports a deployment path prefix:
+
+```sh
+ReportNotifications__FrontendBaseUrl=https://copilot.example.com
+```
+
+The base URL is validated at startup and limited to 1024 characters so cards
+stay within platform payload limits. Use HTTPS for deployed environments.
+Links have the form `/reports/{reportId}?teamId={teamId}`; the frontend selects
+that team before fetching the report and still relies on API authorization
+and team ownership checks. No webhook secrets or authentication tokens are
+included in the link.
+
+Cards use the saved report's executive summary, risks and actions; they do
+not invent an AI analysis that has not been generated. Completed/cancelled
+actions are excluded from the priority list, and long content is bounded to
+stay within message limits. Webhook **Send test** remains a simple connectivity
+message. Delivery failures are logged without exposing signed webhook URLs.
 
 The authenticated API exposes `GET`, `POST`, and `DELETE` at
 `/teams/{teamId}/microsoft-teams`, and `POST` at

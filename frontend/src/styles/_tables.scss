@@ -1,0 +1,155 @@
+.app-card.app-data-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.app-table-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--app-space-md);
+  padding: var(--app-space-md) 20px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.app-table-wrapper {
+  overflow-x: auto;
+
+  &:focus-visible {
+    outline: 2px solid var(--app-primary);
+    outline-offset: -2px;
+  }
+}
+
+.app-data-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--app-border);
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+  }
+
+  thead th {
+    background: var(--app-surface-secondary);
+    color: var(--app-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  tbody th {
+    font-weight: 600;
+  }
+  tbody tr {
+    height: 60px;
+  }
+  tbody tr:hover,
+  tbody tr:focus-within {
+    background: #fafbff;
+  }
+  tbody tr:last-child th,
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  th:first-child,
+  td:first-child {
+    padding-left: 20px;
+  }
+  th:last-child,
+  td:last-child {
+    padding-right: 20px;
+  }
+}
+
+.app-table-caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.app-table-name {
+  display: block;
+  font-weight: 600;
+}
+.app-table-secondary {
+  color: var(--app-text-secondary);
+  font-size: 12px;
+}
+.app-table-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.app-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background: var(--app-surface-secondary);
+  color: var(--app-text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.app-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.app-status-pill--success {
+  background: #ecfdf3;
+  border-color: #abefc6;
+  color: #067647;
+}
+.app-status-pill--error {
+  background: #fef3f2;
+  border-color: #fecdca;
+  color: #b42318;
+}
+.app-status-pill--warning {
+  background: #fffaeb;
+  border-color: #fedf89;
+  color: #b54708;
+}
+
+.app-table-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-md);
+  padding: 14px 20px;
+  border-top: 1px solid var(--app-border);
+
+  nz-pagination {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-table-toolbar,
+  .app-table-footer {
+    padding: var(--app-space-md);
+  }
+  .app-table-footer nz-pagination {
+    width: 100%;
+    margin-left: 0;
+  }
+}

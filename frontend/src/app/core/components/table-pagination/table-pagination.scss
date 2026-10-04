@@ -1,0 +1,17 @@
+:host {
+  display: block;
+}
+
+.pagination-size {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-sm);
+
+  label {
+    color: var(--app-text-secondary);
+    font-size: 12px;
+  }
+  nz-select {
+    min-width: 72px;
+  }
+}

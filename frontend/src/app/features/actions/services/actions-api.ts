@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
+import { PagedActionsResponse } from '../models/paged-actions-response';
 import {
   EngineeringAction,
   EngineeringActionsResponse,
@@ -14,6 +15,17 @@ import {
 })
 export class ActionsApi {
   private readonly http = inject(HttpClient);
+
+  getActionsPage(
+    teamId: string,
+    pageNumber: number,
+    pageSize: number,
+  ): Observable<PagedActionsResponse> {
+    return this.http.get<PagedActionsResponse>(
+      `${environment.apiUrl}/teams/${teamId}/actions/paged`,
+      { params: { pageNumber, pageSize } },
+    );
+  }
 
   getCurrentActions(teamId: string): Observable<EngineeringActionsResponse> {
     return this.http.get<EngineeringActionsResponse>(

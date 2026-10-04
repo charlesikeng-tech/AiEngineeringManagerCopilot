@@ -18,11 +18,15 @@ import { LocalizedNumberPipe } from '@core/i18n/localized-format.pipes';
 import { TeamContext } from '@core/team/team-context';
 import { CreateTeamRequest, Team } from '../../models/team.model';
 import { TeamApi } from '../../services/team-api';
+import { PaginationState } from '@core/models/pagination-state';
+import { TablePagination } from '@core/components/table-pagination/table-pagination';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-teams',
   standalone: true,
   imports: [
+    TablePagination,
     TranslatePipe,
     LocalizedNumberPipe,
     ReactiveFormsModule,
@@ -48,6 +52,8 @@ export class TeamsPage {
   readonly loading = signal(true);
   readonly error = signal(false);
   readonly teams = signal<readonly Team[]>([]);
+  readonly pagination = new PaginationState();
+  private loadSubscription?: Subscription;
 
   readonly createTeamOpen = signal(false);
   readonly creatingTeam = signal(false);
@@ -70,24 +76,41 @@ export class TeamsPage {
     this.loadTeams();
   }
 
-  private loadTeams(): void {
+  loadTeams(): void {
+    this.loadSubscription?.unsubscribe();
     this.loading.set(true);
     this.error.set(false);
 
-    this.teamApi
-      .getTeams()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (teams) => {
-          this.teams.set(teams);
-          this.loading.set(false);
-        },
-        error: (error) => {
-          console.error('Failed to load teams', error);
-          this.error.set(true);
-          this.loading.set(false);
-        },
-      });
+    const subscription = new Subscription();
+    this.loadSubscription = subscription;
+    subscription.add(
+      this.teamApi
+        .getTeamsPage(this.pagination.pageNumber(), this.pagination.pageSize())
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (page) => {
+            if (this.pagination.acceptTotal(page.totalCount)) {
+              this.loadTeams();
+              return;
+            }
+            this.teams.set(page.items);
+            this.loading.set(false);
+          },
+          error: (error) => {
+            console.error('Failed to load teams', error);
+            this.error.set(true);
+            this.loading.set(false);
+          },
+        }),
+    );
+  }
+
+  changePage(pageNumber: number): void {
+    if (this.pagination.changePage(pageNumber)) this.loadTeams();
+  }
+
+  changePageSize(pageSize: number): void {
+    if (this.pagination.changePageSize(pageSize)) this.loadTeams();
   }
 
   openTeam(team: Team): void {
@@ -133,8 +156,6 @@ export class TeamsPage {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (team) => {
-          this.teams.update((teams) => [...teams, team]);
-
           this.creatingTeam.set(false);
           this.createTeamOpen.set(false);
 

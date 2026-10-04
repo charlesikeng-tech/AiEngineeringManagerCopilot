@@ -21,7 +21,7 @@
     </div>
   } @else {
     <div class="risk-list">
-      @for (risk of risks(); track risk.id) {
+      @for (risk of visibleRisks(); track risk.id) {
         <article class="risk-item" [class]="severityClass(risk.severity)">
           <div class="risk-header">
             <span class="risk-indicator"></span>
@@ -30,9 +30,17 @@
               <strong>{{ risk.title }}</strong>
 
               <span class="severity">
-                {{ ('priorities.' + risk.severity) | translate }}
+                {{ 'priorities.' + risk.severity | translate }}
               </span>
             </div>
+            @if (risks().length > visibleRisks().length) {
+              <a
+                class="app-button app-button--secondary app-button--compact risk-view-all"
+                routerLink="/risks"
+              >
+                {{ 'dashboard.risks.viewAll' | translate }}
+              </a>
+            }
           </div>
 
           <p class="risk-description">

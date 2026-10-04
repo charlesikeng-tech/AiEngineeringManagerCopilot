@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Auth } from '@core/auth/auth';
-import { TeamContext } from '@core/team/team-context';
-
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+
+import { Auth } from '@core/auth/auth';
 import { LanguageSelector } from '@core/i18n/language-selector/language-selector';
 import { TeamSelector } from '@core/team/team-selector/team-selector';
 
@@ -12,6 +11,9 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 
+import { environment } from '@environments/environment';
+import { AccountMenu } from '../account-menu/account-menu';
+
 @Component({
   selector: 'app-main-layout',
   standalone: true,
@@ -19,13 +21,16 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
+
     NzButtonModule,
     NzIconModule,
     NzLayoutModule,
     NzMenuModule,
+
     TeamSelector,
-    TranslatePipe,
     LanguageSelector,
+    TranslatePipe,
+    AccountMenu,
   ],
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.scss',
@@ -33,19 +38,12 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
 })
 export class MainLayout {
   private readonly auth = inject(Auth);
-  private readonly teamContext = inject(TeamContext);
-  private readonly router = inject(Router);
+
   readonly isCollapsed = signal(false);
+
   readonly administrator = this.auth.user;
 
-  logout(): void {
-    this.auth.logout().subscribe({
-      next: () => {
-        this.teamContext.clearTeam();
-        void this.router.navigateByUrl('/login');
-      },
-    });
-  }
+  readonly isDevelopment = !environment.production;
 
   toggleSidebar(): void {
     this.isCollapsed.update((value) => !value);

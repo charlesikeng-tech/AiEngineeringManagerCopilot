@@ -1,0 +1,219 @@
+@use './auth-page';
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+/* =========================================================
+   PROVIDERS
+   ========================================================= */
+
+.provider-content {
+  padding: 28px 32px 32px;
+}
+
+.provider-list {
+  display: grid;
+  gap: 12px;
+}
+
+.provider-button {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  height: auto;
+  min-height: 58px;
+
+  padding: 10px 14px;
+
+  text-align: left;
+}
+
+.provider-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  flex: 0 0 36px;
+
+  margin-right: 12px;
+
+  color: var(--app-primary);
+  background: var(--app-primary-soft, #f0efff);
+
+  border-radius: 7px;
+}
+
+.provider-content__text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+
+  strong {
+    overflow: hidden;
+
+    color: var(--app-text-primary);
+
+    font-size: 13px;
+    font-weight: 600;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    margin-top: 2px;
+
+    color: var(--app-text-tertiary);
+
+    font-size: 11px;
+  }
+}
+
+.provider-arrow {
+  margin-left: 12px;
+
+  color: var(--app-text-tertiary);
+}
+
+/* =========================================================
+   STATES
+   ========================================================= */
+
+.loading-state,
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  min-height: 150px;
+
+  color: var(--app-text-secondary);
+
+  font-size: 12px;
+}
+
+/* =========================================================
+   COLLISION
+   ========================================================= */
+
+.collision-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  margin: 20px 32px 0;
+  padding: 14px;
+
+  color: var(--app-text-secondary);
+  background: #fffaf0;
+
+  border: 1px solid #f5e5bd;
+  border-radius: 7px;
+
+  >nz-icon {
+    margin-top: 3px;
+
+    color: #d99118;
+  }
+
+  p {
+    margin: 0;
+
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    margin-top: 6px;
+
+    color: var(--app-primary);
+
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
+
+/* =========================================================
+   DIAGNOSTIC
+   ========================================================= */
+
+.diagnostic {
+  display: grid;
+  gap: 5px;
+
+  margin: 20px 32px 0;
+  padding: 10px 12px;
+
+  background: var(--app-bg);
+
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+
+  code {
+    color: var(--app-text-primary);
+
+    font-size: 11px;
+
+    overflow-wrap: anywhere;
+  }
+}
+
+.diagnostic__label {
+  color: var(--app-text-tertiary);
+
+  font-size: 10px;
+  font-weight: 600;
+
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.auth-card__footer {
+  justify-content: space-between;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    flex-shrink: 0;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 540px) {
+  .provider-content {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .collision-notice,
+  .diagnostic {
+    margin-right: 20px;
+    margin-left: 20px;
+  }
+
+  .auth-card__footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

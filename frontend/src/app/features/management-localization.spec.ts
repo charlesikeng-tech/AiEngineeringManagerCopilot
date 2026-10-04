@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { I18nService } from '@core/i18n/i18n.service';
 import { TeamContext } from '@core/team/team-context';
@@ -15,6 +15,7 @@ import { RisksApi } from '@features/risks/services/risks-api';
 import managementEn from '../../../public/i18n/management/en.json';
 import managementFr from '../../../public/i18n/management/fr.json';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { EMPTY, of } from 'rxjs';
 
 describe('management page localization', () => {
   beforeEach(() => {
@@ -23,18 +24,31 @@ describe('management page localization', () => {
       providers: [
         provideRouter([]),
         ...provideI18nTesting('en', { en: managementEn, fr: managementFr }),
-        { provide: TeamContext, useValue: { selectedTeamId: signal(null) } },
-        { provide: ActionsApi, useValue: { getCurrentActions: () => ({}) } },
-        { provide: ReportsApi, useValue: { getReports: () => ({}) } },
+        {
+          provide: TeamContext,
+          useValue: { selectedTeamId: signal(null), selectionVersion: signal(0) },
+        },
+        {
+          provide: ActionsApi,
+          useValue: { getCurrentActions: () => EMPTY, getActionsPage: () => EMPTY },
+        },
+        { provide: ReportsApi, useValue: { getReports: () => EMPTY, getReportsPage: () => EMPTY } },
         {
           provide: ReportAnalysisApi,
           useValue: { getAnalysis: () => ({}) },
         },
-        { provide: RisksApi, useValue: { getCurrentRisks: () => ({}) } },
+        {
+          provide: RisksApi,
+          useValue: { getCurrentRisks: () => EMPTY, getRisksPage: () => EMPTY },
+        },
         { provide: NzMessageService, useValue: { success: vi.fn(), error: vi.fn() } },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: { get: () => null } } },
+          useValue: {
+            snapshot: { paramMap: convertToParamMap({}), queryParamMap: convertToParamMap({}) },
+            paramMap: of(convertToParamMap({})),
+            queryParamMap: of(convertToParamMap({})),
+          },
         },
       ],
     });

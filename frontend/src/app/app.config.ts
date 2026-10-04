@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import {
   ApiOutline,
   ArrowDownOutline,
+  ArrowRightOutline,
   ArrowUpOutline,
   BarChartOutline,
   CheckSquareOutline,
@@ -12,13 +13,17 @@ import {
   FileTextOutline,
   GithubOutline,
   LockOutline,
+  LoginOutline,
   MenuFoldOutline,
   MenuUnfoldOutline,
   MinusOutline,
   PlusOutline,
+  PoweroffOutline,
+  SafetyCertificateOutline,
   SlackOutline,
   SyncOutline,
   TeamOutline,
+  UserOutline,
   WarningOutline,
 } from '@ant-design/icons-angular/icons';
 
@@ -58,6 +63,12 @@ export const appConfig: ApplicationConfig = {
       SlackOutline,
       BarChartOutline,
       SyncOutline,
+      UserOutline,
+      SafetyCertificateOutline,
+      LockOutline,
+      PoweroffOutline,
+      LoginOutline,
+      ArrowRightOutline,
     ]),
 
     provideAppInitializer(() => {

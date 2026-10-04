@@ -14,13 +14,17 @@
     <!-- Brand -->
 
     <div class="brand" [class.brand--collapsed]="isCollapsed()">
-      <div class="brand-logo">AI</div>
+      <div class="brand-logo">
+        <img src="/icons/ai-em-logo.png" alt="AI Engineering Manager" class="brand-logo__image" />
+      </div>
 
       @if (!isCollapsed()) {
         <div class="brand-content">
           <strong> EM Copilot </strong>
 
-          <span>{{ 'app.intelligence' | translate }}</span>
+          <span>
+            {{ 'app.intelligence' | translate }}
+          </span>
         </div>
       }
     </div>
@@ -32,7 +36,9 @@
 
       <div class="navigation-section">
         @if (!isCollapsed()) {
-          <span class="navigation-label">{{ 'app.workspace' | translate }}</span>
+          <span class="navigation-label">
+            {{ 'app.workspace' | translate }}
+          </span>
         }
 
         <ul
@@ -52,25 +58,33 @@
           >
             <nz-icon nzType="dashboard" />
 
-            <span class="navigation-item-label">{{ 'app.overview' | translate }}</span>
+            <span class="navigation-item-label">
+              {{ 'app.overview' | translate }}
+            </span>
           </li>
 
           <li nz-menu-item routerLink="/reports" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="file-text" />
 
-            <span class="navigation-item-label">{{ 'app.reports' | translate }}</span>
+            <span class="navigation-item-label">
+              {{ 'app.reports' | translate }}
+            </span>
           </li>
 
           <li nz-menu-item routerLink="/risks" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="warning" />
 
-            <span class="navigation-item-label">{{ 'app.risks' | translate }}</span>
+            <span class="navigation-item-label">
+              {{ 'app.risks' | translate }}
+            </span>
           </li>
 
           <li nz-menu-item routerLink="/actions" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="check-square" />
 
-            <span class="navigation-item-label">{{ 'app.actions' | translate }}</span>
+            <span class="navigation-item-label">
+              {{ 'app.actions' | translate }}
+            </span>
           </li>
         </ul>
       </div>
@@ -79,7 +93,9 @@
 
       <div class="navigation-section navigation-section--management">
         @if (!isCollapsed()) {
-          <span class="navigation-label">{{ 'app.management' | translate }}</span>
+          <span class="navigation-label">
+            {{ 'app.management' | translate }}
+          </span>
         }
 
         <ul
@@ -92,21 +108,42 @@
           <li nz-menu-item routerLink="/team" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="team" />
 
-            <span class="navigation-item-label">{{ 'app.teams' | translate }}</span>
+            <span class="navigation-item-label">
+              {{ 'app.teams' | translate }}
+            </span>
           </li>
+
           <li nz-menu-item routerLink="/integrations" routerLinkActive="ant-menu-item-selected">
             <nz-icon nzType="api" />
 
-            <span class="navigation-item-label">{{ 'app.integrations' | translate }}</span>
+            <span class="navigation-item-label">
+              {{ 'app.integrations' | translate }}
+            </span>
           </li>
+
           @if (administrator()?.role === 'PlatformAdministrator') {
-            <li nz-menu-item routerLink="/account/security" routerLinkActive="ant-menu-item-selected">
+            <li
+              nz-menu-item
+              routerLink="/account/security"
+              routerLinkActive="ant-menu-item-selected"
+            >
               <nz-icon nzType="lock" />
-              <span class="navigation-item-label">{{ 'accountLink.title' | translate }}</span>
+
+              <span class="navigation-item-label">
+                {{ 'accountLink.title' | translate }}
+              </span>
             </li>
-            <li nz-menu-item routerLink="/admin/authentication" routerLinkActive="ant-menu-item-selected">
+
+            <li
+              nz-menu-item
+              routerLink="/admin/authentication"
+              routerLinkActive="ant-menu-item-selected"
+            >
               <nz-icon nzType="lock" />
-              <span class="navigation-item-label">{{ 'sso.title' | translate }}</span>
+
+              <span class="navigation-item-label">
+                {{ 'sso.title' | translate }}
+              </span>
             </li>
           }
         </ul>
@@ -119,7 +156,9 @@
       <div class="sidebar-footer">
         <span class="sidebar-footer__label"> K&M ENGINEERING </span>
 
-        <span class="sidebar-footer__version">{{ 'app.platform' | translate }}</span>
+        <span class="sidebar-footer__version">
+          {{ 'app.platform' | translate }}
+        </span>
       </div>
     }
   </nz-sider>
@@ -152,9 +191,17 @@
           </button>
 
           <div class="product-context">
-            <div class="product-name">AI Engineering Manager</div>
+            <div class="product-name-row">
+              <div class="product-name">AI Engineering Manager</div>
 
-            <div class="product-subtitle">{{ 'app.platform' | translate }}</div>
+              @if (isDevelopment) {
+                <span class="development-badge" title="Development environment"> DEV </span>
+              }
+            </div>
+
+            <div class="product-subtitle">
+              {{ 'app.platform' | translate }}
+            </div>
           </div>
         </div>
 
@@ -162,19 +209,18 @@
 
         <div class="topbar-right">
           <div class="topbar-team-context">
-            <span class="topbar-team-context__label">{{ 'app.activeTeam' | translate }}</span>
+            <span class="topbar-team-context__label">
+              {{ 'app.activeTeam' | translate }}
+            </span>
+
             <app-team-selector />
           </div>
 
           <app-language-selector />
-          <button nz-button type="button" (click)="logout()">{{ 'sso.login.logout' | translate }}</button>
 
           <div class="topbar-divider" aria-hidden="true"></div>
 
-          <span class="environment-badge">
-            <span class="environment-dot"></span>
-            {{ 'app.development' | translate }}
-          </span>
+          <app-account-menu />
         </div>
       </div>
     </nz-header>

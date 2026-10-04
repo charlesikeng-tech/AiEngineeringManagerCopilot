@@ -1,150 +1,151 @@
 <div class="app-page">
-  <!-- Page header -->
-
   <header class="page-header">
     <div class="page-header__content">
-      <span class="page-eyebrow"> {{ 'reports.engineering' | translate }} </span>
-
+      <span class="page-eyebrow">{{ 'reports.engineering' | translate }}</span>
       <h1>{{ 'reports.title' | translate }}</h1>
-
       <p>{{ 'reports.description' | translate }}</p>
     </div>
-
-    @if (!loading() && reports().length > 0) {
+    @if (!loading() && !error() && pagination.totalCount() > 0) {
       <div class="page-summary">
-        <span class="page-summary__label"> {{ 'reports.reports' | translate }} </span>
-
-        <strong class="page-summary__value">
-          {{ reports().length | appNumber }}
-        </strong>
+        <span class="page-summary__label">{{ 'reports.reports' | translate }}</span>
+        <strong class="page-summary__value">{{ pagination.totalCount() | appNumber }}</strong>
       </div>
     }
   </header>
 
-  <!-- Report history -->
-
   <section class="app-section">
-    <div class="app-card">
-      <div class="app-card__header">
+    <div class="app-card app-data-panel">
+      <div class="app-table-toolbar">
         <div>
-          <span class="section-eyebrow"> {{ 'reports.history' | translate }} </span>
-
+          <span class="section-eyebrow">{{ 'reports.history' | translate }}</span>
           <h2 class="app-card__title">{{ 'reports.historyTitle' | translate }}</h2>
-
           <p class="app-card__description">{{ 'reports.historyDescription' | translate }}</p>
         </div>
+        <button
+          type="button"
+          class="app-button app-button--secondary app-button--compact"
+          [disabled]="loading()"
+          (click)="retry()"
+        >
+          {{ 'tables.refresh' | translate }}
+        </button>
       </div>
-
       @if (loading()) {
         <div class="reports-loading">
           <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 5 }" />
         </div>
       } @else if (error(); as errorMessage) {
-        <div class="reports-error">
-          {{ errorMessage | translate }}
+        <div class="reports-error" role="alert">
+          <p>{{ errorMessage | translate }}</p>
+          <button type="button" class="app-button app-button--secondary" (click)="retry()">
+            {{ 'tables.retry' | translate }}
+          </button>
         </div>
       } @else if (reports().length === 0) {
         <div class="empty-state">
           <nz-empty [nzNotFoundContent]="'reports.empty' | translate" />
         </div>
       } @else {
-        <div class="report-list">
-          @for (report of reportHistory(); track report.id) {
-            <article class="report-row">
-              <!-- Period -->
-
-              <div class="report-period">
-                <span class="report-month">
-                  {{ report.periodStart | appDate: 'MMMM y' }}
-                </span>
-
-                <span class="report-dates">
-                  {{ report.periodStart | appDate: 'mediumDate' }}
-                  –
-                  {{ report.periodEnd | appDate: 'mediumDate' }}
-                </span>
-              </div>
-
-              <!-- Score -->
-
-              <div class="report-score">
-                <div class="report-value">
-                  <strong>
-                    {{ report.overallScore | appNumber }}
-                  </strong>
-
-                  <span> /100 </span>
-                </div>
-
-                <span
-                  class="report-delta"
-                  [class.report-delta--up]="deltaDirection(report.scoreDelta) === 'up'"
-                  [class.report-delta--down]="deltaDirection(report.scoreDelta) === 'down'"
-                  [class.report-delta--flat]="deltaDirection(report.scoreDelta) === 'flat'"
-                >
-                  @if (deltaDirection(report.scoreDelta) === 'up') {
-                    <span aria-hidden="true">↑</span>
-                  } @else if (deltaDirection(report.scoreDelta) === 'down') {
-                    <span aria-hidden="true">↓</span>
-                  }
-
-                  {{ deltaValue(report.scoreDelta) }}
-                  @if (report.scoreDelta !== null) {
-                    <span>{{ 'reports.vsPrevious' | translate }}</span>
-                  }
-                </span>
-              </div>
-
-              <!-- Health -->
-
-              <div
-                class="health-status"
-                [class.health-status--healthy]="report.healthLevel === 'Healthy'"
-                [class.health-status--attention]="report.healthLevel === 'Needs Attention'"
-                [class.health-status--critical]="report.healthLevel === 'Critical'"
-              >
-                <span class="health-status-dot"></span>
-
-                {{ healthLabel(report.healthLevel) }}
-              </div>
-
-              <!-- Coverage -->
-
-              <div class="coverage">
-                <div class="report-value">
-                  <strong> {{ report.dataCoverage | appNumber: '1.0-0' }}% </strong>
-
-                  <span> {{ 'reports.coverage' | translate }} </span>
-                </div>
-
-                <span
-                  class="coverage-delta"
-                  [class.coverage-delta--up]="deltaDirection(report.coverageDelta) === 'up'"
-                  [class.coverage-delta--down]="deltaDirection(report.coverageDelta) === 'down'"
-                  [class.coverage-delta--flat]="deltaDirection(report.coverageDelta) === 'flat'"
-                >
-                  @if (deltaDirection(report.coverageDelta) === 'up') {
-                    <span aria-hidden="true">↑</span>
-                  } @else if (deltaDirection(report.coverageDelta) === 'down') {
-                    <span aria-hidden="true">↓</span>
-                  }
-
-                  {{ deltaValue(report.coverageDelta) }}
-                  @if (report.coverageDelta !== null) {
-                    <span>{{ 'reports.points' | translate }}</span>
-                  }
-                </span>
-              </div>
-
-              <!-- Action -->
-
-              <a class="app-button app-button--secondary app-button--compact" [routerLink]="['/reports', report.id]">
-                {{ 'reports.viewReport' | translate }}
-                <span aria-hidden="true">→</span>
-              </a>
-            </article>
-          }
+        <div
+          class="app-table-wrapper"
+          tabindex="0"
+          role="region"
+          [attr.aria-label]="'reports.historyTitle' | translate"
+        >
+          <table class="app-data-table">
+            <caption class="app-table-caption">
+              {{
+                'reports.historyTitle' | translate
+              }}
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'risks.reportingPeriod' | translate }}</th>
+                <th scope="col">{{ 'reports.overallScore' | translate }}</th>
+                <th scope="col">{{ 'actions.status' | translate }}</th>
+                <th scope="col">{{ 'reports.dataCoverage' | translate }}</th>
+                <th scope="col">{{ 'reports.viewReport' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (report of reportHistory(); track report.id) {
+                <tr>
+                  <th scope="row">
+                    <span class="app-table-name">{{ report.periodStart | appDate: 'MMMM y' }}</span>
+                    <div class="app-table-secondary">
+                      {{ report.periodStart | appDate: 'mediumDate' }} –
+                      {{ report.periodEnd | appDate: 'mediumDate' }}
+                    </div>
+                  </th>
+                  <td>
+                    <strong>{{ report.overallScore | appNumber }}</strong> /100
+                    <div class="app-table-secondary">
+                      @if (deltaDirection(report.scoreDelta) === 'up') {
+                        <span aria-hidden="true">↑</span>
+                      } @else if (deltaDirection(report.scoreDelta) === 'down') {
+                        <span aria-hidden="true">↓</span>
+                      }
+                      {{ deltaValue(report.scoreDelta) }}
+                      @if (report.scoreDelta !== null) {
+                        {{ 'reports.vsPrevious' | translate }}
+                      }
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      class="app-status-pill"
+                      [class.app-status-pill--success]="
+                        report.healthLevel === 'Healthy' || report.healthLevel === 'Excellent'
+                      "
+                      [class.app-status-pill--warning]="
+                        report.healthLevel === 'Needs Attention' || report.healthLevel === 'At Risk'
+                      "
+                      [class.app-status-pill--error]="report.healthLevel === 'Critical'"
+                      [class.app-status-pill--neutral]="
+                        report.healthLevel === 'No Data' || report.healthLevel === 'Unknown'
+                      "
+                    >
+                      <span class="app-status-dot" aria-hidden="true"></span>
+                      {{ healthLabel(report.healthLevel) }}
+                    </span>
+                  </td>
+                  <td>
+                    <strong>{{ report.dataCoverage | appNumber: '1.0-0' }}%</strong>
+                    <div class="app-table-secondary">
+                      @if (deltaDirection(report.coverageDelta) === 'up') {
+                        <span aria-hidden="true">↑</span>
+                      } @else if (deltaDirection(report.coverageDelta) === 'down') {
+                        <span aria-hidden="true">↓</span>
+                      }
+                      {{ deltaValue(report.coverageDelta) }}
+                      @if (report.coverageDelta !== null) {
+                        {{ 'reports.points' | translate }}
+                      }
+                    </div>
+                  </td>
+                  <td class="app-table-actions">
+                    <a
+                      class="app-button app-button--secondary app-button--compact"
+                      [routerLink]="['/reports', report.id]"
+                    >
+                      {{ 'reports.viewReport' | translate }} <span aria-hidden="true">→</span>
+                    </a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
+      }
+      @if (!error()) {
+        <app-table-pagination
+          [pageNumber]="pagination.pageNumber()"
+          [pageSize]="pagination.pageSize()"
+          [totalCount]="pagination.totalCount()"
+          [disabled]="loading()"
+          (pageChange)="changePage($event)"
+          (pageSizeChange)="changePageSize($event)"
+        />
       }
     </div>
   </section>

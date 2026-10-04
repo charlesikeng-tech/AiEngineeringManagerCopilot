@@ -1,6 +1,10 @@
 import { I18nService } from '@core/i18n/i18n.service';
 import { engineeringCategoryLabel } from '@core/i18n/engineering-category-label';
-import { LocalizedDatePipe, LocalizedNumberPipe, LocalizedPercentPipe } from '@core/i18n/localized-format.pipes';
+import {
+  LocalizedDatePipe,
+  LocalizedNumberPipe,
+  LocalizedPercentPipe,
+} from '@core/i18n/localized-format.pipes';
 import { TranslatePipe } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
@@ -10,8 +14,11 @@ import {
   effect,
   inject,
   signal,
+  computed,
+  untracked,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { Subject, takeUntil } from 'rxjs';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
@@ -28,7 +35,15 @@ import { ReportsApi } from '../../services/reports-api';
 @Component({
   selector: 'app-report-detail',
   standalone: true,
-  imports: [LocalizedPercentPipe, LocalizedDatePipe, LocalizedNumberPipe, TranslatePipe, RouterLink, NzEmptyModule, NzSkeletonModule],
+  imports: [
+    LocalizedPercentPipe,
+    LocalizedDatePipe,
+    LocalizedNumberPipe,
+    TranslatePipe,
+    RouterLink,
+    NzEmptyModule,
+    NzSkeletonModule,
+  ],
   templateUrl: './report-detail.html',
   styleUrl: './report-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,6 +55,19 @@ export class ReportDetail {
   private readonly reportsApi = inject(ReportsApi);
   private readonly reportAnalysisApi = inject(ReportAnalysisApi);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly routeParams = toSignal(this.route.paramMap, {
+    initialValue: this.route.snapshot.paramMap,
+  });
+  private readonly routeQuery = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
+  private readonly reportId = computed(
+    () => this.routeParams().get('reportId')?.toLowerCase() ?? null,
+  );
+  private readonly linkedTeamId = computed(
+    () => this.routeQuery().get('teamId')?.toLowerCase() ?? null,
+  );
+  private readonly reportRequestsChanged = new Subject<void>();
 
   // ---------------------------------------------------------------------------
   // Report
@@ -67,16 +95,33 @@ export class ReportDetail {
 
   constructor() {
     effect(() => {
+      this.reportId();
+      const linkedTeamId = this.linkedTeamId();
+      untracked(() => {
+        if (linkedTeamId && this.validLinkedTeam(linkedTeamId)) {
+          this.teamContext.selectTeam(linkedTeamId);
+        }
+      });
+    });
+
+    effect(() => {
       const teamId = this.teamContext.selectedTeamId();
-
-      const reportId = this.route.snapshot.paramMap.get('reportId');
-
-      if (!teamId || !reportId) {
+      const reportId = this.reportId();
+      const linkedTeamId = this.linkedTeamId();
+      const version = this.teamContext.selectionVersion();
+      untracked(() => {
+        this.reportRequestsChanged.next();
         this.resetReportState();
-        return;
-      }
-
-      this.loadReport(teamId, reportId);
+        if (linkedTeamId && !this.validLinkedTeam(linkedTeamId)) {
+          this.error.set('reports.detailLoadError');
+          return;
+        }
+        if (linkedTeamId && linkedTeamId !== teamId) {
+          this.error.set('reports.detailLoadError');
+          return;
+        }
+        if (teamId && reportId) this.loadReport(teamId, reportId, version);
+      });
     });
   }
 
@@ -93,6 +138,8 @@ export class ReportDetail {
 
     const teamId = currentReport.teamId;
     const reportId = currentReport.id;
+    const version = this.teamContext.selectionVersion();
+    if (!this.isCurrentReport(teamId, reportId, version)) return;
 
     this.analysisGenerating.set(true);
     this.analysisError.set(false);
@@ -100,10 +147,10 @@ export class ReportDetail {
 
     this.reportAnalysisApi
       .generateAnalysis(teamId, reportId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(takeUntil(this.reportRequestsChanged), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (analysis) => {
-          if (!this.isCurrentReport(teamId, reportId)) {
+          if (!this.isCurrentReport(teamId, reportId, version)) {
             return;
           }
 
@@ -115,7 +162,7 @@ export class ReportDetail {
         },
 
         error: (error: HttpErrorResponse) => {
-          if (!this.isCurrentReport(teamId, reportId)) {
+          if (!this.isCurrentReport(teamId, reportId, version)) {
             return;
           }
 
@@ -141,7 +188,7 @@ export class ReportDetail {
   // Report loading
   // ---------------------------------------------------------------------------
 
-  private loadReport(teamId: string, reportId: string): void {
+  private loadReport(teamId: string, reportId: string, version: number): void {
     this.loading.set(true);
     this.error.set(null);
 
@@ -151,12 +198,14 @@ export class ReportDetail {
 
     this.reportsApi
       .getReport(teamId, reportId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(takeUntil(this.reportRequestsChanged), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (report) => {
           if (
             this.teamContext.selectedTeamId() !== teamId ||
-            this.route.snapshot.paramMap.get('reportId') !== reportId
+            this.reportId() !== reportId ||
+            (this.linkedTeamId() !== null && this.linkedTeamId() !== teamId) ||
+            this.teamContext.selectionVersion() !== version
           ) {
             return;
           }
@@ -170,7 +219,9 @@ export class ReportDetail {
         error: (error) => {
           if (
             this.teamContext.selectedTeamId() !== teamId ||
-            this.route.snapshot.paramMap.get('reportId') !== reportId
+            this.reportId() !== reportId ||
+            (this.linkedTeamId() !== null && this.linkedTeamId() !== teamId) ||
+            this.teamContext.selectionVersion() !== version
           ) {
             return;
           }
@@ -193,6 +244,8 @@ export class ReportDetail {
   // ---------------------------------------------------------------------------
 
   private loadAnalysis(teamId: string, reportId: string): void {
+    const version = this.teamContext.selectionVersion();
+    if (!this.isCurrentReport(teamId, reportId, version)) return;
     this.analysisLoading.set(true);
 
     this.analysisUnavailable.set(false);
@@ -202,10 +255,10 @@ export class ReportDetail {
 
     this.reportAnalysisApi
       .getAnalysis(teamId, reportId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(takeUntil(this.reportRequestsChanged), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (analysis) => {
-          if (!this.isCurrentReport(teamId, reportId)) {
+          if (!this.isCurrentReport(teamId, reportId, version)) {
             return;
           }
 
@@ -217,7 +270,7 @@ export class ReportDetail {
         },
 
         error: (error: HttpErrorResponse) => {
-          if (!this.isCurrentReport(teamId, reportId)) {
+          if (!this.isCurrentReport(teamId, reportId, version)) {
             return;
           }
 
@@ -240,29 +293,49 @@ export class ReportDetail {
   // Guards
   // ---------------------------------------------------------------------------
 
-  private isCurrentReport(teamId: string, reportId: string): boolean {
+  private isCurrentReport(teamId: string, reportId: string, version: number): boolean {
     const currentReport = this.report();
 
     return (
       currentReport?.teamId === teamId &&
       currentReport.id === reportId &&
       this.teamContext.selectedTeamId() === teamId &&
-      this.route.snapshot.paramMap.get('reportId') === reportId
+      this.reportId() === reportId &&
+      (this.linkedTeamId() === null || this.linkedTeamId() === teamId) &&
+      this.teamContext.selectionVersion() === version
     );
+  }
+
+  private validLinkedTeam(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
   }
 
   metricLabel(metricType: string): string {
     const knownMetrics = [
-      'CycleTime', 'PRReviewTime', 'DeploymentFrequency', 'ChangeFailureRate',
-      'LeadTime', 'OpenPRs', 'MergedPRs', 'BlockedItems',
+      'CycleTime',
+      'PRReviewTime',
+      'DeploymentFrequency',
+      'ChangeFailureRate',
+      'LeadTime',
+      'OpenPRs',
+      'MergedPRs',
+      'BlockedItems',
     ];
     return knownMetrics.includes(metricType) ? this.i18n.t(`metrics.${metricType}`) : metricType;
   }
 
   healthLabel(healthLevel: string): string {
     const knownLevels = [
-      'Healthy', 'Needs Attention', 'At Risk', 'No Data', 'Attention',
-      'Critical', 'Excellent', 'Good', 'Warning', 'Unknown',
+      'Healthy',
+      'Needs Attention',
+      'At Risk',
+      'No Data',
+      'Attention',
+      'Critical',
+      'Excellent',
+      'Good',
+      'Warning',
+      'Unknown',
     ];
     return knownLevels.includes(healthLevel)
       ? this.i18n.t(`healthLevels.${healthLevel}`)
