@@ -5,7 +5,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { I18nService, LANGUAGE_STORAGE_KEY } from '@core/i18n/i18n.service';
 import { TeamContext } from '@core/team/team-context';
-import { EngineeringAction } from '@features/dashboard/models/engineering-dashboard-response';
+import type { EngineeringAction } from '@domains/engineering/models/action';
 import managementEn from '../../../../../../public/i18n/management/en.json';
 import managementFr from '../../../../../../public/i18n/management/fr.json';
 import { PagedActionsResponse } from '../../models/paged-actions-response';

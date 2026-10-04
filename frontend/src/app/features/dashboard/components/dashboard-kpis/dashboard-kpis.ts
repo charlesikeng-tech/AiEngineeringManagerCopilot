@@ -7,13 +7,13 @@ import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 
-import {
-  EngineeringHealthScore,
+import type { EngineeringHealthScore } from '@domains/engineering/models/health';
+import type {
   EngineeringMetric,
-  EngineeringRisk,
   MetricTrend,
   MetricType,
-} from '../../models/engineering-dashboard-response';
+} from '@domains/engineering/models/metric';
+import type { EngineeringRisk } from '@domains/engineering/models/risk';
 
 @Component({
   selector: 'app-dashboard-kpis',

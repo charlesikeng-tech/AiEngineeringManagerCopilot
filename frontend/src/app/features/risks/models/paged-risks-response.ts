@@ -1,5 +1,5 @@
 import { PagedResult } from '@core/models/paged-result';
-import { EngineeringRisk } from '@features/dashboard/models/engineering-dashboard-response';
+import type { EngineeringRisk } from '@domains/engineering/models/risk';
 
 export interface PagedRisksResponse {
   teamId: string;

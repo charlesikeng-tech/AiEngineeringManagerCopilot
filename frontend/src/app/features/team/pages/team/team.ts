@@ -48,7 +48,7 @@ import {
 } from '@domains/teams/models/team-member';
 import { Team, UpdateTeamRequest } from '@domains/teams/models/team';
 
-import { EngineeringMetric, MetricDataStatus, MetricType } from '../../models/engineering-metric';
+import type { EngineeringMetric, MetricDataStatus, MetricType } from '@domains/engineering/models/metric';
 
 import { ReportsApi } from '@features/reports/services/reports-api';
 

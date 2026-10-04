@@ -8,7 +8,7 @@ import { Observable, of, Subject, throwError } from 'rxjs';
 import { TeamContext } from '@core/team/team-context';
 import { PagedResult } from '@core/models/paged-result';
 import { TeamMember } from '@domains/teams/models/team-member';
-import { EngineeringMetric } from '../../models/engineering-metric';
+import type { EngineeringMetric } from '@domains/engineering/models/metric';
 
 import teamEn from '../../../../../../public/i18n/team/en.json';
 import teamFr from '../../../../../../public/i18n/team/fr.json';

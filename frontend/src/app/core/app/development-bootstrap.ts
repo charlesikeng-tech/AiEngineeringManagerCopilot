@@ -3,10 +3,8 @@ import { inject, Injectable } from '@angular/core';
 import { catchError, Observable, of, switchMap, throwError } from 'rxjs';
 
 import { environment } from '@environments/environment';
-import {
-  AIAnalysis,
-  EngineeringReport,
-} from '@features/dashboard/models/engineering-dashboard-response';
+import type { AIAnalysis } from '@domains/engineering/models/ai-analysis';
+import type { EngineeringReport } from '@domains/engineering/models/report';
 
 @Injectable({
   providedIn: 'root',

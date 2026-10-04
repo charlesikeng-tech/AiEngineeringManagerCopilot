@@ -9,7 +9,7 @@ import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 
-import { EngineeringHealthHistoryPoint } from '../../models/engineering-dashboard-response';
+import type { EngineeringHealthHistoryPoint } from '@domains/engineering/models/health';
 
 @Component({
   selector: 'app-health-evolution',

@@ -3,10 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, ParamMap, convertToParamMap, provideRouter } from '@angular/router';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { TeamContext } from '@core/team/team-context';
-import {
-  AIAnalysis,
-  EngineeringReport,
-} from '@features/dashboard/models/engineering-dashboard-response';
+import type { AIAnalysis } from '@domains/engineering/models/ai-analysis';
+import type { EngineeringReport } from '@domains/engineering/models/report';
 import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import managementEn from '../../../../../../public/i18n/management/en.json';
 import managementFr from '../../../../../../public/i18n/management/fr.json';

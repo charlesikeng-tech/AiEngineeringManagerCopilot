@@ -7,13 +7,13 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 
-import {
+import type {
   EngineeringMetric,
   MetricDataStatus,
   MetricTrend,
   MetricTrendDirection,
   MetricType,
-} from '../../models/engineering-dashboard-response';
+} from '@domains/engineering/models/metric';
 
 interface MetricViewModel {
   type: MetricType;

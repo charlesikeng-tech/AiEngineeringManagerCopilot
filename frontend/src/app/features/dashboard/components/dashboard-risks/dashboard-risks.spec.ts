@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import dashboardEn from '../../../../../../public/i18n/dashboard/en.json';
 import dashboardFr from '../../../../../../public/i18n/dashboard/fr.json';
-import { EngineeringRisk } from '../../models/engineering-dashboard-response';
+import type { EngineeringRisk } from '@domains/engineering/models/risk';
 import { DashboardRisks } from './dashboard-risks';
 
 describe('DashboardRisks summary', () => {

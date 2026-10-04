@@ -6,7 +6,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 
-import { EngineeringRisk, RiskSeverity } from '../../models/engineering-dashboard-response';
+import type { EngineeringRisk, RiskSeverity } from '@domains/engineering/models/risk';
 
 @Component({
   selector: 'app-dashboard-risks',

@@ -4,11 +4,11 @@ import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
 import { PagedActionsResponse } from '../models/paged-actions-response';
-import {
+import type {
   EngineeringAction,
   EngineeringActionsResponse,
   UpdateEngineeringActionRequest,
-} from '@features/dashboard/models/engineering-dashboard-response';
+} from '@domains/engineering/models/action';
 
 @Injectable({
   providedIn: 'root',

@@ -7,7 +7,7 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzProgressModule } from 'ng-zorro-antd/progress';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 
-import { AIAnalysis, LlmEvidence } from '../../models/engineering-dashboard-response';
+import type { AIAnalysis, LlmEvidence } from '@domains/engineering/models/ai-analysis';
 
 @Component({
   selector: 'app-ai-analysis',

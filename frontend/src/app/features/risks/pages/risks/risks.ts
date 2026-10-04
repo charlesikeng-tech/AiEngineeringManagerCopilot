@@ -16,7 +16,7 @@ import { TablePagination } from '@core/components/table-pagination/table-paginat
 import { PagedRisksResponse } from '../../models/paged-risks-response';
 
 import { TeamContext } from '@core/team/team-context';
-import { EngineeringRisk } from '@features/dashboard/models/engineering-dashboard-response';
+import type { EngineeringRisk } from '@domains/engineering/models/risk';
 import { RisksApi } from '../../services/risks-api';
 
 import { UpperCasePipe } from '@angular/common';

@@ -4,7 +4,7 @@ import { Observable, Subject, of, throwError } from 'rxjs';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { I18nService, LANGUAGE_STORAGE_KEY } from '@core/i18n/i18n.service';
 import { TeamContext } from '@core/team/team-context';
-import { EngineeringRisk } from '@features/dashboard/models/engineering-dashboard-response';
+import type { EngineeringRisk } from '@domains/engineering/models/risk';
 import managementEn from '../../../../../../public/i18n/management/en.json';
 import managementFr from '../../../../../../public/i18n/management/fr.json';
 import { PagedRisksResponse } from '../../models/paged-risks-response';

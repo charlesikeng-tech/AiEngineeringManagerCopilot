@@ -9,7 +9,7 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzProgressModule } from 'ng-zorro-antd/progress';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 
-import { EngineeringReport } from '../../models/engineering-dashboard-response';
+import type { EngineeringReport } from '@domains/engineering/models/report';
 
 @Component({
   selector: 'app-latest-report',

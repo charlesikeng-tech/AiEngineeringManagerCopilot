@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
-import { EngineeringMetric } from '../models/engineering-metric';
+import type { EngineeringMetric } from '@domains/engineering/models/metric';
 
 @Injectable({
   providedIn: 'root',

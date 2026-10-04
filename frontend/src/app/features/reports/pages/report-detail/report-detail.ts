@@ -25,10 +25,8 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzSkeletonModule } from 'ng-zorro-antd/skeleton';
 
 import { TeamContext } from '@core/team/team-context';
-import {
-  AIAnalysis,
-  EngineeringReport,
-} from '@features/dashboard/models/engineering-dashboard-response';
+import type { AIAnalysis } from '@domains/engineering/models/ai-analysis';
+import type { EngineeringReport } from '@domains/engineering/models/report';
 import { ReportAnalysisApi } from '../../services/report-analysis-api';
 import { ReportsApi } from '../../services/reports-api';
 

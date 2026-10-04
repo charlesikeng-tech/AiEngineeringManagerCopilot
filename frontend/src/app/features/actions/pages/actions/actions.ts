@@ -31,11 +31,11 @@ import { TablePagination } from '@core/components/table-pagination/table-paginat
 import { PagedActionsResponse } from '../../models/paged-actions-response';
 
 import { TeamContext } from '@core/team/team-context';
-import {
+import type {
   ActionStatus,
   EngineeringAction,
   UpdateEngineeringActionRequest,
-} from '@features/dashboard/models/engineering-dashboard-response';
+} from '@domains/engineering/models/action';
 import { ActionsApi } from '../../services/actions-api';
 
 type EngineeringActionView = EngineeringAction & {

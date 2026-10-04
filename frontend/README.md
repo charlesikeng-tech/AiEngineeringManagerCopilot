@@ -9,7 +9,14 @@ The single `TeamApi` in `domains/teams/data-access` owns team and member HTTP
 endpoints, including unpaged lists and paginated queries. Import these through
 `@domains/teams/*` from both features and core. Team selection state and the
 selector remain in `core/team`; team pages, connector models/services, and
-metrics remain in `features/team`.
+the metrics API remain in `features/team`.
+
+Shared engineering contracts live in `src/app/domains/engineering/models`,
+organized by report, action, risk, metric, health, and AI analysis. Import these
+directly through `@domains/engineering/models/*` from features and core; team
+metrics use the canonical metric contracts from this domain. The dashboard
+response remains a feature-local aggregate, as do feature-owned paged responses
+and report history models.
 
 ## Development server
 

@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
-import { AIAnalysis } from '@features/dashboard/models/engineering-dashboard-response';
+import type { AIAnalysis } from '@domains/engineering/models/ai-analysis';
 
 @Injectable({
   providedIn: 'root',

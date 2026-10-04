@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
-import { EngineeringRisksResponse } from '@features/dashboard/models/engineering-dashboard-response';
+import type { EngineeringRisksResponse } from '@domains/engineering/models/risk';
 import { PagedRisksResponse } from '../models/paged-risks-response';
 
 @Injectable({

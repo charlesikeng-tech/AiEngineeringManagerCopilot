@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
-import { EngineeringReport } from '@features/dashboard/models/engineering-dashboard-response';
+import type { EngineeringReport } from '@domains/engineering/models/report';
 import { PagedResult } from '@core/models/paged-result';
 import { ReportHistoryItem } from '../models/report-history-item';
 

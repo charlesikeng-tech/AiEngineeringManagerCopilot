@@ -1,5 +1,5 @@
 import { PagedResult } from '@core/models/paged-result';
-import { EngineeringAction } from '@features/dashboard/models/engineering-dashboard-response';
+import type { EngineeringAction } from '@domains/engineering/models/action';
 
 export interface PagedActionsResponse {
   teamId: string;
