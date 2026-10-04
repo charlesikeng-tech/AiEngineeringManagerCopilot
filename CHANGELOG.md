@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.6.0](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.5.0...v1.6.0) (2026-10-04)
+
+
+### Features
+
+* add Microsoft Teams webhook report notifications ([8b9c326](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/8b9c3266516c560dc0aaf95317e69f422d211d61))
+* **auth:** add configurable SSO provider connection testing ([1cdfd05](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/1cdfd0562672fac69a2b6dad501f4b8ff1586ed7))
+* **auth:** add secure first-run administrator setup ([4678ed3](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/4678ed3fd1401bc4a4854405ec0b9e5b97481fd3))
+* **auth:** enable active-provider SSO login and user provisioning ([236be29](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/236be291716fa065dc453b1d069a58cb9b2342ba))
+* **auth:** explicitly link local administrator accounts to SSO ([d7c3711](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/d7c371181e3e834c7f8517ad2efad4d6c89041cb))
+* centralize integrations with lazy-loaded team pagination ([0a169d9](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/0a169d9a35cea1f21393222723854ab8eeb06c32))
+* improve management UI and webhook integrations ([2eaea2c](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/2eaea2ce4f28defdf50da6f6e2d14dd164f10111))
+
+
+### Bug Fixes
+
+* **auth:** use standard PKCE flow when optional PAR is rejected ([2774e64](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/commit/2774e640d2c0834c9f65824281cafec642696254))
+
 ## [1.5.0](https://github.com/charlesikeng-tech/AiEngineeringManagerCopilot/compare/v1.4.0...v1.5.0) (2026-10-02)
 
 
