@@ -17,6 +17,9 @@ import { PublicSsoApi, PublicSsoProvider } from './public-sso-api';
       <h1>{{ 'sso.login.title' | translate }}</h1>
       <p>{{ 'sso.login.policy' | translate }}</p>
       @if (error()) { <nz-alert nzType="error" [nzMessage]="('sso.login.errors.' + error()) | translate" nzShowIcon /> }
+      @if (diagnosticId()) {
+        <p>{{ 'sso.login.diagnostic' | translate }} <code>{{ diagnosticId() }}</code></p>
+      }
       @if (loading()) { <p role="status">{{ 'sso.login.loading' | translate }}</p> }
       @else if (!providers().length) { <p>{{ 'sso.login.empty' | translate }}</p> }
       @for (provider of providers(); track provider.id) {
@@ -39,6 +42,7 @@ export class SsoLogin implements OnInit {
   readonly loading = signal(true);
   readonly busy = signal<string | null>(null);
   readonly error = signal('');
+  readonly diagnosticId = signal('');
 
   ngOnInit() {
     const failure = this.route.snapshot.queryParamMap.get('ssoError');
@@ -54,6 +58,7 @@ export class SsoLogin implements OnInit {
     if (this.busy() !== null) return;
     this.busy.set(id);
     this.error.set('');
+    this.diagnosticId.set('');
     this.api.start(id).subscribe({
       next: ({ authorizationUrl }) => {
         try { this.api.navigate(authorizationUrl); }
@@ -62,6 +67,9 @@ export class SsoLogin implements OnInit {
       error: (error: HttpErrorResponse) => {
         this.busy.set(null);
         this.error.set(error.status === 429 ? 'rate_limited' : 'login_failed');
+        const diagnosticId = error.error?.diagnosticId;
+        if (typeof diagnosticId === 'string' && /^[a-f0-9]{32}$/.test(diagnosticId))
+          this.diagnosticId.set(diagnosticId);
       },
     });
   }

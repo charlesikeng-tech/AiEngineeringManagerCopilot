@@ -19,6 +19,7 @@ public static class SsoServiceCollectionExtensions
         services.AddScoped<SsoConnectionFlow>();
         services.AddScoped<SsoOidcHandlerFactory>();
         services.AddScoped<SsoLoginFlow>();
+        services.AddScoped<SsoLoginDiagnostics>();
         services.Configure<OpenIdConnectOptions>(SsoLoginFlow.Scheme, options =>
         {
             options.SignInScheme = SsoSessionAuthenticationHandler.Scheme;

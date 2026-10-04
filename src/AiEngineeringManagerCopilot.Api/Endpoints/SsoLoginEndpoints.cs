@@ -23,7 +23,7 @@ public static class SsoLoginEndpoints
             }).OrderBy(x => x.Name));
         });
         group.MapPost("/{id:guid}/start", async (Guid id, HttpContext context, AppDbContext db,
-            SsoLoginFlow flow, SsoDeployment deployment, CancellationToken ct) =>
+            SsoLoginFlow flow, SsoDeployment deployment, SsoLoginDiagnostics diagnostics, CancellationToken ct) =>
         {
             try { deployment.GetLoginUrls(); }
             catch (InvalidOperationException) { return Results.BadRequest(new { error = "deployment_configuration" }); }
@@ -46,8 +46,9 @@ public static class SsoLoginEndpoints
             try { return Results.Ok(new { authorizationUrl = await flow.StartAsync(context, attempt) }); }
             catch (Exception ex) when (SsoConnectionFlow.IsProtocolFailure(ex, ct))
             {
+                var diagnosticId = diagnostics.ReportFailure(ex, id, attempt.ActiveRevision);
                 await db.SsoLoginAttempts.Where(x => x.Id == attempt.Id).ExecuteDeleteAsync(ct);
-                return Results.BadRequest(new { error = "login_failed" });
+                return Results.BadRequest(new { error = "login_failed", diagnosticId });
             }
         }).RequireRateLimiting("LocalAuthentication");
         group.MapGet("/callback", async (HttpContext context, SsoLoginFlow flow, CancellationToken ct) =>

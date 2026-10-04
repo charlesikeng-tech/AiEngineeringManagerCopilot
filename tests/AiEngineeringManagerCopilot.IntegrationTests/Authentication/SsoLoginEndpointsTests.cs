@@ -16,6 +16,66 @@ public sealed class SsoLoginEndpointsTests
     private const string Root = "/auth/sso/login";
 
     [Fact]
+    public async Task Optional_PAR_uses_standard_code_PKCE_without_calling_the_rejected_PAR_endpoint()
+    {
+        await using var factory = new LocalAuthenticationWebApplicationFactory();
+        using var protocol = Protocol();
+        protocol.AdvertisePar = true;
+        using var app = Configure(factory, protocol);
+        var provider = await Activate(app);
+        using var client = NewClient(app);
+        var response = await Complete(client, protocol, provider);
+        Assert.EndsWith("/dashboard", response.Headers.Location!.ToString());
+        Assert.Equal(0, protocol.ParRequests);
+        Assert.True(protocol.PkceVerified);
+        SetSession(client, response);
+        Assert.Equal("User", (await Current(client)).GetProperty("role").GetString());
+    }
+
+    [Fact]
+    public async Task Mandatory_PAR_is_rejected_instead_of_downgraded()
+    {
+        await using var factory = new LocalAuthenticationWebApplicationFactory();
+        using var protocol = Protocol();
+        protocol.AdvertisePar = true;
+        protocol.RequirePar = true;
+        using var app = Configure(factory, protocol);
+        var provider = await Activate(app);
+        using var client = NewClient(app);
+        var response = await client.PostAsJsonAsync($"{Root}/{provider}/start", new { });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(0, protocol.ParRequests);
+        Assert.Equal(0, protocol.TokenRequests);
+        await WithDatabase(app, async db => Assert.Empty(await db.SsoSessions.ToListAsync()));
+    }
+
+    [Fact]
+    public async Task Start_failure_returns_only_a_diagnostic_reference_and_removes_the_failed_attempt()
+    {
+        await using var factory = new LocalAuthenticationWebApplicationFactory();
+        using var protocol = Protocol();
+        protocol.Failure = "discovery-unavailable";
+        using var app = Configure(factory, protocol);
+        var provider = await Activate(app);
+        using var client = NewClient(app);
+        var response = await client.PostAsJsonAsync($"{Root}/{provider}/start", new { });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        var payload = JsonDocument.Parse(body).RootElement;
+        Assert.Equal("login_failed", payload.GetProperty("error").GetString());
+        Assert.True(Guid.TryParseExact(payload.GetProperty("diagnosticId").GetString(), "N", out _));
+        Assert.Equal(2, payload.EnumerateObject().Count());
+        Assert.DoesNotContain("sensitive-provider-response", body);
+        Assert.Equal(0, protocol.TokenRequests);
+        await WithDatabase(app, async db =>
+        {
+            Assert.Empty(await db.SsoLoginAttempts.ToListAsync());
+            Assert.Empty(await db.SsoSessions.ToListAsync());
+            Assert.Empty(await db.ExternalIdentities.ToListAsync());
+        });
+    }
+
+    [Fact]
     public async Task Login_creates_ordinary_owner_profile_and_logout_revokes_session_without_seed_access()
     {
         await using var factory = new LocalAuthenticationWebApplicationFactory();

@@ -46,6 +46,7 @@
       "continue": "Continue with",
       "recovery": "Local administrator recovery login",
       "logout": "Sign out",
+      "diagnostic": "Diagnostic reference to share with your administrator:",
       "errors": {
         "login_failed": "Sign-in failed or expired. Try again; contact your administrator if the problem persists.",
         "email_collision": "This email already belongs to another account. Accounts are never linked by email. Ask your provider administrator to supply a distinct email or omit the email claim.",

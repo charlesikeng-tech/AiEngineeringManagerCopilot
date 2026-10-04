@@ -46,6 +46,7 @@
       "continue": "Continuer avec",
       "recovery": "Connexion de récupération de l’administrateur local",
       "logout": "Déconnexion",
+      "diagnostic": "Référence de diagnostic à transmettre à l’administrateur :",
       "errors": {
         "login_failed": "Connexion échouée ou expirée. Réessayez ; contactez votre administrateur si le problème persiste.",
         "email_collision": "Cette adresse appartient déjà à un autre compte. Les comptes ne sont jamais liés par e-mail. Demandez à l’administrateur du fournisseur une adresse distincte ou l’omission de la revendication e-mail.",

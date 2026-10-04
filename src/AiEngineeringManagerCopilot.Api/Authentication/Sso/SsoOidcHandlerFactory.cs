@@ -11,18 +11,24 @@ using Microsoft.IdentityModel.Tokens;
 namespace AiEngineeringManagerCopilot.Api.Authentication.Sso;
 
 public sealed class SsoOidcHandlerFactory(
-    IOptionsFactory<OpenIdConnectOptions> optionsFactory, ISecretProtector secrets, IWebHostEnvironment environment)
+    IOptionsFactory<OpenIdConnectOptions> optionsFactory, ISecretProtector secrets, IWebHostEnvironment environment,
+    SsoLoginDiagnostics diagnostics)
 {
     public const string AttemptKey = "sso.attempt";
 
     public OpenIdConnectOptions Create(SsoProvider snapshot, Guid attemptId, string scheme,
         string callback, string callbackPath, HttpClient backchannel)
     {
+        diagnostics.Stage = SsoLoginStage.Options;
         var options = optionsFactory.Create(scheme);
         options.CallbackPath = callbackPath;
         options.Authority = snapshot.Authority;
         options.ClientId = snapshot.ClientId;
+        // Use the supported code + PKCE flow; the framework still rejects providers requiring PAR.
+        options.PushedAuthorizationBehavior = PushedAuthorizationBehavior.Disable;
+        diagnostics.Stage = SsoLoginStage.SecretDecryption;
         options.ClientSecret = snapshot.ProtectedSecret is null ? null : secrets.Unprotect(snapshot.ProtectedSecret);
+        diagnostics.Stage = SsoLoginStage.Options;
         options.Backchannel = backchannel;
         options.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
             snapshot.Authority.TrimEnd('/') + "/.well-known/openid-configuration",

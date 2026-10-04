@@ -110,6 +110,12 @@ profile; there is no userinfo/Graph request. The configured client uses
 `client_secret_post` when a secret is saved, or PKCE without a secret for a
 provider-supported public client. The login handler shares the maintained
 framework protocol options/validator and SSRF-protected backchannel with tests.
+Both paths explicitly use the standard authorization-code + PKCE redirect,
+not automatically advertised optional Pushed Authorization Requests (PAR).
+Some provider applications reject PAR even when discovery advertises its endpoint;
+the framework's default automatic PAR behavior can otherwise fail before browser
+redirection. Providers declaring PAR mandatory are rejected, never silently
+downgraded. Supporting mandatory PAR requires a separately configured integration.
 
 ## Draft, test and activation workflow
 
@@ -255,6 +261,25 @@ reserved or transition address causes rejection, and connections use the
 validated addresses directly to prevent DNS rebinding. No userinfo fetch occurs.
 Providers with cross-host metadata/JWKS URLs or custom domains require a future
 explicit trust design rather than weakening these defaults.
+
+## Troubleshooting a failed login start
+
+A `400` with `error: login_failed` from `/auth/sso/login/{providerId}/start`
+now includes an opaque `diagnosticId`. The login page displays this reference.
+Find the matching `SSO login preparation failed` warning in the API console or
+your restricted server logs. It reports only the provider ID, active revision,
+preparation stage, exception type names, an optional HTTP status, a fixed-format
+IdentityModel error code and an allowlisted OAuth error hint. Exception
+messages, stack traces, credentials, callback codes, tokens and upstream bodies
+are deliberately not logged or returned. Do not enable PII or HTTP body logging.
+
+`SecretDecryption` points to key-ring/credential protection; `Options` or
+`HandlerInitialization` points to local protocol setup; `AuthorizationChallenge`
+includes provider discovery, metadata retrieval and authorization-request
+preparation. An HTTP status can identify a rejected metadata request. These are
+diagnostic leads, not proof of a specific root cause. Supply only the filtered
+warning and reference when requesting support. No database migration is required
+for this diagnostic increment; restart the API and frontend to use it.
 
 ## Focused validation
 

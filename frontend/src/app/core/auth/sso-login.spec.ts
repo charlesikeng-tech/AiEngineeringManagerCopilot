@@ -83,4 +83,28 @@ describe('Public SSO login', () => {
     expect(TestBed.inject(Router).navigateByUrl).toHaveBeenCalledWith('/dashboard');
     expect(api.providers).not.toHaveBeenCalled();
   });
+
+  it('shows only a validated diagnostic reference and clears it on retry', () => {
+    const reference = '1234567890abcdef1234567890abcdef';
+    api.start.mockReturnValueOnce(throwError(() => ({
+      status: 400, error: { error: 'login_failed', diagnosticId: reference, message: 'sensitive-provider-response' },
+    })));
+    const fixture = TestBed.createComponent(SsoLogin);
+    fixture.detectChanges();
+    fixture.componentInstance.login('okta');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain(reference);
+    expect(fixture.nativeElement.textContent).not.toContain('sensitive-provider-response');
+    fixture.componentInstance.login('okta');
+    expect(fixture.componentInstance.diagnosticId()).toBe('');
+  });
+
+  it('ignores untrusted diagnostic reference formats', () => {
+    api.start.mockReturnValueOnce(throwError(() => ({
+      status: 400, error: { diagnosticId: 'provider-response-with-sensitive-claims' },
+    })));
+    const component = TestBed.createComponent(SsoLogin).componentInstance;
+    component.login('okta');
+    expect(component.diagnosticId()).toBe('');
+  });
 });

@@ -314,6 +314,9 @@ public sealed class SsoEndpointsTests
         public void RegisterCode(string code, string nonce, string challenge) => codes[code] = (nonce, challenge);
         public int TokenRequests;
         public bool PkceVerified;
+        public bool AdvertisePar;
+        public bool RequirePar;
+        public int ParRequests;
         public bool PauseToken;
         public TaskCompletionSource<bool> TokenEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource<bool> ReleaseToken = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -325,16 +328,28 @@ public sealed class SsoEndpointsTests
             {
                 object body;
                 var key = new RsaSecurityKey(owner.rsa) { KeyId = "test-key" };
+                if (owner.Failure == "discovery-unavailable")
+                    throw new HttpRequestException("sensitive-provider-response", null, HttpStatusCode.ServiceUnavailable);
                 if (request.RequestUri!.AbsolutePath.Contains(".well-known"))
                     body = new
                     {
                         issuer = owner.Authority,
                         authorization_endpoint = owner.Authority.TrimEnd('/') + "/authorize",
                         token_endpoint = owner.Authority.TrimEnd('/') + "/token",
+                        pushed_authorization_request_endpoint = owner.AdvertisePar ? owner.Authority.TrimEnd('/') + "/par" : null,
+                        require_pushed_authorization_requests = owner.RequirePar,
                         jwks_uri = owner.Authority.TrimEnd('/') + "/keys",
                         response_types_supported = new[] { "code" }, subject_types_supported = new[] { "public" },
                         id_token_signing_alg_values_supported = new[] { "RS256" }
                     };
+                else if (request.RequestUri.AbsolutePath == "/par")
+                {
+                    owner.ParRequests++;
+                    return new HttpResponseMessage(HttpStatusCode.BadRequest)
+                    {
+                        Content = JsonContent.Create(new { error = "invalid_request", error_description = "sensitive-provider-response" })
+                    };
+                }
                 else if (request.RequestUri.AbsolutePath == "/keys")
                 {
                     var publicKey = JsonWebKeyConverter.ConvertFromRSASecurityKey(new RsaSecurityKey(owner.rsa.ExportParameters(false)) { KeyId = key.KeyId });

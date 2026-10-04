@@ -21,7 +21,8 @@ public sealed record SsoActiveSnapshot(string Type, string Name, string Authorit
 
 public sealed class SsoLoginFlow(
     IOptionsFactory<OpenIdConnectOptions> optionsFactory, SsoOidcHandlerFactory handlers,
-    SsoProtocolHttpClientFactory clients, SsoDeployment deployment, AppDbContext db, IWebHostEnvironment environment)
+    SsoProtocolHttpClientFactory clients, SsoDeployment deployment, AppDbContext db, IWebHostEnvironment environment,
+    SsoLoginDiagnostics diagnostics)
 {
     public const string Scheme = "SsoLogin";
     public const string CallbackPath = "/auth/sso/login/callback";
@@ -29,13 +30,18 @@ public sealed class SsoLoginFlow(
     public async Task<string> StartAsync(HttpContext context, SsoLoginAttempt attempt)
     {
         var urls = deployment.GetLoginUrls();
+        diagnostics.Stage = SsoLoginStage.ActiveSnapshot;
         var snapshot = JsonSerializer.Deserialize<SsoActiveSnapshot>(attempt.ActiveConfiguration)!;
+        diagnostics.Stage = SsoLoginStage.Backchannel;
         using var backchannel = clients.Create(snapshot.Authority);
         var options = handlers.Create(snapshot.ProtocolProvider(), attempt.Id, Scheme, urls.Callback, CallbackPath, backchannel);
         var properties = new AuthenticationProperties();
         properties.Items[SsoOidcHandlerFactory.AttemptKey] = attempt.Id.ToString("D");
+        diagnostics.Stage = SsoLoginStage.HandlerInitialization;
         var handler = await SsoOidcHandlerFactory.HandlerAsync(context, options, Scheme);
+        diagnostics.Stage = SsoLoginStage.AuthorizationChallenge;
         await handler.ChallengeAsync(properties);
+        diagnostics.Stage = SsoLoginStage.AuthorizationRedirect;
         var target = context.Response.Headers.Location.ToString();
         context.Response.Headers.Remove("Location");
         context.Response.StatusCode = StatusCodes.Status200OK;
