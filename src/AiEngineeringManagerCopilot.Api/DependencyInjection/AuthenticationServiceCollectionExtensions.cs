@@ -99,6 +99,14 @@ public static class AuthenticationServiceCollectionExtensions
             policy.RequireAssertion(context =>
                 context.User.Identity?.AuthenticationType == LocalSessionAuthenticationHandler.Scheme);
             });
+            options.AddPolicy("PlatformAdministrator", policy =>
+            {
+                policy.AddAuthenticationSchemes("BearerOrSession");
+                policy.RequireAuthenticatedUser();
+                policy.RequireRole(LocalSessionAuthenticationHandler.AdministratorRole);
+                policy.RequireAssertion(context => context.User.Identity?.AuthenticationType is
+                    LocalSessionAuthenticationHandler.Scheme or SsoSessionAuthenticationHandler.Scheme);
+            });
         });
 
         if (environment.IsDevelopment())

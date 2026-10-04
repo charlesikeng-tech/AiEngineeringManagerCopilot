@@ -57,9 +57,7 @@ public sealed class SsoConnectionFlow(
         // Consume atomically before exchanging a code. Replays cannot issue a second token request.
         var consumed = await db.SsoConnectionTests.Where(x => x.Id == attempt.Id && !x.Consumed &&
                 x.ExpiresAt > DateTimeOffset.UtcNow && db.SsoProviders.Any(p => p.Id == x.ProviderId && p.Revision == x.Revision) &&
-                db.AdministratorSessions.Any(s => s.TokenHash == x.SessionHash && s.ExpiresAt > DateTimeOffset.UtcNow &&
-                    db.LocalAdministrators.Any(a => a.UserId == s.UserId && a.IsActive &&
-                        a.Role == LocalSessionAuthenticationHandler.AdministratorRole)))
+                AdministratorSessionProof.ValidHashes(db).Contains(x.SessionHash))
             .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Consumed, true), ct);
         if (consumed != 1) { Redirect(context, urls.Frontend, false); return; }
         var provider = await db.SsoProviders.AsNoTracking().SingleOrDefaultAsync(x => x.Id == attempt.ProviderId, ct);
@@ -78,9 +76,7 @@ public sealed class SsoConnectionFlow(
                 await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(7192836402)", ct);
                 var updated = await db.SsoProviders.Where(p => p.Id == attempt.ProviderId && p.Revision == attempt.Revision &&
                         p.CurrentTestId == attempt.Id && attempt.ExpiresAt > DateTimeOffset.UtcNow &&
-                        db.AdministratorSessions.Any(s => s.TokenHash == attempt.SessionHash && s.ExpiresAt > DateTimeOffset.UtcNow &&
-                            db.LocalAdministrators.Any(a => a.UserId == s.UserId && a.IsActive &&
-                                a.Role == LocalSessionAuthenticationHandler.AdministratorRole)))
+                        AdministratorSessionProof.ValidHashes(db).Contains(attempt.SessionHash))
                     .ExecuteUpdateAsync(setters => setters
                         .SetProperty(p => p.TestedRevision, attempt.Revision)
                         .SetProperty(p => p.TestedAt, DateTimeOffset.UtcNow)

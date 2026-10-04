@@ -11,6 +11,7 @@ public sealed class ExternalIdentityConfiguration : IEntityTypeConfiguration<Ext
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Issuer).HasMaxLength(512).IsRequired();
         builder.Property(x => x.Subject).HasMaxLength(255).IsRequired();
+        builder.Property(x => x.AdministratorAccessApproved).HasDefaultValue(false);
         builder.HasIndex(x => new { x.Issuer, x.Subject }).IsUnique();
         builder.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
     }
@@ -35,6 +36,8 @@ public sealed class SsoLoginAttemptConfiguration : IEntityTypeConfiguration<SsoL
     {
         builder.HasKey(x => x.Id);
         builder.Property(x => x.PreviousSessionHash).HasMaxLength(64);
+        builder.Property(x => x.LinkSourceSessionHash).HasMaxLength(64);
+        builder.HasOne<User>().WithMany().HasForeignKey(x => x.LinkTargetUserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne<SsoProvider>().WithMany().HasForeignKey(x => x.ProviderId).OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(x => x.ExpiresAt);
     }

@@ -30,7 +30,9 @@ public sealed class LocalAuthenticationWebApplicationFactory(
         builder.UseSetting("Jwt:Issuer", "LocalAuthTests");
         builder.UseSetting("Jwt:Audience", "LocalAuthTests");
         builder.UseSetting("Jwt:Key", JwtKey);
-        builder.UseSetting("ConnectionStrings:Default", $"{ConnectionString};Search Path={schema}");
+        // Each schema has a distinct connection string. Retaining one pool per
+        // test exhausts PostgreSQL connections when the combined auth suite grows.
+        builder.UseSetting("ConnectionStrings:Default", $"{ConnectionString};Search Path={schema};Pooling=false");
         builder.UseSetting("Cors:AllowedOrigins:0", "http://localhost:4200");
         builder.ConfigureServices(services =>
         {

@@ -44,9 +44,11 @@ public sealed class SsoEndpointsTests
         });
         client.DefaultRequestHeaders.Authorization = new("Bearer", bearer);
         Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync(Root)).StatusCode);
-        client.DefaultRequestHeaders.Authorization = null;
         client.DefaultRequestHeaders.Add("Origin", "http://localhost:4200");
         client.DefaultRequestHeaders.Add("X-Session-Protection", "1");
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/auth/account/identities/start",
+            new { providerId = Guid.NewGuid(), password = "Strong-test-password-42!", approveAdministratorAccess = true })).StatusCode);
+        client.DefaultRequestHeaders.Authorization = null;
         await LoginAsync(client);
         client.DefaultRequestHeaders.Remove("X-Session-Protection");
         Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync(Root, Draft())).StatusCode);
@@ -369,6 +371,12 @@ public sealed class SsoEndpointsTests
                     Assert.Equal("authorization_code", form["grant_type"]);
                     Assert.Equal(owner.CallbackUrl, form["redirect_uri"]);
                     var claims = new List<Claim> { new("sub", owner.Subject) };
+                    if (owner.Failure != "missing-auth-time")
+                        claims.Add(new Claim("auth_time",
+                            (owner.Failure == "stale-auth-time" ? DateTimeOffset.UtcNow.AddHours(-1) :
+                                owner.Failure == "future-auth-time" ? DateTimeOffset.UtcNow.AddHours(1) : DateTimeOffset.UtcNow)
+                                .ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                            ClaimValueTypes.Integer64));
                     if (owner.Failure != "missing-nonce") claims.Add(new("nonce", owner.Failure == "nonce" ? "wrong" : flow.Item1));
                     if (owner.Email is not null) claims.Add(new("email", owner.Email));
                     if (owner.EmailVerified is not null) claims.Add(new("email_verified", owner.EmailVerified));

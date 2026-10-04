@@ -1,4 +1,5 @@
 using System.Net.Mail;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
 using AiEngineeringManagerCopilot.Api.Endpoints;
@@ -22,7 +23,7 @@ public sealed record SsoActiveSnapshot(string Type, string Name, string Authorit
 public sealed class SsoLoginFlow(
     IOptionsFactory<OpenIdConnectOptions> optionsFactory, SsoOidcHandlerFactory handlers,
     SsoProtocolHttpClientFactory clients, SsoDeployment deployment, AppDbContext db, IWebHostEnvironment environment,
-    SsoLoginDiagnostics diagnostics)
+    SsoLoginDiagnostics diagnostics, ILogger<SsoLoginFlow> logger)
 {
     public const string Scheme = "SsoLogin";
     public const string CallbackPath = "/auth/sso/login/callback";
@@ -35,6 +36,16 @@ public sealed class SsoLoginFlow(
         diagnostics.Stage = SsoLoginStage.Backchannel;
         using var backchannel = clients.Create(snapshot.Authority);
         var options = handlers.Create(snapshot.ProtocolProvider(), attempt.Id, Scheme, urls.Callback, CallbackPath, backchannel);
+        if (attempt.LinkTargetUserId is not null)
+        {
+            var redirect = options.Events.OnRedirectToIdentityProvider;
+            options.Events.OnRedirectToIdentityProvider = async eventContext =>
+            {
+                await redirect(eventContext);
+                eventContext.ProtocolMessage.Prompt = "login";
+                eventContext.ProtocolMessage.MaxAge = "0";
+            };
+        }
         var properties = new AuthenticationProperties();
         properties.Items[SsoOidcHandlerFactory.AttemptKey] = attempt.Id.ToString("D");
         diagnostics.Stage = SsoLoginStage.HandlerInitialization;
@@ -61,10 +72,23 @@ public sealed class SsoLoginFlow(
         }
         var attempt = await db.SsoLoginAttempts.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);
         if (attempt is null) { Redirect(context, urls.Frontend, "login_failed"); return; }
+        void Fail(string error = "link_failed")
+        {
+            if (attempt.LinkTargetUserId is not null)
+            {
+                logger.LogInformation("Account linking: user {UserId}, attempt {AttemptId}, outcome {Outcome}",
+                    attempt.LinkTargetUserId, attempt.Id, error);
+                context.Response.Redirect(urls.Frontend + "/account/security?link=" + error);
+            }
+            else Redirect(context, urls.Frontend, error == "link_failed" ? "login_failed" : error);
+        }
         var consumed = await db.SsoLoginAttempts.Where(x => x.Id == id && !x.Consumed && x.ExpiresAt > DateTimeOffset.UtcNow &&
+            (x.LinkTargetUserId == null || (db.AdministratorSessions.Any(s =>
+                s.TokenHash == x.LinkSourceSessionHash && s.UserId == x.LinkTargetUserId) &&
+                AdministratorSessionProof.ValidHashes(db).Contains(x.LinkSourceSessionHash!))) &&
             db.SsoProviders.Any(p => p.Id == x.ProviderId && p.ActiveRevision == x.ActiveRevision &&
                 p.ActiveConfiguration == x.ActiveConfiguration)).ExecuteUpdateAsync(s => s.SetProperty(x => x.Consumed, true), ct);
-        if (consumed != 1) { Redirect(context, urls.Frontend, "login_failed"); return; }
+        if (consumed != 1) { Fail(); return; }
         var snapshot = JsonSerializer.Deserialize<SsoActiveSnapshot>(attempt.ActiveConfiguration)!;
         using var backchannel = clients.Create(snapshot.Authority);
         try
@@ -73,7 +97,7 @@ public sealed class SsoLoginFlow(
             options.Events.OnRemoteFailure = eventContext =>
             {
                 eventContext.HandleResponse();
-                Redirect(context, urls.Frontend, "login_failed");
+                Fail();
                 return Task.CompletedTask;
             };
             options.Events.OnTicketReceived = async eventContext =>
@@ -82,7 +106,16 @@ public sealed class SsoLoginFlow(
                 var subject = eventContext.Principal?.FindFirst("sub")?.Value;
                 if (string.IsNullOrEmpty(subject) || subject.Length > 255)
                 {
-                    Redirect(context, urls.Frontend, "login_failed");
+                    Fail();
+                    return;
+                }
+                if (attempt.LinkTargetUserId is not null &&
+                    (!long.TryParse(eventContext.Principal?.FindFirst("auth_time")?.Value,
+                        NumberStyles.None, CultureInfo.InvariantCulture, out var authenticatedAt) ||
+                     authenticatedAt < attempt.ExpiresAt.AddMinutes(-10).AddSeconds(-30).ToUnixTimeSeconds() ||
+                     authenticatedAt > DateTimeOffset.UtcNow.AddSeconds(30).ToUnixTimeSeconds()))
+                {
+                    Fail();
                     return;
                 }
                 await using var transaction = await db.Database.BeginTransactionAsync(ct);
@@ -94,11 +127,40 @@ public sealed class SsoLoginFlow(
                     !await db.SsoProviders.AnyAsync(p => p.Id == attempt.ProviderId &&
                         p.ActiveRevision == attempt.ActiveRevision && p.ActiveConfiguration == attempt.ActiveConfiguration, ct))
                 {
-                    Redirect(context, urls.Frontend, "login_failed");
+                    Fail();
                     return;
                 }
                 var identity = await db.ExternalIdentities.SingleOrDefaultAsync(
                     x => x.Issuer == snapshot.Authority && x.Subject == subject, ct);
+                if (attempt.LinkTargetUserId is Guid targetId)
+                {
+                    if (attempt.LinkSourceSessionHash is null ||
+                        await AdministratorSessionProof.LockLocalAsync(db, attempt.LinkSourceSessionHash, targetId, ct) is null)
+                    {
+                        Fail();
+                        return;
+                    }
+                    if (identity is not null && identity.UserId != targetId)
+                    {
+                        Fail("identity_conflict");
+                        return;
+                    }
+                    if (identity is null)
+                    {
+                        identity = new ExternalIdentity
+                        {
+                            Id = Guid.NewGuid(), UserId = targetId, Issuer = snapshot.Authority, Subject = subject
+                        };
+                        db.ExternalIdentities.Add(identity);
+                    }
+                    identity.AdministratorAccessApproved = true;
+                    await db.SaveChangesAsync(ct);
+                    await transaction.CommitAsync(ct);
+                    logger.LogInformation("Account linking: user {UserId}, identity {IdentityId}, outcome {Outcome}",
+                        targetId, identity.Id, "linked");
+                    context.Response.Redirect(urls.Frontend + "/account/security?link=success");
+                    return;
+                }
                 User user;
                 if (identity is null)
                 {
@@ -124,7 +186,10 @@ public sealed class SsoLoginFlow(
                 else
                 {
                     user = await db.Users.SingleAsync(x => x.Id == identity.UserId, ct);
-                    if (!user.IsActive || await db.LocalAdministrators.AnyAsync(x => x.UserId == user.Id, ct))
+                    var admin = await db.LocalAdministrators.AsNoTracking().SingleOrDefaultAsync(x => x.UserId == user.Id, ct);
+                    if (!user.IsActive || (admin is not null && (!identity.AdministratorAccessApproved ||
+                        !admin.IsActive || admin.Role != LocalSessionAuthenticationHandler.AdministratorRole)) ||
+                        (identity.AdministratorAccessApproved && admin is null))
                     {
                         Redirect(context, urls.Frontend, "login_failed");
                         return;
@@ -150,11 +215,11 @@ public sealed class SsoLoginFlow(
                 context.Response.Redirect(urls.Frontend + "/dashboard");
             };
             var handler = await SsoOidcHandlerFactory.HandlerAsync(context, options, Scheme);
-            if (!await handler.HandleRequestAsync()) Redirect(context, urls.Frontend, "login_failed");
+            if (!await handler.HandleRequestAsync()) Fail();
         }
         catch (Exception ex) when (SsoConnectionFlow.IsProtocolFailure(ex, ct))
         {
-            Redirect(context, urls.Frontend, "login_failed");
+            Fail();
         }
     }
 

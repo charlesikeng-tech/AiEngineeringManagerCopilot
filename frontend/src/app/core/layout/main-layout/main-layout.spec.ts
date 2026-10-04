@@ -87,9 +87,12 @@ describe('MainLayout integrations navigation', () => {
     fixture.detectChanges();
     const item = fixture.nativeElement.querySelector('li[routerlink="/admin/authentication"]');
     expect(item.textContent).toContain('Administrator authentication');
+    const security = fixture.nativeElement.querySelector('li[routerlink="/account/security"]');
+    expect(security.textContent).toContain('Account security');
     await TestBed.inject(I18nService).setLanguage('fr');
     fixture.detectChanges();
     expect(item.textContent).toContain('Authentification administrateur');
+    expect(security.textContent).toContain('Sécurité du compte');
   });
 
   it('never shows provider administration to an ordinary SSO user', () => {
@@ -97,6 +100,7 @@ describe('MainLayout integrations navigation', () => {
     const fixture = TestBed.createComponent(MainLayout);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('li[routerlink="/admin/authentication"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('li[routerlink="/account/security"]')).toBeNull();
   });
 
   it('clears team context on logout and returns to general login', () => {

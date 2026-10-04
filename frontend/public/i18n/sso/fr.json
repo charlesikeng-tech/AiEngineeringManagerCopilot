@@ -1,7 +1,39 @@
 {
+  "accountLink": {
+    "title": "Sécurité du compte",
+    "explanation": "Associez explicitement une identité à cet administrateur local existant. Aucune fusion ni correspondance par e-mail. Votre compte, vos équipes, votre mot de passe local et votre rôle administrateur sont conservés.",
+    "collision": "Cet e-mail appartient à un compte existant. Connectez-vous avec votre mot de passe administrateur local via la récupération locale, puis ouvrez Sécurité du compte. Inutile de modifier votre e-mail fournisseur.",
+    "unsupported": "L’association est réservée aux administrateurs locaux existants. Un compte SSO ordinaire ne peut pas confirmer un mot de passe local.",
+    "loading": "Chargement de la sécurité du compte…",
+    "identities": "Identités associées",
+    "empty": "Aucune identité associée.",
+    "approved": "Accès administrateur explicitement approuvé",
+    "localRequired": "L’association et sa suppression exigent une session locale et une nouvelle confirmation du mot de passe local. La session SSO seule ne suffit pas.",
+    "localLogin": "Connexion avec les identifiants de récupération locale",
+    "provider": "Fournisseur actuellement actif",
+    "select": "Sélectionner un fournisseur actif",
+    "noProviders": "Activez d’abord un fournisseur testé dans les paramètres d’authentification.",
+    "password": "Confirmez votre mot de passe administrateur local (également requis pour dissocier)",
+    "consent": "J’approuve explicitement que cette identité conserve mon accès administrateur existant. Je m’authentifierai à nouveau auprès du fournisseur.",
+    "start": "Confirmer le mot de passe et associer l’identité",
+    "pending": "Préparation de l’authentification sécurisée…",
+    "unlink": "Dissocier avec confirmation du mot de passe",
+    "unlinkExplanation": "La dissociation révoque les sessions SSO de cette identité et les associations en attente. Votre compte local et son mot de passe restent intacts.",
+    "outcomes": {
+      "success": "Le retour indique un succès. Seule la liste actualisée ci-dessous confirme l’approbation enregistrée. Votre session locale reste active.",
+      "link_failed": "L’association n’a pas abouti. Réessayez depuis votre session locale active. Aucun compte n’a été fusionné.",
+      "identity_conflict": "Cette identité appartient déjà à un autre compte. Les comptes ne peuvent pas être fusionnés.",
+      "unlinked": "Identité dissociée et ses sessions SSO révoquées."
+    },
+    "errors": {
+      "confirmation_failed": "Confirmation refusée. Vérifiez votre mot de passe local ou attendez la fin du verrouillage. Votre session reste inchangée.",
+      "rate_limited": "Trop de tentatives. Réessayez plus tard.",
+      "request_failed": "La demande n’a pas abouti. Rechargez la page puis réessayez."
+    }
+  },
   "sso": {
     "title": "Authentification administrateur",
-    "scope": "Configuration OIDC globale à l’installation. L’activation d’une configuration vérifiée permet la connexion SSO et crée un compte utilisateur ordinaire à la première connexion, jamais un administrateur. La récupération locale reste indépendante. Enregistrez les deux URL de retour décrites dans docs/sso.md.",
+    "scope": "Configuration OIDC globale à l’installation. L’activation permet la connexion SSO et crée des comptes utilisateurs ordinaires à la première connexion, jamais un administrateur. Les administrateurs locaux doivent associer explicitement leur identité avec confirmation du mot de passe dans Sécurité du compte. La récupération locale reste indépendante. Enregistrez les deux URL de retour décrites dans docs/sso.md.",
     "callback": "Enregistrez cette URL de retour exacte dans l’application du fournisseur :",
     "loginCallback": "Enregistrez également cette URL de retour exacte pour la connexion des utilisateurs :",
     "domains": "Utilisez un nom d’hôte standard *.auth0.com, *.okta.com, *.oktapreview.com ou *.okta-emea.com (sans URL ni domaine personnalisé). Entra ID exige le GUID du tenant. Le test utilise le code d’autorisation avec PKCE et ouvre la page d’authentification du fournisseur.",
@@ -40,7 +72,7 @@
     "testSuccess": "Échange du code d’autorisation et validation du jeton d’identité réussis. L’actualisation affiche le statut vérifié côté serveur ; activez explicitement la configuration lorsque vous êtes prêt.",
     "login": {
       "title": "Connexion",
-      "policy": "Connectez-vous avec un fournisseur actif. Votre compte utilisateur ordinaire est créé à la première connexion, sans accès administrateur.",
+      "policy": "Connectez-vous avec un fournisseur actif. Les nouveaux comptes sont des utilisateurs ordinaires. Les administrateurs locaux conservent leur rôle uniquement après association explicite avec confirmation du mot de passe dans Sécurité du compte.",
       "loading": "Chargement des fournisseurs…",
       "empty": "Aucun fournisseur SSO actif. Contactez l’administrateur de la plateforme.",
       "continue": "Continuer avec",
@@ -49,7 +81,7 @@
       "diagnostic": "Référence de diagnostic à transmettre à l’administrateur :",
       "errors": {
         "login_failed": "Connexion échouée ou expirée. Réessayez ; contactez votre administrateur si le problème persiste.",
-        "email_collision": "Cette adresse appartient déjà à un autre compte. Les comptes ne sont jamais liés par e-mail. Demandez à l’administrateur du fournisseur une adresse distincte ou l’omission de la revendication e-mail.",
+        "email_collision": "Cette adresse appartient déjà à un compte existant. Aucune association automatique par e-mail. Les administrateurs locaux peuvent se connecter localement puis associer explicitement leur identité dans Sécurité du compte.",
         "request_failed": "Impossible de charger les fournisseurs. Vérifiez la connexion et rechargez la page.",
         "rate_limited": "Trop de tentatives. Réessayez plus tard."
       }

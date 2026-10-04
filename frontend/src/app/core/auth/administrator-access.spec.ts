@@ -40,6 +40,12 @@ describe('Administrator access page', () => {
     expect(TestBed.inject(Router).navigateByUrl).toHaveBeenCalledWith('/dashboard');
     expect(component.password).toBe('');
   });
+  it('keeps local recovery accessible even when an SSO administrator is signed in', () => {
+    const user = vi.spyOn(auth, 'user').mockReturnValue({ role: 'PlatformAdministrator' } as never);
+    TestBed.createComponent(AdministratorAccess).componentInstance.ngOnInit();
+    expect(TestBed.inject(Router).navigateByUrl).not.toHaveBeenCalled();
+    user.mockRestore();
+  });
 
   it('does not submit installation when password confirmation differs', () => {
     route.snapshot.data.setup = true;

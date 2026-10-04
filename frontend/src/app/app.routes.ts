@@ -24,6 +24,10 @@ export const routes: Routes = [
       import('@core/layout/main-layout/main-layout').then(({ MainLayout }) => MainLayout),
     children: [
       {
+        path: 'account/security',
+        loadComponent: () => import('@features/authentication/account-security').then(({ AccountSecurity }) => AccountSecurity),
+      },
+      {
         path: 'admin/authentication',
         canActivate: [administratorGuard],
         loadComponent: () => import('@features/authentication/authentication-settings').then(({ AuthenticationSettings }) => AuthenticationSettings),

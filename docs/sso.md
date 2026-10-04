@@ -9,7 +9,9 @@ authorized by that active provider application to create an ordinary app account
 at their **first login (JIT)**. There are no invitations or preapproval checks.
 Restrict application assignments/authorization at the provider accordingly.
 There is no public password signup, organization scoping, user import or
-external administrator linking. Provider configuration is global to this
+automatic external administrator linking. Explicit linking for an existing local
+administrator requires local password confirmation and fresh provider proof.
+Provider configuration is global to this
 installation. Deactivation never disables or deletes the local recovery account
 at `/admin/login`.
 
@@ -119,7 +121,8 @@ downgraded. Supporting mandatory PAR requires a separately configured integratio
 
 ## Draft, test and activation workflow
 
-1. Sign in as the local platform administrator and open the authentication page.
+1. Sign in as the local platform administrator (or an explicitly approved linked
+   SSO administrator) and open the authentication page.
 2. Add a provider draft, supply its tenant/client ID and choose a secret action:
    **retain** leaves an existing secret unchanged; **replace** requires a new
    value; **clear** removes it for a public PKCE application. No masked value
@@ -127,7 +130,7 @@ downgraded. Supporting mandatory PAR requires a separately configured integratio
 3. Save. Every edit increments the revision and invalidates its test result,
    but does not change the previous active configuration.
 4. Select **Test connection**. The protected POST creates a ten-minute attempt
-   bound to the initiating local session and exact draft revision. Discovery
+   bound to the initiating local or approved SSO session and exact draft revision. Discovery
    is followed by a real browser authorization request. Authenticate at the
    provider; the API exchanges the returned code using PKCE and validates
    signature, issuer, audience, lifetime, nonce and correlation with the
@@ -168,8 +171,9 @@ Concurrent first callbacks are serialized and constrained by the unique DB
 index; repeat logins retain the same local ID. Two active configurations using
 the same issuer reuse a pair only after independently validating the selected
 provider's audience and current snapshot. A different issuer or subject creates
-a distinct identity. The IdP's `PlatformAdministrator` claim is ignored: every
-SSO principal is `User`, and linked local-administrator records are rejected.
+a distinct identity. The IdP's `PlatformAdministrator` claim is ignored. JIT accounts remain `User`.
+Local-administrator identities are rejected unless that exact external identity
+has persisted `AdministratorAccessApproved = true` from the explicit flow below.
 
 Email is optional: absent or malformed email yields `NULL`, never a fabricated
 address. Valid email may be saved even when unverified; `EmailVerified` is true
@@ -178,8 +182,9 @@ profile information, never authorization or account recovery evidence. Name
 is a bounded non-control-character claim or the neutral fallback `SSO user`.
 An email collision with **any existing user**, including the local administrator,
 fails explicitly with `email_collision` and creates no identity/account/session.
-There is no email matching/linking/promotion. The provider administrator must
-resolve the claim or omit it; there is no manual linking UI in this pilot.
+There is no automatic email matching/linking/promotion. An existing local
+administrator can instead use explicit linking below; no Okta email change is
+needed. Ordinary JIT accounts cannot use a cached SSO session as password proof.
 Existing linked users are not overwritten by later email/name claims.
 
 New users have no inherited memberships or seeded/other-owner data. Existing
@@ -188,9 +193,77 @@ own teams normally. No organization or import behavior is added.
 
 ## Revocable sessions and recovery
 
+### Explicit local-administrator linking and revocation
+
+1. Apply `AddExplicitAdministratorAccountLinking` with the migration command above.
+2. Sign in at `/admin/login` with the **existing local recovery credentials**,
+   even if already signed in through SSO. Open **Account security**
+   (`/account/security`) in the administrator menu.
+3. Select a **currently active** provider, not a saved draft. Enter your local
+   password again and explicitly consent to retaining the existing administrator
+   role. Each start requires a new password confirmation; a cached profile or
+   SSO session is never sufficient.
+4. Authenticate freshly at the provider. Linking requests `prompt=login` and
+   `max_age=0`, with the same framework code/PKCE validator, nonce/correlation,
+   trusted issuer and SSRF-protected backchannel as effective login.
+   The validated ID token must include `auth_time` at or after link initiation
+   (with 30-second clock tolerance); missing/stale/future authentication times
+   are rejected, not silently treated as fresh provider proof.
+5. The fixed configured frontend `/account/security?link=success` shows feedback;
+   the freshly loaded linked-identity list is authoritative. No raw subject,
+   claims, tokens or password is returned. **Linking leaves the original local
+   session and cookie intact**. Log out and use `/login` when you want to test SSO.
+
+`POST /auth/account/identities/start` accepts only a provider ID, local password
+and explicit administrator-access consent. The target user, role and original
+local session hash are server-selected. Password verification, Identity rehash
+and serialized failed-attempt/15-minute lockout behavior are shared with local
+login. Wrong passwords never rotate/revoke a valid session or write identities.
+The shared authentication rate limiter and exact Origin/header CSRF rules apply.
+
+The ten-minute single-use attempt stores the target existing user ID and exact
+source local session hash. The callback uses DB proof, **not** the Strict cookie
+which is absent on cross-site returns. It rechecks/locks the active credential,
+user and original local session and verifies the exact active snapshot under
+the same PostgreSQL advisory lock as provider mutations. Logout, session
+rotation/expiry, credential/user deactivation, changed role, provider reactivation
+or deletion of the attempt invalidates the proof, including during token exchange.
+Invalid/canceled/replayed/tampered protocol returns create no identity or session.
+If the state/attempt is no longer available, feedback can fall back to the safe
+login-failed page; return to Account security to restart.
+
+The callback attaches the validated exact issuer/subject to the **existing
+UserId**, preserving email, name, credential, team ownership and all existing
+owner data. Email need not match: local password plus provider identity proof,
+not email, authorizes the association. An identity owned by any different user
+fails with `identity_conflict`; no account merge is allowed. Repeating the same
+identity for the same user is idempotent, but requires both proofs again.
+Only this deliberate flow writes `ExternalIdentities.AdministratorAccessApproved`.
+Existing identities default to false on migration; merely having a local
+credential, verified email, provider groups or a role claim grants nothing.
+
+Subsequent SSO login resolves the existing UserId. Every SSO request computes
+its role from the persisted identity approval and active local credential/user
+with the existing `PlatformAdministrator` role. Revoking approval, removing or
+deactivating the credential/user, or changing that role rejects existing admin
+SSO sessions on their next request. `/auth/current` returns that actual role.
+Approved SSO administrators can perform provider CRUD/test/activation and
+connection callbacks also verify their exact live SSO source session and approval.
+Ordinary accounts remain ordinary and cannot access these administration endpoints.
+
+To revoke a link, sign in **locally**, enter the local password on Account
+security, then choose **Unlink with password confirmation**. The protected
+`POST /auth/account/identities/{identityId}/unlink` atomically removes only your
+identity, revokes its SSO sessions and invalidates your pending link attempts.
+It never deletes the local account, password or teams. A later SSO login with
+the same local-account email again fails `email_collision` until explicitly
+linked again. The local recovery form remains accessible to signed-in SSO
+administrators. Audit logging includes only safe local IDs and fixed outcomes;
+never enable provider bodies, subject/email or credential logging.
+
 `SsoSessions` contains only a hash of an opaque random eight-hour token and
 references the user, external identity, provider and active snapshot/revision.
-It does not reference `LocalAdministrators`. Every SSO API request rechecks
+Every SSO API request rechecks
 account activity, identity/account consistency and the exact current active
 provider snapshot. Draft edits leave sessions and in-flight logins unaffected.
 Activation (including reactivation) conservatively deletes that provider's
@@ -204,8 +277,10 @@ session, so no competing local/SSO cookies can select a surprising privilege.
 Local cookies/scheme retain their existing behavior. Both modes protect
 mutations against CSRF and `/auth/current` and `/auth/logout` accept only these
 session schemes, not bearer-only impersonation. Bearer remains preferred when
-explicitly supplied on other API requests. Provider administration still
-requires local scheme + explicit local `PlatformAdministrator` role.
+explicitly supplied on other API requests. Provider administration uses `PlatformAdministrator`: a local or approved SSO
+session with a server-authoritative existing administrator role. Bearer role
+claims alone are never accepted. `LocalAdministrator` remains local-only for
+password reauthentication, linking and unlinking.
 
 Logout revokes the app session and clears the cookie/team context; it does not
 log out of Okta/Auth0/Entra. A later login can transparently reuse the provider's
@@ -216,7 +291,7 @@ revoke a preexisting app session in this pilot: deactivate the provider, disable
 the app account or delete sessions operationally when immediate revocation is
 needed. Backchannel logout and organization lifecycle management are deferred.
 
-Only the newest attempt for a provider can complete. Attempts are single-use;
+Only the newest connection-test attempt for a provider can complete. Attempts are single-use;
 replay, timeout, revision changes, session logout/rotation/expiry, inactive
 administrator, missing correlation/nonce or invalid tokens fail closed.
 The main local session cookie retains `SameSite=Strict`; the callback uses
@@ -287,7 +362,12 @@ With the repository PostgreSQL test service on port 5433:
 
 ```sh
 dotnet test tests/AiEngineeringManagerCopilot.IntegrationTests \
-  --filter 'FullyQualifiedName~Sso|FullyQualifiedName~LocalAuthenticationEndpointsTests'
+  --filter 'FullyQualifiedName~Sso|FullyQualifiedName~LocalAuthenticationEndpointsTests|FullyQualifiedName~AccountLinkEndpointsTests'
+dotnet test tests/AiEngineeringManagerCopilot.UnitTests \
+  --filter 'FullyQualifiedName~Authentication|FullyQualifiedName~ServiceRegistrationTests'
+dotnet ef migrations has-pending-model-changes \
+  --project src/AiEngineeringManagerCopilot.Infrastructure \
+  --startup-project src/AiEngineeringManagerCopilot.Api
 cd frontend
 npm test -- --watch=false --include='src/app/features/authentication/*.spec.ts' \
   --include='src/app/core/auth/*.spec.ts' \
@@ -306,6 +386,11 @@ The effective-login tests also cover JIT concurrency, stable issuer/subject
 linkage across providers, optional/unverified email, administrator email
 collision, owner isolation, logout/account switching, active vs draft changes,
 in-flight changes, revocation, protected/rate-limited starts and prefixed callbacks.
+Explicit-link tests cover local-password confirmation/lockout, consent/CSRF,
+source revocation during exchange, invalid tokens/state/correlation/replay,
+identity conflict/idempotent concurrency, retained owner data and local session,
+approved SSO provider CRUD/connection testing, dynamic approval revocation and
+password-confirmed unlink.
 They are **not live tenant validation**. Operators
 must provide real provider applications/credentials and run the browser test
 for each intended tenant before activation.

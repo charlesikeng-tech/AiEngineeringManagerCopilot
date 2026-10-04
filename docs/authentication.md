@@ -8,6 +8,10 @@ connection testing and explicit configuration activation; see [SSO configuration
 Activation enables ordinary-user SSO login and just-in-time accounts at `/login`.
 Local administrator login and recovery remain independent of those configurations.
 SSO can never promote or link an administrator by email or provider claims.
+An existing local administrator can explicitly link a provider identity after
+fresh local-password confirmation and OIDC proof at `/account/security`, deliberately
+approving preservation of the existing administrator role. See the explicit-link
+workflow in [SSO configuration](sso.md).
 
 ## Prepare the database and installation secret
 
@@ -125,8 +129,11 @@ After login/setup it refreshes accessible teams, clearing stale team selection;
 an administrator or ordinary user with no teams starts with no team selected.
 Logout clears the team context and returns to `/login`. `/admin/login` remains
 the independent local recovery form, also accessible while an ordinary user is
-signed in. Only `PlatformAdministrator` sees or can access provider administration;
-the server additionally requires the local authentication scheme.
+signed in, including an approved SSO administrator. Only `PlatformAdministrator`
+sees or can access provider administration; the server requires a local or
+explicitly approved linked SSO session and reads its role from the database,
+never from provider groups or bearer role claims. Linking/unlinking still
+requires the local authentication scheme and a fresh local password.
 The development-only `/dev/token` endpoint is disabled unless the operator
 explicitly sets `Development__EnableToken=true`; no normal UI path calls it.
 
@@ -140,6 +147,12 @@ explicitly sets `Development__EnableToken=true`; no normal UI path calls it.
 * `POST /auth/logout`: revoke the current local/SSO server session and clear the
   single cookie. This is **not** an upstream provider logout; a new provider
   authorization can sign in automatically using its existing upstream session.
+* `GET /auth/account/identities`: administrator-only safe linked identities and
+  server-authoritative `canLink` (local session required).
+* `POST /auth/account/identities/start`: local-only provider ID, password and
+  `approveAdministratorAccess: true`; no client-selected target/email/role.
+* `POST /auth/account/identities/{id}/unlink`: local-only password confirmation,
+  removes your identity and revokes its SSO sessions, retaining local recovery.
 
 With the repository's PostgreSQL test service running on port 5433:
 

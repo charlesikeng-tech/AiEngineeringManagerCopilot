@@ -25,8 +25,9 @@ public sealed class SsoConnectionTestConfiguration : IEntityTypeConfiguration<Ss
         builder.HasKey(x => x.Id);
         builder.Property(x => x.SessionHash).HasMaxLength(64);
         builder.HasOne<SsoProvider>().WithMany().HasForeignKey(x => x.ProviderId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasOne<AdministratorSession>().WithMany().HasForeignKey(x => x.SessionHash)
-            .OnDelete(DeleteBehavior.Cascade);
+        // The hash can reference a local or approved SSO session; callback proof
+        // checks the corresponding live table rather than a local-only FK.
+        builder.HasIndex(x => x.SessionHash);
         builder.HasIndex(x => x.ExpiresAt);
     }
 }

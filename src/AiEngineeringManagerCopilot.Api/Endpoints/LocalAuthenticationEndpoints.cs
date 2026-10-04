@@ -20,6 +20,7 @@ public static class LocalAuthenticationEndpoints
     {
         app.MapSsoEndpoints();
         app.MapSsoLoginEndpoints();
+        app.MapAccountLinkEndpoints();
         var group = app.MapGroup("/auth").WithTags("Local administrator");
         group.MapGet("/setup-status", async (AppDbContext db, IConfiguration config, CancellationToken ct) =>
             Results.Ok(new { setupAvailable = SecretConfigured(config) && !await db.Installations.AnyAsync(ct) }))
@@ -35,7 +36,10 @@ public static class LocalAuthenticationEndpoints
         }).RequireAuthorization("Session");
         group.MapPost("/logout", async (HttpContext context, AppDbContext db, IWebHostEnvironment env, CancellationToken ct) =>
         {
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(7192836402)", ct);
             await RevokePresentedSessionAsync(context, db, ct);
+            await transaction.CommitAsync(ct);
             context.Response.Cookies.Delete(LocalSessionAuthenticationHandler.CookieName, CookieOptions(env));
             return Results.NoContent();
         }).RequireAuthorization("Session");
@@ -106,37 +110,16 @@ public static class LocalAuthenticationEndpoints
 
         var normalizedEmail = request.Email.Trim().ToUpperInvariant();
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(7192836402)", ct);
         var admin = await db.LocalAdministrators
             .FromSqlInterpolated($"SELECT * FROM \"LocalAdministrators\" WHERE \"NormalizedEmail\" = {normalizedEmail} FOR UPDATE")
             .SingleOrDefaultAsync(ct);
-        if (admin is null || !admin.IsActive || admin.Role != LocalSessionAuthenticationHandler.AdministratorRole ||
-            admin.LockoutUntil > DateTimeOffset.UtcNow)
+        var user = await LocalPasswordConfirmation.VerifyAsync(admin, request.Password, db, hasher, ct);
+        if (user is null)
         {
-            // Perform a real Identity hash verification even for missing or locked accounts.
-            hasher.VerifyHashedPassword(new IdentityUser(), DummyPasswordHash, request.Password);
-            return Results.Unauthorized();
-        }
-        var identityUser = new IdentityUser { UserName = request.Email };
-        var result = hasher.VerifyHashedPassword(identityUser, admin.PasswordHash, request.Password);
-        if (result == PasswordVerificationResult.Failed)
-        {
-            admin.FailedLoginCount++;
-            if (admin.FailedLoginCount >= 5)
-            {
-                admin.LockoutUntil = DateTimeOffset.UtcNow.AddMinutes(15);
-                admin.FailedLoginCount = 0;
-            }
-            await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
             return Results.Unauthorized();
         }
-
-        var user = await db.Users.SingleAsync(x => x.Id == admin.UserId, ct);
-        if (!user.IsActive) return Results.Unauthorized();
-        admin.FailedLoginCount = 0;
-        admin.LockoutUntil = null;
-        if (result == PasswordVerificationResult.SuccessRehashNeeded)
-            admin.PasswordHash = hasher.HashPassword(identityUser, request.Password);
         await db.AdministratorSessions.Where(x => x.ExpiresAt <= DateTimeOffset.UtcNow).ExecuteDeleteAsync(ct);
         await RevokePresentedSessionAsync(context, db, ct);
         var token = AddSession(db, user.Id);
@@ -145,9 +128,6 @@ public static class LocalAuthenticationEndpoints
         WriteCookie(context, env, token);
         return Results.Ok(Profile(user));
     }
-
-    private static readonly string DummyPasswordHash =
-        new PasswordHasher<IdentityUser>().HashPassword(new IdentityUser(), Convert.ToHexString(RandomNumberGenerator.GetBytes(32)));
 
     private static bool ValidEmail(string? email) =>
         !string.IsNullOrWhiteSpace(email) && email.Trim().Length <= 254 &&

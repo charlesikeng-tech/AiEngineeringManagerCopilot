@@ -68,7 +68,7 @@ export class AdministratorAccess implements OnInit {
   confirmation = '';
 
   ngOnInit() {
-    if (this.auth.user()?.role === 'PlatformAdministrator') { void this.router.navigateByUrl('/dashboard'); return; }
+    if (this.setupMode && this.auth.user()) { void this.router.navigateByUrl('/dashboard'); return; }
     if (this.setupMode) {
       this.auth.setupStatus().subscribe({
         next: ({ setupAvailable }) => {

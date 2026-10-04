@@ -20,7 +20,7 @@ public static class SsoEndpoints
 
     public static void MapSsoEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/auth/sso/providers").RequireAuthorization("LocalAdministrator");
+        var group = app.MapGroup("/auth/sso/providers").RequireAuthorization("PlatformAdministrator");
         group.MapGet("", async (AppDbContext db, SsoDeployment deployment, CancellationToken ct) =>
         {
             (string Callback, string Frontend) urls;
@@ -131,6 +131,7 @@ public static class SsoEndpoints
         if (provider is null) return Results.NotFound();
         if (provider.Revision != request.Revision) return Results.Conflict(new { error = "revision_conflict" });
         var hash = LocalSessionAuthenticationHandler.Hash(context.Request.Cookies[LocalSessionAuthenticationHandler.CookieName]!);
+        if (!await AdministratorSessionProof.ValidHashes(db).ContainsAsync(hash, ct)) return Results.Unauthorized();
         await db.SsoConnectionTests.Where(x => x.ExpiresAt <= DateTimeOffset.UtcNow).ExecuteDeleteAsync(ct);
         // Only the newest test can complete for this revision; multiple tabs cannot race their results.
         await db.SsoConnectionTests.Where(x => x.ProviderId == id).ExecuteUpdateAsync(

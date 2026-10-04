@@ -32,13 +32,15 @@ public sealed class SsoSessionAuthenticationHandler(
                 user.IsActive && identity.UserId == user.Id &&
                 provider.ActiveRevision == session.ActiveRevision &&
                 provider.ActiveConfiguration == session.ActiveConfiguration &&
-                !db.LocalAdministrators.Any(a => a.UserId == user.Id)
-            select new { user.Id, user.Email, user.Name }).SingleOrDefaultAsync(Context.RequestAborted);
+                ((!identity.AdministratorAccessApproved && !db.LocalAdministrators.Any(a => a.UserId == user.Id)) ||
+                    (identity.AdministratorAccessApproved && db.LocalAdministrators.Any(a => a.UserId == user.Id &&
+                        a.IsActive && a.Role == LocalSessionAuthenticationHandler.AdministratorRole)))
+            select new { user.Id, user.Email, user.Name, identity.AdministratorAccessApproved }).SingleOrDefaultAsync(Context.RequestAborted);
         if (account is null) return AuthenticateResult.Fail("Invalid or expired session.");
         var identityClaims = new ClaimsIdentity([
             new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
             new Claim(ClaimTypes.Name, account.Name),
-            new Claim(ClaimTypes.Role, UserRole)
+            new Claim(ClaimTypes.Role, account.AdministratorAccessApproved ? LocalSessionAuthenticationHandler.AdministratorRole : UserRole)
         ], Scheme);
         if (account.Email is not null) identityClaims.AddClaim(new Claim(ClaimTypes.Email, account.Email));
         return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identityClaims), Scheme));

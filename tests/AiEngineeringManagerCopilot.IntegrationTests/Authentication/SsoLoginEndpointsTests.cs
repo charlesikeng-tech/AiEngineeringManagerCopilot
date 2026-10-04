@@ -424,9 +424,9 @@ public sealed class SsoLoginEndpointsTests
         Assert.Contains(LocalSessionAuthenticationHandler.CookieName + "=s.", jar.GetCookieHeader(new Uri(protocol.CallbackUrl)));
     }
 
-    private static FakeProtocol Protocol() => new() { CallbackUrl = "http://localhost" + SsoLoginFlow.CallbackPath };
+    internal static FakeProtocol Protocol() => new() { CallbackUrl = "http://localhost" + SsoLoginFlow.CallbackPath };
 
-    private static async Task<Guid> Activate(WebApplicationFactory<Program> app)
+    internal static async Task<Guid> Activate(WebApplicationFactory<Program> app)
     {
         using var admin = NewClient(app);
         await LoginAsync(admin);
@@ -449,11 +449,14 @@ public sealed class SsoLoginEndpointsTests
         return id;
     }
 
-    private sealed record Flow(string Callback, string Cookies, string[] SetCookies);
+    internal sealed record Flow(string Callback, string Cookies, string[] SetCookies);
 
-    private static async Task<Flow> Start(HttpClient client, FakeProtocol protocol, Guid provider)
+    internal static async Task<Flow> Start(HttpClient client, FakeProtocol protocol, Guid provider, bool link = false)
     {
-        var result = await client.PostAsJsonAsync($"{Root}/{provider}/start", new { });
+        var result = link
+            ? await client.PostAsJsonAsync("/auth/account/identities/start",
+                new { providerId = provider, password = "Strong-test-password-42!", approveAdministratorAccess = true })
+            : await client.PostAsJsonAsync($"{Root}/{provider}/start", new { });
         result.EnsureSuccessStatusCode();
         var query = QueryHelpers.ParseQuery(new Uri(JsonDocument.Parse(await result.Content.ReadAsStringAsync())
             .RootElement.GetProperty("authorizationUrl").GetString()!).Query);
@@ -461,6 +464,7 @@ public sealed class SsoLoginEndpointsTests
         Assert.Equal("S256", query["code_challenge_method"]);
         Assert.Equal("openid profile email", query["scope"]);
         Assert.Equal(protocol.CallbackUrl, query["redirect_uri"]);
+        if (link) Assert.Equal("login", query["prompt"]);
         var code = Guid.NewGuid().ToString("N");
         protocol.RegisterCode(code, query["nonce"].ToString(), query["code_challenge"].ToString());
         var cookies = result.Headers.GetValues("Set-Cookie").ToArray();
@@ -469,10 +473,10 @@ public sealed class SsoLoginEndpointsTests
             string.Join("; ", cookies.Select(x => x.Split(';')[0])), cookies);
     }
 
-    private static async Task<HttpResponseMessage> Complete(HttpClient client, FakeProtocol protocol, Guid id) =>
+    internal static async Task<HttpResponseMessage> Complete(HttpClient client, FakeProtocol protocol, Guid id) =>
         await Callback(client, await Start(client, protocol, id));
 
-    private static async Task<HttpResponseMessage> Callback(HttpClient client, Flow flow)
+    internal static async Task<HttpResponseMessage> Callback(HttpClient client, Flow flow)
     {
         var existing = client.DefaultRequestHeaders.TryGetValues("Cookie", out var cookies) ? cookies.ToArray() : [];
         client.DefaultRequestHeaders.Remove("Cookie");
@@ -485,7 +489,7 @@ public sealed class SsoLoginEndpointsTests
         finally { foreach (var cookie in existing) client.DefaultRequestHeaders.Add("Cookie", cookie); }
     }
 
-    private static void SetSession(HttpClient client, HttpResponseMessage response)
+    internal static void SetSession(HttpClient client, HttpResponseMessage response)
     {
         Assert.True(response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Found);
         client.DefaultRequestHeaders.Remove("Cookie");
@@ -493,12 +497,12 @@ public sealed class SsoLoginEndpointsTests
             .Single(x => x.StartsWith(LocalSessionAuthenticationHandler.CookieName + "=")).Split(';')[0]);
     }
 
-    private static async Task LocalLogin(HttpClient client)
+    internal static async Task LocalLogin(HttpClient client)
     {
         var result = await client.PostAsJsonAsync("/auth/login", new { email = "sso-admin@test.example", password = "Strong-test-password-42!" });
         SetSession(client, result);
     }
 
-    private static async Task<JsonElement> Current(HttpClient client) =>
+    internal static async Task<JsonElement> Current(HttpClient client) =>
         JsonDocument.Parse(await client.GetStringAsync("/auth/current")).RootElement;
 }

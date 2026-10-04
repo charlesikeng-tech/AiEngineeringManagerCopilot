@@ -17,6 +17,10 @@ import { PublicSsoApi, PublicSsoProvider } from './public-sso-api';
       <h1>{{ 'sso.login.title' | translate }}</h1>
       <p>{{ 'sso.login.policy' | translate }}</p>
       @if (error()) { <nz-alert nzType="error" [nzMessage]="('sso.login.errors.' + error()) | translate" nzShowIcon /> }
+      @if (error() === 'email_collision') {
+        <p>{{ 'accountLink.collision' | translate }}</p>
+        <a routerLink="/account/security">{{ 'accountLink.title' | translate }}</a>
+      }
       @if (diagnosticId()) {
         <p>{{ 'sso.login.diagnostic' | translate }} <code>{{ diagnosticId() }}</code></p>
       }

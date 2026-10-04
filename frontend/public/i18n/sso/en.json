@@ -1,7 +1,39 @@
 {
+  "accountLink": {
+    "title": "Account security",
+    "explanation": "Explicitly link an identity to this existing local administrator. No email matching or account merging. Your existing account, teams, local password and administrator role are preserved.",
+    "collision": "This email belongs to an existing account. Sign in with your local administrator password at Local recovery, then open Account security to link explicitly. You do not need to change your provider email.",
+    "unsupported": "Account linking is currently available only for existing local administrators. Ordinary SSO accounts cannot prove a local password.",
+    "loading": "Loading account security…",
+    "identities": "Linked identities",
+    "empty": "No linked identities.",
+    "approved": "Administrator access explicitly approved",
+    "localRequired": "Linking and unlinking require a local session and fresh local password confirmation. Your SSO session alone is not sufficient.",
+    "localLogin": "Sign in with local recovery credentials",
+    "provider": "Current active provider",
+    "select": "Select an active provider",
+    "noProviders": "Activate a tested provider in Authentication settings first.",
+    "password": "Confirm your local administrator password (also required for unlink)",
+    "consent": "I explicitly approve this provider identity to retain my existing administrator access. I will authenticate freshly at the provider.",
+    "start": "Confirm password and link identity",
+    "pending": "Preparing secure provider authentication…",
+    "unlink": "Unlink with password confirmation",
+    "unlinkExplanation": "Unlink revokes this identity’s SSO sessions and pending links. It never deletes your local account or password.",
+    "outcomes": {
+      "success": "The link flow returned success. Only the refreshed linked-identity list below confirms saved approval. Your local session remains active.",
+      "link_failed": "Linking did not complete. Retry from your active local session; no account was merged.",
+      "identity_conflict": "That provider identity already belongs to another account. Accounts cannot be merged.",
+      "unlinked": "Identity unlinked and its SSO sessions revoked."
+    },
+    "errors": {
+      "confirmation_failed": "Confirmation refused. Check your local password or retry after the lockout period. Your existing session is unchanged.",
+      "rate_limited": "Too many attempts. Please retry later.",
+      "request_failed": "Unable to complete the request. Reload account security and retry."
+    }
+  },
   "sso": {
     "title": "Administrator authentication",
-    "scope": "Installation-wide OIDC configuration. Activating a verified snapshot enables SSO login and creates ordinary user accounts on first login. It never grants administrator privileges. Local administrator recovery remains independent. Register both callback URLs documented in docs/sso.md.",
+    "scope": "Installation-wide OIDC configuration. Activating a verified snapshot enables SSO login and creates ordinary user accounts on first login. Activation never grants administrator privileges; existing local administrators must explicitly link with password confirmation at Account security. Local recovery remains independent. Register both callback URLs documented in docs/sso.md.",
     "callback": "Register this exact callback URL in your provider application:",
     "loginCallback": "Also register this exact user-login callback URL:",
     "domains": "Use a standard *.auth0.com, *.okta.com, *.oktapreview.com or *.okta-emea.com hostname (no URL/custom domain). Entra ID requires a tenant GUID. Tests use authorization code + PKCE and open the provider's authentication page.",
@@ -40,7 +72,7 @@
     "testSuccess": "Authorization code exchange and ID token validation succeeded. Refresh shows server-verified status; activate explicitly when ready.",
     "login": {
       "title": "Sign in",
-      "policy": "Sign in with an active provider. Your ordinary user account is created on first login; this never grants administrator access.",
+      "policy": "Sign in with an active provider. New accounts are ordinary users. Existing local administrators retain their role only after explicit password-confirmed linking at Account security.",
       "loading": "Loading sign-in providers…",
       "empty": "No SSO providers are active. Contact your platform administrator.",
       "continue": "Continue with",
@@ -49,7 +81,7 @@
       "diagnostic": "Diagnostic reference to share with your administrator:",
       "errors": {
         "login_failed": "Sign-in failed or expired. Try again; contact your administrator if the problem persists.",
-        "email_collision": "This email already belongs to another account. Accounts are never linked by email. Ask your provider administrator to supply a distinct email or omit the email claim.",
+        "email_collision": "This email already belongs to an existing account. Accounts are never automatically linked by email. Local administrators can sign in locally and explicitly link at Account security.",
         "request_failed": "Unable to load sign-in providers. Check your connection and reload.",
         "rate_limited": "Too many attempts. Please try again later."
       }
