@@ -26,8 +26,8 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { EMPTY, Subject } from 'rxjs';
 import { catchError, switchMap, takeUntil } from 'rxjs/operators';
-import { PaginationState } from '@core/models/pagination-state';
-import { TablePagination } from '@core/components/table-pagination/table-pagination';
+import { PaginationState } from '@shared/pagination/pagination-state';
+import { TablePagination } from '@shared/ui/table-pagination/table-pagination';
 import { PagedActionsResponse } from '../../models/paged-actions-response';
 
 import { TeamContext } from '@core/team/team-context';

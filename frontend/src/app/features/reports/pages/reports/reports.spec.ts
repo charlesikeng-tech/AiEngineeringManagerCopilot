@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { I18nService, LANGUAGE_STORAGE_KEY } from '@core/i18n/i18n.service';
-import { PagedResult } from '@core/models/paged-result';
+import { PagedResult } from '@shared/pagination/paged-result';
 import { TeamContext } from '@core/team/team-context';
 import managementEn from '../../../../../../public/i18n/management/en.json';
 import managementFr from '../../../../../../public/i18n/management/fr.json';

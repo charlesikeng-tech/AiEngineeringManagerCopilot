@@ -5,6 +5,10 @@ import { of, Subject, throwError } from 'rxjs';
 import { Auth } from '@core/auth/auth';
 import { PublicSsoApi } from '../../data-access/public-sso-api';
 import { SsoLogin } from './sso-login';
+import authenticationEn from '../../../../../../public/i18n/authentication/en.json';
+import authenticationFr from '../../../../../../public/i18n/authentication/fr.json';
+import accountEn from '../../../../../../public/i18n/account/en.json';
+import accountFr from '../../../../../../public/i18n/account/fr.json';
 
 describe('Public SSO login', () => {
   const api = {
@@ -22,7 +26,10 @@ describe('Public SSO login', () => {
     TestBed.configureTestingModule({
       imports: [SsoLogin],
       providers: [
-        provideRouter([]), ...provideI18nTesting(),
+        provideRouter([]), ...provideI18nTesting('en', {
+          en: { ...authenticationEn, ...accountEn },
+          fr: { ...authenticationFr, ...accountFr },
+        }),
         { provide: Auth, useValue: { user: () => user } },
         { provide: PublicSsoApi, useValue: api },
         { provide: ActivatedRoute, useValue: { snapshot: {

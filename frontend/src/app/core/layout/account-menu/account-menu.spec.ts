@@ -17,6 +17,12 @@ import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { of } from 'rxjs';
 
 import { AccountMenu } from './account-menu';
+import authenticationEn from '../../../../../public/i18n/authentication/en.json';
+import authenticationFr from '../../../../../public/i18n/authentication/fr.json';
+import accountEn from '../../../../../public/i18n/account/en.json';
+import accountFr from '../../../../../public/i18n/account/fr.json';
+import administrationEn from '../../../../../public/i18n/administration/en.json';
+import administrationFr from '../../../../../public/i18n/administration/fr.json';
 
 describe('AccountMenu', () => {
   const auth = {
@@ -39,7 +45,10 @@ describe('AccountMenu', () => {
       providers: [
         provideRouter([]),
 
-        ...provideI18nTesting(),
+        ...provideI18nTesting('en', {
+          en: { ...accountEn, sso: { ...authenticationEn.sso, ...administrationEn.sso } },
+          fr: { ...accountFr, sso: { ...authenticationFr.sso, ...administrationFr.sso } },
+        }),
 
         provideNzIcons([DownOutline, KeyOutline, LogoutOutline, SafetyCertificateOutline]),
 

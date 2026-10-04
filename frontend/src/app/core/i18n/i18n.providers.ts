@@ -10,7 +10,15 @@ export function provideFrontendI18n(): (Provider | EnvironmentProviders)[] {
     ...provideTranslateService({
       fallbackLang: 'en',
       loader: provideTranslateHttpLoader({
-        resources: ['./i18n/common/', './i18n/team/', './i18n/dashboard/', './i18n/management/', './i18n/sso/'],
+        resources: [
+          './i18n/common/',
+          './i18n/team/',
+          './i18n/dashboard/',
+          './i18n/management/',
+          './i18n/authentication/',
+          './i18n/account/',
+          './i18n/administration/',
+        ],
         failOnError: true,
       }),
     }),

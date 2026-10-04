@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
 import type { EngineeringReport } from '@domains/engineering/models/report';
-import { PagedResult } from '@core/models/paged-result';
+import { PagedResult } from '@shared/pagination/paged-result';
 import { ReportHistoryItem } from '../models/report-history-item';
 
 @Injectable({

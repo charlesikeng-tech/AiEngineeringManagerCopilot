@@ -18,8 +18,8 @@ import { LocalizedNumberPipe } from '@core/i18n/localized-format.pipes';
 import { TeamContext } from '@core/team/team-context';
 import { CreateTeamRequest, Team } from '@domains/teams/models/team';
 import { TeamApi } from '@domains/teams/data-access/team-api';
-import { PaginationState } from '@core/models/pagination-state';
-import { TablePagination } from '@core/components/table-pagination/table-pagination';
+import { PaginationState } from '@shared/pagination/pagination-state';
+import { TablePagination } from '@shared/ui/table-pagination/table-pagination';
 import { Subscription } from 'rxjs';
 
 @Component({

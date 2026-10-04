@@ -1,4 +1,4 @@
-import { PagedResult } from '@core/models/paged-result';
+import { PagedResult } from '@shared/pagination/paged-result';
 import type { EngineeringAction } from '@domains/engineering/models/action';
 
 export interface PagedActionsResponse {

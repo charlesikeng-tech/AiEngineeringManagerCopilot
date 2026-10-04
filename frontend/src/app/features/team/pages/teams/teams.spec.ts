@@ -5,7 +5,7 @@ import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { Observable, of, throwError } from 'rxjs';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { I18nService } from '@core/i18n/i18n.service';
-import { PagedResult } from '@core/models/paged-result';
+import { PagedResult } from '@shared/pagination/paged-result';
 import { TeamContext } from '@core/team/team-context';
 import { Team } from '@domains/teams/models/team';
 import { TeamApi } from '@domains/teams/data-access/team-api';

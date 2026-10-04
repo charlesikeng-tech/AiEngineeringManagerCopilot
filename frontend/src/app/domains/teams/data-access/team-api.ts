@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
-import { PagedResult } from '@core/models/paged-result';
+import { PagedResult } from '@shared/pagination/paged-result';
 import { CreateTeamRequest, Team, UpdateTeamRequest } from '../models/team';
 import {
   CreateTeamMemberRequest,

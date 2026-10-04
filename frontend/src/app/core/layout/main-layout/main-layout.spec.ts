@@ -31,8 +31,12 @@ import { routes } from '../../../app.routes';
 
 import { MainLayout } from './main-layout';
 
-import ssoEn from '../../../../../public/i18n/sso/en.json';
-import ssoFr from '../../../../../public/i18n/sso/fr.json';
+import authenticationEn from '../../../../../public/i18n/authentication/en.json';
+import authenticationFr from '../../../../../public/i18n/authentication/fr.json';
+import accountEn from '../../../../../public/i18n/account/en.json';
+import accountFr from '../../../../../public/i18n/account/fr.json';
+import administrationEn from '../../../../../public/i18n/administration/en.json';
+import administrationFr from '../../../../../public/i18n/administration/fr.json';
 
 @Component({
   standalone: true,
@@ -73,8 +77,8 @@ describe('MainLayout integrations navigation', () => {
         ]),
 
         ...provideI18nTesting('en', {
-          en: ssoEn,
-          fr: ssoFr,
+          en: { ...accountEn, sso: { ...authenticationEn.sso, ...administrationEn.sso } },
+          fr: { ...accountFr, sso: { ...authenticationFr.sso, ...administrationFr.sso } },
         }),
 
         provideNzIcons([

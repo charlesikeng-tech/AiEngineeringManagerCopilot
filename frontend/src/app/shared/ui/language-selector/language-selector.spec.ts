@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
-import { provideI18nTesting } from '../i18n-testing';
-import { I18nService, LANGUAGE_STORAGE_KEY } from '../i18n.service';
+import { provideI18nTesting } from '@core/i18n/i18n-testing';
+import { I18nService, LANGUAGE_STORAGE_KEY } from '@core/i18n/i18n.service';
 import { LanguageSelector } from './language-selector';
 
 describe('LanguageSelector', () => {

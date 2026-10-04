@@ -1,0 +1,20 @@
+{
+  "sso": {
+    "login": {
+      "title": "Sign in",
+      "policy": "Sign in with an active provider. New accounts are ordinary users. Existing local administrators retain their role only after explicit password-confirmed linking at Account security.",
+      "loading": "Loading sign-in providers…",
+      "empty": "No SSO providers are active. Contact your platform administrator.",
+      "continue": "Continue with",
+      "recovery": "Local administrator recovery login",
+      "logout": "Sign out",
+      "diagnostic": "Diagnostic reference to share with your administrator:",
+      "errors": {
+        "login_failed": "Sign-in failed or expired. Try again; contact your administrator if the problem persists.",
+        "email_collision": "This email already belongs to an existing account. Accounts are never automatically linked by email. Local administrators can sign in locally and explicitly link at Account security.",
+        "request_failed": "Unable to load sign-in providers. Check your connection and reload.",
+        "rate_limited": "Too many attempts. Please try again later."
+      }
+    }
+  }
+}

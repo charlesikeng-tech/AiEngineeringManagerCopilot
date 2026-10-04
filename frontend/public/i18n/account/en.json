@@ -1,0 +1,34 @@
+{
+  "accountLink": {
+    "title": "Account security",
+    "explanation": "Explicitly link an identity to this existing local administrator. No email matching or account merging. Your existing account, teams, local password and administrator role are preserved.",
+    "collision": "This email belongs to an existing account. Sign in with your local administrator password at Local recovery, then open Account security to link explicitly. You do not need to change your provider email.",
+    "unsupported": "Account linking is currently available only for existing local administrators. Ordinary SSO accounts cannot prove a local password.",
+    "loading": "Loading account security…",
+    "identities": "Linked identities",
+    "empty": "No linked identities.",
+    "approved": "Administrator access explicitly approved",
+    "localRequired": "Linking and unlinking require a local session and fresh local password confirmation. Your SSO session alone is not sufficient.",
+    "localLogin": "Sign in with local recovery credentials",
+    "provider": "Current active provider",
+    "select": "Select an active provider",
+    "noProviders": "Activate a tested provider in Authentication settings first.",
+    "password": "Confirm your local administrator password (also required for unlink)",
+    "consent": "I explicitly approve this provider identity to retain my existing administrator access. I will authenticate freshly at the provider.",
+    "start": "Confirm password and link identity",
+    "pending": "Preparing secure provider authentication…",
+    "unlink": "Unlink with password confirmation",
+    "unlinkExplanation": "Unlink revokes this identity’s SSO sessions and pending links. It never deletes your local account or password.",
+    "outcomes": {
+      "success": "The link flow returned success. Only the refreshed linked-identity list below confirms saved approval. Your local session remains active.",
+      "link_failed": "Linking did not complete. Retry from your active local session; no account was merged.",
+      "identity_conflict": "That provider identity already belongs to another account. Accounts cannot be merged.",
+      "unlinked": "Identity unlinked and its SSO sessions revoked."
+    },
+    "errors": {
+      "confirmation_failed": "Confirmation refused. Check your local password or retry after the lockout period. Your existing session is unchanged.",
+      "rate_limited": "Too many attempts. Please retry later.",
+      "request_failed": "Unable to complete the request. Reload account security and retry."
+    }
+  }
+}

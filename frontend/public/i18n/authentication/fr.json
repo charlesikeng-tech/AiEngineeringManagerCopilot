@@ -1,0 +1,20 @@
+{
+  "sso": {
+    "login": {
+      "title": "Connexion",
+      "policy": "Connectez-vous avec un fournisseur actif. Les nouveaux comptes sont des utilisateurs ordinaires. Les administrateurs locaux conservent leur rôle uniquement après association explicite avec confirmation du mot de passe dans Sécurité du compte.",
+      "loading": "Chargement des fournisseurs…",
+      "empty": "Aucun fournisseur SSO actif. Contactez l’administrateur de la plateforme.",
+      "continue": "Continuer avec",
+      "recovery": "Connexion de récupération de l’administrateur local",
+      "logout": "Déconnexion",
+      "diagnostic": "Référence de diagnostic à transmettre à l’administrateur :",
+      "errors": {
+        "login_failed": "Connexion échouée ou expirée. Réessayez ; contactez votre administrateur si le problème persiste.",
+        "email_collision": "Cette adresse appartient déjà à un compte existant. Aucune association automatique par e-mail. Les administrateurs locaux peuvent se connecter localement puis associer explicitement leur identité dans Sécurité du compte.",
+        "request_failed": "Impossible de charger les fournisseurs. Vérifiez la connexion et rechargez la page.",
+        "rate_limited": "Trop de tentatives. Réessayez plus tard."
+      }
+    }
+  }
+}

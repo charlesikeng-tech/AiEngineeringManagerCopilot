@@ -3,8 +3,8 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { Auth } from '@core/auth/auth';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { of, Subject, throwError } from 'rxjs';
-import en from '../../../../../../public/i18n/sso/en.json';
-import fr from '../../../../../../public/i18n/sso/fr.json';
+import en from '../../../../../../public/i18n/account/en.json';
+import fr from '../../../../../../public/i18n/account/fr.json';
 import { AccountLinkApi } from '../../data-access/account-link-api';
 import { AccountSecurity } from './account-security';
 

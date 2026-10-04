@@ -364,8 +364,13 @@ in `frontend/src/app/core/auth`. Login/setup/local-administrator pages and
 live in `features/administration`; account security and `AccountLinkApi` live in
 `features/account`. The account feature explicitly imports the shared public
 authentication API rather than duplicating it. Co-located tests follow these
-owners. All screens retain the `public/i18n/sso` namespace; translation-resource
-splitting remains deferred to LOT6.
+owners. Translation resources live under `public/i18n/authentication` for
+`sso.login.*`, `public/i18n/account` for `accountLink.*`, and
+`public/i18n/administration` for the remaining `sso.*` provider-setting keys.
+The historical keys and text remain unchanged: the startup multi-resource
+loader deep-merges the disjoint `sso` subsets, rather than using a catch-all
+resource. Reusable language/team selectors and table pagination live in
+`shared/ui`; global i18n and team-selection state remain in `core`.
 
 With the repository PostgreSQL test service on port 5433:
 
@@ -383,6 +388,7 @@ npm test -- --watch=false --include='src/app/features/authentication/**/*.spec.t
   --include='src/app/features/account/**/*.spec.ts' \
   --include='src/app/core/auth/*.spec.ts' \
   --include='src/app/core/i18n/**/*.spec.ts' \
+  --include='src/app/shared/**/*.spec.ts' \
   --include='src/app/app.routes.spec.ts' \
   --include='src/app/core/app/app-initializer.spec.ts'
 npm run build -- --configuration production

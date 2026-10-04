@@ -3,8 +3,8 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { Auth } from '@core/auth/auth';
-import { LanguageSelector } from '@core/i18n/language-selector/language-selector';
-import { TeamSelector } from '@core/team/team-selector/team-selector';
+import { LanguageSelector } from '@shared/ui/language-selector/language-selector';
+import { TeamSelector } from '@shared/ui/team-selector/team-selector';
 
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconModule } from 'ng-zorro-antd/icon';

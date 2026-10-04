@@ -1240,6 +1240,8 @@ Frontend imports use aliases defined in `frontend/tsconfig.json`:
 | Alias | Directory |
 |---|---|
 | `@core/*` | `frontend/src/app/core/*` |
+| `@shared/*` | `frontend/src/app/shared/*` |
+| `@domains/*` | `frontend/src/app/domains/*` |
 | `@features/*` | `frontend/src/app/features/*` |
 | `@environments/*` | `frontend/src/environments/*` |
 
@@ -1320,10 +1322,16 @@ Runtime translation dictionaries live under `frontend/public/i18n/`:
 | `team/` | Team management, members, and GitHub connection forms |
 | `dashboard/` | Dashboard components, chart labels, and tooltips |
 | `management/` | Reports, actions, and risks |
+| `authentication/` | Public login (`sso.login.*`) |
+| `account/` | Account security and linking (`accountLink.*`) |
+| `administration/` | Provider settings (`sso.*` except login) |
 
 Each directory contains `en.json` and `fr.json`. `@ngx-translate/core`
-loads the selected language through the HTTP loader configured in
-`core/i18n/i18n.providers.ts`. English is the fallback for missing keys;
+loads all resources for the selected language through the HTTP loader configured
+in `core/i18n/i18n.providers.ts`. Its deep merge preserves the disjoint login
+and provider-setting keys within the historical `sso` namespace; resource
+ownership follows features rather than a catch-all SSO dictionary.
+English is the fallback for missing keys;
 a missing dictionary file is surfaced as a load error instead of silently
 serving partial translations. Deploy these JSON assets with the frontend.
 
@@ -1460,6 +1468,8 @@ AiEngineeringManagerCopilot/
 │
 ├── frontend/
 │   ├── src/app/core/
+│   ├── src/app/shared/
+│   ├── src/app/domains/
 │   ├── src/app/features/
 │   └── src/environments/
 │

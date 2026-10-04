@@ -122,6 +122,13 @@ The SSO start also records only its prior session hash so it can revoke that
 session when the Strict cookie is absent on the cross-site callback.
 Existing team ownership checks still apply to the administrator.
 
+Frontend session services/guards remain in `core/auth`, startup initialization
+in `core/app`, and team-selection state in `core/team`. Reusable selectors live
+in `shared/ui`, separate from those singletons. Login text is owned by
+`public/i18n/authentication`; account-security and provider-setting resources
+live in `public/i18n/account` and `public/i18n/administration`. Their historical
+translation keys are preserved and deep-merged at startup.
+
 The frontend initializes from `/auth/current` without obtaining demo JWTs or
 generating dated reports. Unauthenticated protected navigation redirects to
 `/setup` only if the server reports setup available, otherwise `/login`.
@@ -162,6 +169,8 @@ dotnet test tests/AiEngineeringManagerCopilot.IntegrationTests \
 cd frontend
 npm test -- --watch=false --include='src/app/core/auth/*.spec.ts' \
   --include='src/app/features/authentication/**/*.spec.ts' \
+  --include='src/app/shared/**/*.spec.ts' \
+  --include='src/app/core/i18n/**/*.spec.ts' \
   --include='src/app/app.routes.spec.ts' \
   --include='src/app/core/app/app-initializer.spec.ts'
 npm run build -- --configuration development

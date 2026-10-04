@@ -1,5 +1,10 @@
 import { EnvironmentProviders, Provider } from '@angular/core';
-import { provideTranslateService, TranslateLoader, TranslationObject } from '@ngx-translate/core';
+import {
+  mergeDeep,
+  provideTranslateService,
+  TranslateLoader,
+  TranslationObject,
+} from '@ngx-translate/core';
 import { enUS } from 'date-fns/locale';
 import { provideNzDateFnsAdapter } from 'ng-zorro-antd/core/time';
 import { en_US, provideNzI18n } from 'ng-zorro-antd/i18n';
@@ -14,8 +19,8 @@ export function provideI18nTesting(
   extra?: Record<AppLanguage, TranslationObject>,
 ): (Provider | EnvironmentProviders)[] {
   const dictionaries: Record<AppLanguage, TranslationObject> = {
-    en: { ...commonEn, ...extra?.en },
-    fr: { ...commonFr, ...extra?.fr },
+    en: mergeDeep(commonEn, extra?.en ?? {}),
+    fr: mergeDeep(commonFr, extra?.fr ?? {}),
   };
 
   return [

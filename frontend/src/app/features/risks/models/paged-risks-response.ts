@@ -1,4 +1,4 @@
-import { PagedResult } from '@core/models/paged-result';
+import { PagedResult } from '@shared/pagination/paged-result';
 import type { EngineeringRisk } from '@domains/engineering/models/risk';
 
 export interface PagedRisksResponse {

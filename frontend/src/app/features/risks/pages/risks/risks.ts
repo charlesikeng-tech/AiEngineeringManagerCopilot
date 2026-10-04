@@ -11,8 +11,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, switchMap } from 'rxjs';
-import { PaginationState } from '@core/models/pagination-state';
-import { TablePagination } from '@core/components/table-pagination/table-pagination';
+import { PaginationState } from '@shared/pagination/pagination-state';
+import { TablePagination } from '@shared/ui/table-pagination/table-pagination';
 import { PagedRisksResponse } from '../../models/paged-risks-response';
 
 import { TeamContext } from '@core/team/team-context';

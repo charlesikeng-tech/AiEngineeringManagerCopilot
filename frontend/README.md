@@ -4,6 +4,44 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ## Architecture
 
+```text
+src/app/
+├── core/
+│   ├── app/                  # Startup/session initialization
+│   ├── auth/                 # Global session state, interceptor and guards
+│   ├── i18n/                 # Global configuration, service and localized pipes
+│   ├── layout/               # Application shell and account menu
+│   └── team/                 # TeamContext selection state
+├── shared/
+│   ├── pagination/           # PagedResult and PaginationState
+│   └── ui/
+│       ├── table-pagination/
+│       ├── language-selector/
+│       └── team-selector/
+├── domains/
+│   ├── teams/                # Team contracts and canonical TeamApi
+│   └── engineering/          # Cross-feature engineering contracts
+└── features/
+    ├── authentication/       # Public login and local administrator access
+    ├── account/              # Security and explicit identity linking
+    ├── administration/       # Installation-wide provider configuration
+    ├── team/                 # Team/member management and engineering data
+    ├── integrations/         # Provider widgets and provider-owned APIs/models
+    ├── dashboard/
+    ├── reports/
+    ├── actions/
+    └── risks/
+```
+
+Import cross-area code directly through `@core/*`, `@shared/*`, `@domains/*`,
+and `@features/*` (configured in `tsconfig.json`); use relative imports within
+an owner. No barrels or duplicate contract exports are needed. Reusable
+controls and pagination contracts live in `shared`, while application-scoped
+state, guards, i18n configuration/services/pipes, and startup remain in `core`.
+Shared controls keep their selectors, templates, styles, and co-located tests.
+The language and team selectors consume the existing `I18nService` and
+`TeamContext`; neither singleton is duplicated or renamed.
+
 `core/auth` owns only global authentication state and session HTTP operations
 (`Auth`), the session interceptor, and route guards, with their tests.
 Login and shared setup/local-administrator access pages belong to
@@ -18,15 +56,13 @@ linking belong to `features/account/pages/security` and
 authentication API through `@features/authentication/data-access/public-sso-api`;
 imports within each feature are short relative paths. Tests follow their owners.
 Route URLs, guard ordering, templates, and API contracts remain unchanged.
-All these screens still use the shared `public/i18n/sso` namespace; splitting
-translation resources is deferred to LOT6.
 
 Shared team DTOs and request models live in `src/app/domains/teams/models`.
 The single `TeamApi` in `domains/teams/data-access` owns team and member HTTP
 endpoints, including unpaged lists and paginated queries. Import these through
-`@domains/teams/*` from both features and core. Team selection state and the
-selector remain in `core/team`; team pages and the metrics API remain in
-`features/team`.
+`@domains/teams/*` from features, core, and shared controls. Team selection state
+remains in `core/team`; its reusable selector lives in `shared/ui/team-selector`.
+Team pages and the metrics API remain in `features/team`.
 
 The team route owns team loading, editing, and deletion. `components/team-members`
 owns member paging and deletion, with `team-member-editor` owning its drawer,
@@ -55,6 +91,34 @@ directly through `@domains/engineering/models/*` from features and core; team
 metrics use the canonical metric contracts from this domain. The dashboard
 response remains a feature-local aggregate, as do feature-owned paged responses
 and report history models.
+
+## Translation resources
+
+Every directory under `public/i18n/` contains `en.json` and `fr.json`:
+
+| Resource | Responsibility / keys |
+|---|---|
+| `common/` | Shared navigation, language, formatting, statuses and metric labels |
+| `team/` | Team/member management and team connection forms |
+| `dashboard/` | Dashboard labels, charts and tooltips |
+| `management/` | Reports, actions and risks |
+| `authentication/` | Public SSO login (`sso.login.*`) |
+| `account/` | Account security and identity linking (`accountLink.*`) |
+| `administration/` | Provider configuration (`sso.*` except `sso.login.*`) |
+
+Resource ownership follows feature responsibility, not necessarily the top-level
+translation namespace. The historical `sso` keys are retained to preserve text
+and template contracts, but there is no catch-all SSO resource. Authentication
+and administration own disjoint leaf keys under `sso`. Shell menus can consume
+authentication, account, and administration labels without owning their resources.
+
+`core/i18n/i18n.providers.ts` loads all seven small resources at startup through
+the ngx-translate multi-resource HTTP loader, which **deep-merges** shared
+namespaces. No route-level lazy translation loading is needed. Missing resource
+files fail loading; English remains the missing-key fallback. Test fixtures
+assemble nested namespaces explicitly and `provideI18nTesting` deep-merges
+overrides with common defaults. The i18n specs verify loading, language parity,
+nonoverlapping ownership, and preservation of all original split keys/text.
 
 ## Development server
 

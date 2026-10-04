@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { of, Subject, throwError } from 'rxjs';
-import en from '../../../../../../public/i18n/sso/en.json';
-import fr from '../../../../../../public/i18n/sso/fr.json';
+import en from '../../../../../../public/i18n/administration/en.json';
+import fr from '../../../../../../public/i18n/administration/fr.json';
 import { AuthenticationSettings } from './authentication-settings';
 import { SsoApi, SsoProvider } from '../../data-access/sso-api';
 

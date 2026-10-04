@@ -12,8 +12,8 @@ import { EMPTY, Subject, catchError, switchMap } from 'rxjs';
 
 import { TeamContext } from '@core/team/team-context';
 import { ReportHistoryItem } from '../../models/report-history-item';
-import { PaginationState } from '@core/models/pagination-state';
-import { TablePagination } from '@core/components/table-pagination/table-pagination';
+import { PaginationState } from '@shared/pagination/pagination-state';
+import { TablePagination } from '@shared/ui/table-pagination/table-pagination';
 import { ReportsApi } from '../../services/reports-api';
 
 import { I18nService } from '@core/i18n/i18n.service';

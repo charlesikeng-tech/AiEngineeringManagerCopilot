@@ -10,7 +10,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 
 import { Team } from '@domains/teams/models/team';
 import { TeamApi } from '@domains/teams/data-access/team-api';
-import { TeamContext } from '../team-context';
+import { TeamContext } from '@core/team/team-context';
 
 @Component({
   selector: 'app-team-selector',

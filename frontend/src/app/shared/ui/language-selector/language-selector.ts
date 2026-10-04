@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { I18nService, isAppLanguage } from '../i18n.service';
+import { I18nService, isAppLanguage } from '@core/i18n/i18n.service';
 
 @Component({
   selector: 'app-language-selector',

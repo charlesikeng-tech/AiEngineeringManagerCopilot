@@ -5,16 +5,23 @@ import { administratorGuard } from '@core/auth/administrator-guard';
 export const routes: Routes = [
   {
     path: 'login',
-    loadComponent: () => import('@features/authentication/pages/login/sso-login').then(({ SsoLogin }) => SsoLogin),
+    loadComponent: () =>
+      import('@features/authentication/pages/login/sso-login').then(({ SsoLogin }) => SsoLogin),
   },
   {
     path: 'setup',
     data: { setup: true },
-    loadComponent: () => import('@features/authentication/pages/administrator-access/administrator-access').then(({ AdministratorAccess }) => AdministratorAccess),
+    loadComponent: () =>
+      import('@features/authentication/pages/administrator-access/administrator-access').then(
+        ({ AdministratorAccess }) => AdministratorAccess,
+      ),
   },
   {
     path: 'admin/login',
-    loadComponent: () => import('@features/authentication/pages/administrator-access/administrator-access').then(({ AdministratorAccess }) => AdministratorAccess),
+    loadComponent: () =>
+      import('@features/authentication/pages/administrator-access/administrator-access').then(
+        ({ AdministratorAccess }) => AdministratorAccess,
+      ),
   },
   {
     path: '',
@@ -25,12 +32,18 @@ export const routes: Routes = [
     children: [
       {
         path: 'account/security',
-        loadComponent: () => import('@features/account/pages/security/account-security').then(({ AccountSecurity }) => AccountSecurity),
+        loadComponent: () =>
+          import('@features/account/pages/security/account-security').then(
+            ({ AccountSecurity }) => AccountSecurity,
+          ),
       },
       {
         path: 'admin/authentication',
         canActivate: [administratorGuard],
-        loadComponent: () => import('@features/administration/pages/authentication-settings/authentication-settings').then(({ AuthenticationSettings }) => AuthenticationSettings),
+        loadComponent: () =>
+          import('@features/administration/pages/authentication-settings/authentication-settings').then(
+            ({ AuthenticationSettings }) => AuthenticationSettings,
+          ),
       },
       {
         path: '',

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TeamContext } from '@core/team/team-context';
-import { TeamSelector } from '@core/team/team-selector/team-selector';
+import { TeamSelector } from '@shared/ui/team-selector/team-selector';
 import { TranslatePipe } from '@ngx-translate/core';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { GitHubIntegration } from '../github-integration/github-integration';

@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons-angular/icons';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { TeamContext } from '@core/team/team-context';
-import { PagedResult } from '@core/models/paged-result';
+import { PagedResult } from '@shared/pagination/paged-result';
 import { TeamApi } from '@domains/teams/data-access/team-api';
 import { TeamMember } from '@domains/teams/models/team-member';
 import { ReportsApi } from '@features/reports/services/reports-api';
