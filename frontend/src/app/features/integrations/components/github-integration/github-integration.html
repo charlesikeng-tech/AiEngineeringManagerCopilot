@@ -1,0 +1,217 @@
+<div class="app-card data-sources-card">
+  <article class="data-source">
+    <div class="data-source__main">
+      <div class="data-source__icon"><nz-icon nzType="github"></nz-icon></div>
+      <div class="data-source__content">
+        <div class="data-source__heading">
+          <strong>{{ 'team.github' | translate }}</strong>
+          @if (githubConnectionLoading()) {
+            <span class="integration-status integration-status--loading">{{
+              'team.connectionLoading' | translate
+            }}</span>
+          } @else if (githubConnection()) {
+            <span class="integration-status integration-status--connected">{{
+              'team.connected' | translate
+            }}</span>
+          } @else if (githubConnectionError()) {
+            <span class="integration-status integration-status--error">{{
+              'team.connectionError' | translate
+            }}</span>
+          } @else {
+            <span class="integration-status integration-status--disconnected">{{
+              'team.notConnected' | translate
+            }}</span>
+          }
+        </div>
+        @if (githubConnectionLoading()) {
+          <p>{{ 'team.checkingConnection' | translate }}</p>
+        } @else if (githubConnectionError()) {
+          <p>{{ 'team.connectionLoadError' | translate }}</p>
+        } @else if (githubConnection(); as connection) {
+          <p>{{ 'team.connectedDescription' | translate }}</p>
+          <div class="integration-metadata">
+            <div class="integration-metadata__item">
+              <span>{{ 'team.account' | translate }}</span
+              ><strong>{{ connection.owner }}</strong>
+            </div>
+            <div class="integration-metadata__item">
+              <span>{{ 'team.type' | translate }}</span
+              ><strong>{{ 'team.ownerTypes.' + connection.ownerType | translate }}</strong>
+            </div>
+            <div class="integration-metadata__item">
+              <span>{{ 'team.lastSync' | translate }}</span>
+              <strong>
+                @if (connection.lastSyncAt) {
+                  {{ connection.lastSyncAt | appDate: 'medium' }}
+                } @else {
+                  {{ 'team.never' | translate }}
+                }
+              </strong>
+            </div>
+          </div>
+        } @else {
+          <p>{{ 'team.connectDescription' | translate }}</p>
+        }
+      </div>
+    </div>
+    <div class="data-source__actions">
+      @if (githubConnectionLoading()) {
+        <nz-spin nzSimple></nz-spin>
+      } @else if (githubConnectionError()) {
+        <button nz-button nzType="default" type="button" (click)="reloadGitHubConnection()">
+          {{ 'team.retry' | translate }}
+        </button>
+      } @else if (githubConnection()) {
+        <button
+          nz-button
+          nzType="default"
+          type="button"
+          [nzLoading]="githubTesting()"
+          [disabled]="githubSyncing() || githubDisconnecting()"
+          (click)="testGitHubConnection()"
+        >
+          {{ 'team.testConnection' | translate }}
+        </button>
+        <button
+          nz-button
+          nzType="primary"
+          type="button"
+          [nzLoading]="githubSyncing()"
+          [disabled]="githubTesting() || githubDisconnecting()"
+          (click)="syncGitHub()"
+        >
+          <nz-icon nzType="sync"></nz-icon>{{ 'team.syncNow' | translate }}
+        </button>
+        <button
+          nz-button
+          nzType="text"
+          nzDanger
+          type="button"
+          nz-popconfirm
+          [nzPopconfirmTitle]="'team.disconnectConfirm' | translate"
+          nzPopconfirmPlacement="topRight"
+          [disabled]="githubTesting() || githubSyncing() || githubDisconnecting()"
+          (nzOnConfirm)="disconnectGitHub()"
+        >
+          {{ 'team.disconnect' | translate }}
+        </button>
+      } @else {
+        <button nz-button nzType="primary" type="button" (click)="openGitHubConnection()">
+          {{ 'team.connectGitHub' | translate }}
+        </button>
+      }
+    </div>
+  </article>
+  @if (githubTestResult(); as testResult) {
+    <div
+      class="integration-result"
+      [class.integration-result--success]="testResult.success"
+      [class.integration-result--error]="!testResult.success"
+    >
+      <div class="integration-result__content">
+        <strong>{{
+          (testResult.success ? 'team.connectionVerified' : 'team.connectionTestFailed') | translate
+        }}</strong>
+        <span>{{ testResult.message }}</span>
+      </div>
+      @if (testResult.success && testResult.organization) {
+        <span class="integration-result__meta">{{ testResult.organization }}</span>
+      }
+    </div>
+  }
+  @if (githubSyncResult(); as syncResult) {
+    <div class="integration-result integration-result--success">
+      <div class="integration-result__content">
+        <strong>{{ 'team.syncCompleted' | translate }}</strong
+        ><span>{{ 'team.syncDescription' | translate }}</span>
+      </div>
+      <div class="sync-stats">
+        <div class="sync-stat">
+          <strong>{{ syncResult.synchronized | appNumber }}</strong
+          ><span>{{ 'team.synchronized' | translate }}</span>
+        </div>
+        <div class="sync-stat">
+          <strong>{{ syncResult.created | appNumber }}</strong
+          ><span>{{ 'team.created' | translate }}</span>
+        </div>
+        <div class="sync-stat">
+          <strong>{{ syncResult.updated | appNumber }}</strong
+          ><span>{{ 'team.updated' | translate }}</span>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+<nz-drawer
+  [nzTitle]="'team.connectGitHub' | translate"
+  [nzVisible]="githubConnectOpen()"
+  [nzWidth]="480"
+  [nzClosable]="!githubConnecting()"
+  [nzMaskClosable]="!githubConnecting()"
+  (nzOnClose)="closeGitHubConnection()"
+>
+  <ng-container *nzDrawerContent>
+    <form nz-form nzLayout="vertical" [formGroup]="githubConnectionForm">
+      <div class="integration-drawer-intro">
+        <strong>{{ 'team.githubDataSource' | translate }}</strong>
+        <p>{{ 'team.githubDrawerDescription' | translate }}</p>
+      </div>
+      <nz-form-item>
+        <nz-form-label nzRequired>{{ 'team.accountType' | translate }}</nz-form-label>
+        <nz-form-control
+          ><nz-select formControlName="ownerType">
+            @for (ownerType of githubOwnerTypes; track ownerType.value) {
+              <nz-option
+                [nzValue]="ownerType.value"
+                [nzLabel]="ownerType.label | translate"
+              ></nz-option>
+            }</nz-select
+        ></nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label nzRequired>{{ 'team.githubAccount' | translate }}</nz-form-label>
+        <nz-form-control [nzErrorTip]="'team.githubAccountError' | translate"
+          ><input
+            nz-input
+            type="text"
+            formControlName="owner"
+            maxlength="200"
+            autocomplete="off"
+            [placeholder]="'team.githubAccountPlaceholder' | translate"
+        /></nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label nzRequired>{{ 'team.accessToken' | translate }}</nz-form-label>
+        <nz-form-control [nzErrorTip]="'team.accessTokenError' | translate"
+          ><input
+            nz-input
+            type="password"
+            formControlName="accessToken"
+            autocomplete="new-password"
+            [placeholder]="'team.accessTokenPlaceholder' | translate"
+        /></nz-form-control>
+      </nz-form-item>
+      <nz-alert nzType="info" nzShowIcon [nzMessage]="'team.tokenNotice' | translate"></nz-alert>
+      <div class="drawer-actions">
+        <button
+          nz-button
+          type="button"
+          [disabled]="githubConnecting()"
+          (click)="closeGitHubConnection()"
+        >
+          {{ 'team.cancel' | translate }}
+        </button>
+        <button
+          nz-button
+          nzType="primary"
+          type="button"
+          [nzLoading]="githubConnecting()"
+          [disabled]="githubConnectionForm.invalid || githubConnecting()"
+          (click)="connectGitHub()"
+        >
+          {{ 'team.connectGitHub' | translate }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+</nz-drawer>

@@ -1,0 +1,23 @@
+.slack-connection-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  align-items: end;
+  gap: var(--app-space-xs) var(--app-space-sm);
+  label {
+    grid-column: 1;
+  }
+  input {
+    grid-column: 1;
+    min-width: 0;
+  }
+  button {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+@media (max-width: 640px) {
+  .slack-connection-form {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}

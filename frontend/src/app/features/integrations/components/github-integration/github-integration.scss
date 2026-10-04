@@ -1,0 +1,106 @@
+@use '../../styles/integration-widget';
+
+.data-sources-card {
+  padding: 0;
+  overflow: hidden;
+}
+.integration-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-sm) var(--app-space-xl);
+  margin-top: var(--app-space-md);
+}
+.integration-metadata__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  span {
+    color: var(--app-text-tertiary);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  strong {
+    max-width: 260px;
+    overflow: hidden;
+    color: var(--app-text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+.integration-result__meta {
+  flex-shrink: 0;
+  color: var(--app-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+.sync-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xl);
+}
+.sync-stat {
+  display: flex;
+  min-width: 70px;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+  strong {
+    color: var(--app-text-primary);
+    font-size: 16px;
+    font-weight: 600;
+  }
+  span {
+    color: var(--app-text-tertiary);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+}
+.integration-drawer-intro {
+  margin-bottom: var(--app-space-lg);
+  padding: var(--app-space-md);
+  background: var(--app-surface-secondary);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  strong {
+    display: block;
+    margin-bottom: var(--app-space-xs);
+    color: var(--app-text-primary);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  p {
+    margin: 0;
+    color: var(--app-text-secondary);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+}
+@media (max-width: 900px) {
+  .sync-stats {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .sync-stat {
+    text-align: left;
+  }
+}
+@media (max-width: 640px) {
+  .integration-metadata {
+    flex-direction: column;
+    gap: var(--app-space-sm);
+  }
+  .sync-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--app-space-sm);
+  }
+  .sync-stat {
+    min-width: 0;
+  }
+}

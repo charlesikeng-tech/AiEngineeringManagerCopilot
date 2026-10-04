@@ -28,6 +28,19 @@ endpoints, including unpaged lists and paginated queries. Import these through
 selector remain in `core/team`; team pages and the metrics API remain in
 `features/team`.
 
+The team route owns team loading, editing, and deletion. `components/team-members`
+owns member paging and deletion, with `team-member-editor` owning its drawer,
+validation, and saves. `team-engineering-data` owns calculation periods, metrics,
+and report generation. Children receive the loaded team ID and selection version
+so they cannot act on a stale route selection.
+
+`IntegrationSettings` only composes the team selector and source/notification
+sections. GitHub, Slack, and Microsoft Teams widgets own their provider forms,
+connection loading, and actions; Jira remains independent. Each widget provides
+its own `IntegrationRequestScope` to cancel requests and reject stale callbacks,
+including same-tick A → B → A selection changes. Shared widget styles are
+feature-local SCSS partials, compiled in each child's encapsulated scope.
+
 Connector models, HTTP APIs, and provider-specific validators live in
 `features/integrations/providers/{github,jira,slack,microsoft-teams}`, organized
 into `models`, `data-access`, and `validators` as applicable. Jira follows the

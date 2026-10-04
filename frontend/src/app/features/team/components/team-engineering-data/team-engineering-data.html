@@ -1,0 +1,123 @@
+<section class="app-section">
+  <div class="section-header">
+    <div class="section-header__content">
+      <span class="section-eyebrow">{{ 'team.engineeringIntelligence' | translate }}</span>
+      <h2>{{ 'team.engineeringData' | translate }}</h2>
+      <p>{{ 'team.engineeringDataDescription' | translate }}</p>
+    </div>
+  </div>
+  <div class="app-card engineering-data-card">
+    <div class="metrics-toolbar">
+      <form class="metrics-period" [formGroup]="metricsPeriodForm">
+        <div class="metrics-period__field">
+          <label for="metrics-period-start">{{ 'team.periodStart' | translate }}</label
+          ><input id="metrics-period-start" nz-input type="date" formControlName="periodStart" />
+        </div>
+        <div class="metrics-period__field">
+          <label for="metrics-period-end">{{ 'team.periodEnd' | translate }}</label
+          ><input id="metrics-period-end" nz-input type="date" formControlName="periodEnd" />
+        </div>
+      </form>
+      <div class="metrics-toolbar__actions">
+        <button
+          nz-button
+          nzType="default"
+          type="button"
+          [nzLoading]="calculatingMetrics()"
+          [disabled]="calculatingMetrics() || generatingReport() || metricsPeriodForm.invalid"
+          (click)="calculateMetrics()"
+        >
+          {{ 'team.calculateMetrics' | translate }}
+        </button>
+        <button
+          nz-button
+          nzType="primary"
+          type="button"
+          [nzLoading]="generatingReport()"
+          [disabled]="!hasValidCalculatedMetrics() || calculatingMetrics() || generatingReport()"
+          (click)="generateReport()"
+        >
+          {{ 'team.generateReport' | translate }}
+        </button>
+      </div>
+      @if (reportGenerationError()) {
+        <nz-alert
+          nzType="error"
+          nzShowIcon
+          [nzMessage]="'team.reportError' | translate"
+          [nzDescription]="'team.reportErrorDescription' | translate"
+        ></nz-alert>
+      }
+    </div>
+    @if (metrics().length > 0 && !hasValidCalculatedMetrics()) {
+      <nz-alert
+        nzType="info"
+        nzShowIcon
+        [nzMessage]="'team.periodChanged' | translate"
+        [nzDescription]="'team.periodChangedDescription' | translate"
+      ></nz-alert>
+    }
+    @if (metricsError()) {
+      <nz-alert
+        nzType="error"
+        nzShowIcon
+        [nzMessage]="'team.metricsError' | translate"
+        [nzDescription]="'team.metricsErrorDescription' | translate"
+      ></nz-alert>
+    }
+    @if (!calculatingMetrics() && !metricsError() && metrics().length === 0) {
+      <div class="metrics-empty">
+        <div class="metrics-empty__icon"><nz-icon nzType="bar-chart"></nz-icon></div>
+        <strong>{{ 'team.metricsEmpty' | translate }}</strong>
+        <p>{{ 'team.metricsEmptyDescription' | translate }}</p>
+      </div>
+    }
+    @if (metrics().length > 0) {
+      <div class="metrics-summary">
+        <div>
+          <span>{{ 'team.reportingPeriod' | translate }}</span
+          ><strong
+            >{{ metricsPeriodForm.controls.periodStart.value | appDate: 'mediumDate' }} —
+            {{ metricsPeriodForm.controls.periodEnd.value | appDate: 'mediumDate' }}</strong
+          >
+        </div>
+        <div>
+          <span>{{ 'team.observableMetrics' | translate }}</span
+          ><strong
+            >{{ availableMetricCount() | appNumber }}/{{ metrics().length | appNumber }}</strong
+          >
+        </div>
+      </div>
+      <div class="metrics-grid">
+        @for (metricType of metricTypes; track metricType) {
+          @if (metric(metricType); as currentMetric) {
+            <article
+              class="metric-card"
+              [class.metric-card--unavailable]="currentMetric.dataStatus !== 'Available'"
+            >
+              <div class="metric-card__header">
+                <span class="metric-card__label">{{ metricLabel(metricType) }}</span>
+                <span
+                  class="metric-status"
+                  [class.metric-status--available]="currentMetric.dataStatus === 'Available'"
+                  [class.metric-status--no-data]="currentMetric.dataStatus === 'NoData'"
+                  [class.metric-status--not-configured]="
+                    currentMetric.dataStatus === 'SourceNotConfigured'
+                  "
+                  >{{ metricStatusLabel(currentMetric.dataStatus) }}</span
+                >
+              </div>
+              <strong class="metric-card__value">{{ metricValue(currentMetric) }}</strong>
+              @if (currentMetric.dataStatus === 'NoData') {
+                <p>{{ 'team.metricNoDataDescription' | translate }}</p>
+              }
+              @if (currentMetric.dataStatus === 'SourceNotConfigured') {
+                <p>{{ 'team.metricSourceMissing' | translate }}</p>
+              }
+            </article>
+          }
+        }
+      </div>
+    }
+  </div>
+</section>

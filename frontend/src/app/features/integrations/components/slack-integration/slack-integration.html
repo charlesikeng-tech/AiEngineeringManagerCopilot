@@ -1,0 +1,106 @@
+<article class="data-source">
+  <div class="data-source__main">
+    <div class="data-source__icon"><nz-icon nzType="slack"></nz-icon></div>
+    <div class="data-source__content">
+      <div class="data-source__heading">
+        <strong>{{ 'team.slack' | translate }}</strong>
+        @if (slackConnectionLoading()) {
+          <span class="integration-status integration-status--loading">{{
+            'team.connectionLoading' | translate
+          }}</span>
+        } @else if (slackConnection()) {
+          <span class="integration-status integration-status--connected">{{
+            'team.connected' | translate
+          }}</span>
+        } @else if (slackConnectionError()) {
+          <span class="integration-status integration-status--error">{{
+            'team.connectionError' | translate
+          }}</span>
+        } @else {
+          <span class="integration-status integration-status--disconnected">{{
+            'team.notConnected' | translate
+          }}</span>
+        }
+      </div>
+      @if (slackConnectionLoading()) {
+        <p>{{ 'team.slackChecking' | translate }}</p>
+      } @else if (slackConnectionError()) {
+        <p>{{ 'team.slackLoadError' | translate }}</p>
+      } @else if (slackConnection()) {
+        <p>{{ 'team.slackConnectedDescription' | translate }}</p>
+      } @else {
+        <p>{{ 'team.slackDescription' | translate }}</p>
+      }
+    </div>
+  </div>
+  <div class="data-source__actions">
+    @if (slackConnectionLoading()) {
+      <nz-spin nzSimple></nz-spin>
+    } @else if (slackConnectionError()) {
+      <button nz-button nzType="default" type="button" (click)="reloadSlackConnection()">
+        {{ 'team.retry' | translate }}
+      </button>
+    } @else if (slackConnection()) {
+      <button
+        nz-button
+        nzType="default"
+        type="button"
+        [nzLoading]="slackTesting()"
+        [disabled]="slackDisconnecting()"
+        (click)="testSlackWebhook()"
+      >
+        {{ 'team.slackTest' | translate }}
+      </button>
+      <button
+        nz-button
+        nzType="text"
+        nzDanger
+        type="button"
+        nz-popconfirm
+        [nzPopconfirmTitle]="'team.slackDisconnectConfirm' | translate"
+        [disabled]="slackTesting() || slackDisconnecting()"
+        (nzOnConfirm)="disconnectSlackWebhook()"
+      >
+        {{ 'team.disconnect' | translate }}
+      </button>
+    } @else {
+      <form class="slack-connection-form" [formGroup]="slackWebhookForm">
+        <label class="field-label" for="slack-webhook-url">{{
+          'team.slackWebhookUrl' | translate
+        }}</label>
+        <input
+          id="slack-webhook-url"
+          nz-input
+          type="url"
+          autocomplete="off"
+          formControlName="webhookUrl"
+          [placeholder]="'team.slackWebhookPlaceholder' | translate"
+        />
+        <button
+          nz-button
+          nzType="primary"
+          type="button"
+          [nzLoading]="slackConnecting()"
+          [disabled]="slackWebhookForm.invalid || slackConnecting()"
+          (click)="connectSlackWebhook()"
+        >
+          {{ 'team.slackConnect' | translate }}
+        </button>
+      </form>
+    }
+  </div>
+</article>
+@if (slackTestResult(); as testResult) {
+  <div
+    class="integration-result"
+    [class.integration-result--success]="testResult.success"
+    [class.integration-result--error]="!testResult.success"
+  >
+    <div class="integration-result__content">
+      <strong>{{
+        (testResult.success ? 'team.slackTestSuccess' : 'team.slackTestFailure') | translate
+      }}</strong
+      ><span>{{ testResult.message }}</span>
+    </div>
+  </div>
+}

@@ -1,0 +1,122 @@
+<section class="app-section">
+  <div class="section-header">
+    <div class="section-header__content">
+      <span class="section-eyebrow">{{ 'team.people' | translate }}</span>
+      <h2>{{ 'team.membersTitle' | translate }}</h2>
+      <p>{{ 'team.membersSectionDescription' | translate }}</p>
+    </div>
+    <div class="section-actions">
+      <span class="member-count">{{
+        (memberPagination.totalCount() === 1 ? 'team.memberCountOne' : 'team.memberCountMany')
+          | translate: { count: (memberPagination.totalCount() | appNumber) }
+      }}</span>
+      <button
+        nz-button
+        nzType="primary"
+        type="button"
+        [disabled]="memberMutationInProgress()"
+        (click)="openAddMember()"
+      >
+        <nz-icon nzType="plus"></nz-icon>{{ 'team.addMember' | translate }}
+      </button>
+    </div>
+  </div>
+  <div class="app-card app-data-panel" [attr.aria-busy]="membersLoading()">
+    <div class="app-table-toolbar">
+      <button
+        nz-button
+        type="button"
+        [disabled]="membersLoading() || memberMutationInProgress()"
+        (click)="loadMembers()"
+      >
+        {{ 'tables.refresh' | translate }}
+      </button>
+    </div>
+    @if (membersLoading()) {
+      <div class="state-container">
+        <nz-spin nzSimple></nz-spin><span>{{ 'team.loading' | translate }}</span>
+      </div>
+    } @else if (membersError()) {
+      <div class="state-container">
+        <nz-alert nzType="error" nzShowIcon [nzMessage]="'team.loadError' | translate"></nz-alert>
+        <button nz-button type="button" (click)="loadMembers()">
+          {{ 'tables.retry' | translate }}
+        </button>
+      </div>
+    } @else if (members().length === 0) {
+      <div class="empty-state members-empty">
+        <nz-empty [nzNotFoundContent]="'team.membersEmpty' | translate"></nz-empty>
+      </div>
+    } @else {
+      <div class="app-table-wrapper">
+        <table class="app-data-table">
+          <caption class="app-table-caption">
+            {{
+              'team.membersTitle' | translate
+            }}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'team.name' | translate }} / {{ 'team.email' | translate }}</th>
+              <th scope="col">{{ 'team.role' | translate }}</th>
+              <th scope="col">{{ 'team.providerId' | translate }}</th>
+              <th scope="col">{{ 'team.edit' | translate }} / {{ 'team.delete' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (member of members(); track member.id) {
+              <tr>
+                <th scope="row">
+                  <span class="app-table-name">{{ member.name }}</span
+                  ><span class="app-table-secondary">{{ member.email }}</span>
+                </th>
+                <td>{{ roleLabel(member.role) }}</td>
+                <td>{{ member.providerUserId || '—' }}</td>
+                <td>
+                  <div class="app-table-actions">
+                    <button
+                      nz-button
+                      nzType="text"
+                      type="button"
+                      [disabled]="memberMutationInProgress()"
+                      (click)="openEditMember(member)"
+                    >
+                      {{ 'team.edit' | translate }}
+                    </button>
+                    <button
+                      nz-button
+                      nzType="text"
+                      nzDanger
+                      type="button"
+                      nz-popconfirm
+                      [nzPopconfirmTitle]="'team.removeMemberConfirm' | translate"
+                      nzPopconfirmPlacement="topRight"
+                      [disabled]="memberMutationInProgress()"
+                      (nzOnConfirm)="deleteMember(member)"
+                    >
+                      {{ 'team.delete' | translate }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <app-table-pagination
+      [pageNumber]="memberPagination.pageNumber()"
+      [pageSize]="memberPagination.pageSize()"
+      [totalCount]="memberPagination.totalCount()"
+      [disabled]="membersLoading() || memberMutationInProgress()"
+      (pageChange)="changeMemberPage($event)"
+      (pageSizeChange)="changeMemberPageSize($event)"
+    />
+  </div>
+</section>
+<app-team-member-editor
+  [teamId]="teamId()"
+  [selectionVersion]="selectionVersion()"
+  [mutationBlocked]="deletingMemberId() !== null"
+  (saved)="loadMembers()"
+/>
