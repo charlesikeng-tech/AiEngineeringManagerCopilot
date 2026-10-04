@@ -17,8 +17,8 @@ import {
   JiraConnection,
   JiraSyncResult,
   TestJiraConnectionResponse,
-} from '../../models/jira-connection';
-import { JiraApi } from '../../services/jira-api';
+} from '@features/integrations/providers/jira/models/jira-connection';
+import { JiraApi } from '@features/integrations/providers/jira/data-access/jira-api';
 
 @Component({
   selector: 'app-jira-integration',

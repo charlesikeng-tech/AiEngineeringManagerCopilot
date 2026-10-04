@@ -14,15 +14,15 @@ import { PagedResult } from '@core/models/paged-result';
 import { Team } from '@domains/teams/models/team';
 import { TeamApi } from '@domains/teams/data-access/team-api';
 import { TeamContext } from '@core/team/team-context';
-import { GitHubConnection } from '@features/team/models/github-connection';
-import { GitHubApi } from '@features/team/services/github-api';
-import { MicrosoftTeamsApi } from '@features/team/services/microsoft-teams-api';
-import { SlackApi } from '@features/team/services/slack-api';
+import { GitHubConnection } from '@features/integrations/providers/github/models/github-connection';
+import { GitHubApi } from '@features/integrations/providers/github/data-access/github-api';
+import { MicrosoftTeamsApi } from '@features/integrations/providers/microsoft-teams/data-access/microsoft-teams-api';
+import { SlackApi } from '@features/integrations/providers/slack/data-access/slack-api';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import teamEn from '../../../../../../public/i18n/team/en.json';
 import teamFr from '../../../../../../public/i18n/team/fr.json';
-import { JiraApi } from '../../services/jira-api';
+import { JiraApi } from '@features/integrations/providers/jira/data-access/jira-api';
 import { IntegrationsPage } from './integrations';
 
 describe('all-team integrations overview', () => {

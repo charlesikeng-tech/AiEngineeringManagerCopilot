@@ -44,24 +44,24 @@ import { TeamSelector } from '@core/team/team-selector/team-selector';
 import { JiraIntegration } from '../../components/jira-integration/jira-integration';
 import { EMPTY, Observable, Subject, catchError, filter, takeUntil, throwError } from 'rxjs';
 
-import { CreateGitHubConnectionRequest } from '../../../team/models/create-github-connection-request';
-import { CreateSlackWebhookRequest } from '../../../team/models/create-slack-webhook-request';
-import { CreateMicrosoftTeamsWebhookRequest } from '../../../team/models/create-microsoft-teams-webhook-request';
-import { MicrosoftTeamsWebhookConnection } from '../../../team/models/microsoft-teams-webhook-connection';
-import { TestMicrosoftTeamsWebhookResponse } from '../../../team/models/test-microsoft-teams-webhook-response';
-import { microsoftTeamsWebhookUrl } from '../../../team/validators/microsoft-teams-webhook-url';
+import { CreateGitHubConnectionRequest } from '@features/integrations/providers/github/models/create-github-connection-request';
+import { CreateSlackWebhookRequest } from '@features/integrations/providers/slack/models/create-slack-webhook-request';
+import { CreateMicrosoftTeamsWebhookRequest } from '@features/integrations/providers/microsoft-teams/models/create-microsoft-teams-webhook-request';
+import { MicrosoftTeamsWebhookConnection } from '@features/integrations/providers/microsoft-teams/models/microsoft-teams-webhook-connection';
+import { TestMicrosoftTeamsWebhookResponse } from '@features/integrations/providers/microsoft-teams/models/test-microsoft-teams-webhook-response';
+import { microsoftTeamsWebhookUrl } from '@features/integrations/providers/microsoft-teams/validators/microsoft-teams-webhook-url';
 
-import { GitHubConnection, GitHubOwnerType } from '../../../team/models/github-connection';
+import { GitHubConnection, GitHubOwnerType } from '@features/integrations/providers/github/models/github-connection';
 
-import { GitHubConnectionTestResponse } from '../../../team/models/github-connection-test-response';
+import { GitHubConnectionTestResponse } from '@features/integrations/providers/github/models/github-connection-test-response';
 
-import { GitHubSyncResponse } from '../../../team/models/github-sync-response';
-import { SlackWebhookConnection } from '../../../team/models/slack-webhook-connection';
-import { TestSlackWebhookResponse } from '../../../team/models/test-slack-webhook-response';
+import { GitHubSyncResponse } from '@features/integrations/providers/github/models/github-sync-response';
+import { SlackWebhookConnection } from '@features/integrations/providers/slack/models/slack-webhook-connection';
+import { TestSlackWebhookResponse } from '@features/integrations/providers/slack/models/test-slack-webhook-response';
 
-import { GitHubApi } from '../../../team/services/github-api';
-import { SlackApi } from '../../../team/services/slack-api';
-import { MicrosoftTeamsApi } from '../../../team/services/microsoft-teams-api';
+import { GitHubApi } from '@features/integrations/providers/github/data-access/github-api';
+import { SlackApi } from '@features/integrations/providers/slack/data-access/slack-api';
+import { MicrosoftTeamsApi } from '@features/integrations/providers/microsoft-teams/data-access/microsoft-teams-api';
 
 @Component({
   selector: 'app-integration-settings',

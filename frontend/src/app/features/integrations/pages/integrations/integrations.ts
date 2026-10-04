@@ -34,11 +34,11 @@ import {
   tap,
   throwError,
 } from 'rxjs';
-import { GitHubApi } from '../../../team/services/github-api';
-import { MicrosoftTeamsApi } from '../../../team/services/microsoft-teams-api';
-import { SlackApi } from '../../../team/services/slack-api';
+import { GitHubApi } from '@features/integrations/providers/github/data-access/github-api';
+import { MicrosoftTeamsApi } from '@features/integrations/providers/microsoft-teams/data-access/microsoft-teams-api';
+import { SlackApi } from '@features/integrations/providers/slack/data-access/slack-api';
 import { IntegrationSettings } from '../../components/integration-settings/integration-settings';
-import { JiraApi } from '../../services/jira-api';
+import { JiraApi } from '@features/integrations/providers/jira/data-access/jira-api';
 
 type ConnectionStatus = 'loading' | 'connected' | 'notConnected' | 'error';
 

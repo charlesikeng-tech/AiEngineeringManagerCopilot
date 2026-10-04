@@ -24,17 +24,17 @@ import teamEn from '../../../../../../public/i18n/team/en.json';
 import teamFr from '../../../../../../public/i18n/team/fr.json';
 import commonEn from '../../../../../../public/i18n/common/en.json';
 import commonFr from '../../../../../../public/i18n/common/fr.json';
-import { GitHubApi } from '../../../team/services/github-api';
-import { SlackApi } from '../../../team/services/slack-api';
-import { MicrosoftTeamsApi } from '../../../team/services/microsoft-teams-api';
-import { MicrosoftTeamsWebhookConnection } from '../../../team/models/microsoft-teams-webhook-connection';
-import { TestMicrosoftTeamsWebhookResponse } from '../../../team/models/test-microsoft-teams-webhook-response';
-import { GitHubConnection } from '../../../team/models/github-connection';
-import { GitHubConnectionTestResponse } from '../../../team/models/github-connection-test-response';
-import { GitHubSyncResponse } from '../../../team/models/github-sync-response';
-import { SlackWebhookConnection } from '../../../team/models/slack-webhook-connection';
-import { TestSlackWebhookResponse } from '../../../team/models/test-slack-webhook-response';
-import { JiraApi } from '../../services/jira-api';
+import { GitHubApi } from '@features/integrations/providers/github/data-access/github-api';
+import { SlackApi } from '@features/integrations/providers/slack/data-access/slack-api';
+import { MicrosoftTeamsApi } from '@features/integrations/providers/microsoft-teams/data-access/microsoft-teams-api';
+import { MicrosoftTeamsWebhookConnection } from '@features/integrations/providers/microsoft-teams/models/microsoft-teams-webhook-connection';
+import { TestMicrosoftTeamsWebhookResponse } from '@features/integrations/providers/microsoft-teams/models/test-microsoft-teams-webhook-response';
+import { GitHubConnection } from '@features/integrations/providers/github/models/github-connection';
+import { GitHubConnectionTestResponse } from '@features/integrations/providers/github/models/github-connection-test-response';
+import { GitHubSyncResponse } from '@features/integrations/providers/github/models/github-sync-response';
+import { SlackWebhookConnection } from '@features/integrations/providers/slack/models/slack-webhook-connection';
+import { TestSlackWebhookResponse } from '@features/integrations/providers/slack/models/test-slack-webhook-response';
+import { JiraApi } from '@features/integrations/providers/jira/data-access/jira-api';
 import { IntegrationSettings as IntegrationsPage } from './integration-settings';
 
 describe('team-scoped integrations', () => {

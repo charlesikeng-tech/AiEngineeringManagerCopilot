@@ -8,8 +8,16 @@ Shared team DTOs and request models live in `src/app/domains/teams/models`.
 The single `TeamApi` in `domains/teams/data-access` owns team and member HTTP
 endpoints, including unpaged lists and paginated queries. Import these through
 `@domains/teams/*` from both features and core. Team selection state and the
-selector remain in `core/team`; team pages, connector models/services, and
-the metrics API remain in `features/team`.
+selector remain in `core/team`; team pages and the metrics API remain in
+`features/team`.
+
+Connector models, HTTP APIs, and provider-specific validators live in
+`features/integrations/providers/{github,jira,slack,microsoft-teams}`, organized
+into `models`, `data-access`, and `validators` as applicable. Jira follows the
+same provider ownership pattern as the other connectors. Import these through
+`@features/integrations/providers/*` outside the provider; use short relative
+imports within a provider. Integration UI components and pages remain in
+`features/integrations`.
 
 Shared engineering contracts live in `src/app/domains/engineering/models`,
 organized by report, action, risk, metric, health, and AI analysis. Import these
