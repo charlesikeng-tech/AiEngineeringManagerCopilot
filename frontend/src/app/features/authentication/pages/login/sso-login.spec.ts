@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { of, Subject, throwError } from 'rxjs';
-import { Auth } from './auth';
-import { PublicSsoApi } from './public-sso-api';
+import { Auth } from '@core/auth/auth';
+import { PublicSsoApi } from '../../data-access/public-sso-api';
 import { SsoLogin } from './sso-login';
 
 describe('Public SSO login', () => {

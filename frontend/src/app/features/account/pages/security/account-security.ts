@@ -15,9 +15,9 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { finalize, forkJoin } from 'rxjs';
 
 import { Auth } from '@core/auth/auth';
-import { PublicSsoProvider } from '@core/auth/public-sso-api';
+import { PublicSsoProvider } from '@features/authentication/data-access/public-sso-api';
 
-import { AccountLinkApi, AccountSecurityState } from './account-link-api';
+import { AccountLinkApi, AccountSecurityState } from '../../data-access/account-link-api';
 
 @Component({
   selector: 'app-account-security',

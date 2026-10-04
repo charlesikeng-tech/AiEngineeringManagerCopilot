@@ -3,7 +3,7 @@ import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { AppInitializer } from '@core/app/app-initializer';
 import { of, throwError } from 'rxjs';
 import { AdministratorAccess } from './administrator-access';
-import { Auth } from './auth';
+import { Auth } from '@core/auth/auth';
 
 describe('Administrator access page', () => {
   const auth = {

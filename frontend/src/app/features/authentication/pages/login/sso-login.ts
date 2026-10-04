@@ -11,8 +11,8 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { finalize } from 'rxjs';
 
-import { Auth } from './auth';
-import { PublicSsoApi, PublicSsoProvider } from './public-sso-api';
+import { Auth } from '@core/auth/auth';
+import { PublicSsoApi, PublicSsoProvider } from '../../data-access/public-sso-api';
 
 @Component({
   selector: 'app-sso-login',

@@ -358,6 +358,15 @@ for this diagnostic increment; restart the API and frontend to use it.
 
 ## Focused validation
 
+Frontend session state, HTTP session operations, the interceptor and guards remain
+in `frontend/src/app/core/auth`. Login/setup/local-administrator pages and
+`PublicSsoApi` live in `features/authentication`; provider settings and `SsoApi`
+live in `features/administration`; account security and `AccountLinkApi` live in
+`features/account`. The account feature explicitly imports the shared public
+authentication API rather than duplicating it. Co-located tests follow these
+owners. All screens retain the `public/i18n/sso` namespace; translation-resource
+splitting remains deferred to LOT6.
+
 With the repository PostgreSQL test service on port 5433:
 
 ```sh
@@ -369,10 +378,12 @@ dotnet ef migrations has-pending-model-changes \
   --project src/AiEngineeringManagerCopilot.Infrastructure \
   --startup-project src/AiEngineeringManagerCopilot.Api
 cd frontend
-npm test -- --watch=false --include='src/app/features/authentication/*.spec.ts' \
+npm test -- --watch=false --include='src/app/features/authentication/**/*.spec.ts' \
+  --include='src/app/features/administration/**/*.spec.ts' \
+  --include='src/app/features/account/**/*.spec.ts' \
   --include='src/app/core/auth/*.spec.ts' \
-  --include='src/app/core/i18n/i18n.providers.spec.ts' \
-  --include='src/app/core/layout/main-layout/main-layout.spec.ts' \
+  --include='src/app/core/i18n/**/*.spec.ts' \
+  --include='src/app/app.routes.spec.ts' \
   --include='src/app/core/app/app-initializer.spec.ts'
 npm run build -- --configuration production
 ```

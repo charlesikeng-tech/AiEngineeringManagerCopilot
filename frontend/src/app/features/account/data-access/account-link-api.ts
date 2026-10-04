@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '@environments/environment';
 import { timeout } from 'rxjs';
-import { PublicSsoApi } from '@core/auth/public-sso-api';
+import { PublicSsoApi } from '@features/authentication/data-access/public-sso-api';
 
 export interface LinkedIdentity {
   id: string;

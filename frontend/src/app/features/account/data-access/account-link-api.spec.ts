@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '@environments/environment';
-import { PublicSsoApi } from '@core/auth/public-sso-api';
+import { PublicSsoApi } from '@features/authentication/data-access/public-sso-api';
 import { AccountLinkApi } from './account-link-api';
 
 describe('AccountLinkApi', () => {

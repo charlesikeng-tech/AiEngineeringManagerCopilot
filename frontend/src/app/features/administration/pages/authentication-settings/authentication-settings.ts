@@ -15,7 +15,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 
 import { finalize, Observable } from 'rxjs';
 
-import { SsoApi, SsoDraft, SsoProvider } from './sso-api';
+import { SsoApi, SsoDraft, SsoProvider } from '../../data-access/sso-api';
 
 @Component({
   selector: 'app-authentication-settings',

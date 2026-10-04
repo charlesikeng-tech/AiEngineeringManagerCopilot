@@ -13,7 +13,7 @@ import { finalize, switchMap, tap } from 'rxjs';
 
 import { AppInitializer } from '@core/app/app-initializer';
 
-import { Auth } from './auth';
+import { Auth } from '@core/auth/auth';
 
 @Component({
   selector: 'app-administrator-access',

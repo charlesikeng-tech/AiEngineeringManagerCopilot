@@ -161,6 +161,8 @@ dotnet test tests/AiEngineeringManagerCopilot.IntegrationTests \
   --filter FullyQualifiedName~LocalAuthenticationEndpointsTests
 cd frontend
 npm test -- --watch=false --include='src/app/core/auth/*.spec.ts' \
+  --include='src/app/features/authentication/**/*.spec.ts' \
+  --include='src/app/app.routes.spec.ts' \
   --include='src/app/core/app/app-initializer.spec.ts'
 npm run build -- --configuration development
 ```

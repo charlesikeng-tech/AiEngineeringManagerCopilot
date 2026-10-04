@@ -4,6 +4,23 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ## Architecture
 
+`core/auth` owns only global authentication state and session HTTP operations
+(`Auth`), the session interceptor, and route guards, with their tests.
+Login and shared setup/local-administrator access pages belong to
+`features/authentication/pages`; their unchanged shared page styles live in
+`features/authentication/styles`. Public provider discovery and login navigation
+belong to `features/authentication/data-access/public-sso-api`.
+
+Provider settings belong to `features/administration/pages/authentication-settings`
+and `features/administration/data-access/sso-api`. Account security and identity
+linking belong to `features/account/pages/security` and
+`features/account/data-access/account-link-api`. Account code uses the public
+authentication API through `@features/authentication/data-access/public-sso-api`;
+imports within each feature are short relative paths. Tests follow their owners.
+Route URLs, guard ordering, templates, and API contracts remain unchanged.
+All these screens still use the shared `public/i18n/sso` namespace; splitting
+translation resources is deferred to LOT6.
+
 Shared team DTOs and request models live in `src/app/domains/teams/models`.
 The single `TeamApi` in `domains/teams/data-access` owns team and member HTTP
 endpoints, including unpaged lists and paginated queries. Import these through
