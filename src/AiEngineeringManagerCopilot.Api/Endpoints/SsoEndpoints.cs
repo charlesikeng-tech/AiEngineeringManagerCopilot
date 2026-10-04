@@ -45,6 +45,8 @@ public static class SsoEndpoints
             provider.ActiveConfiguration = JsonSerializer.Serialize(new Snapshot(
                 provider.Type, provider.Name, provider.Authority, provider.ClientId, provider.ProtectedSecret));
             provider.ActiveRevision = provider.Revision;
+            await db.SsoSessions.Where(x => x.ProviderId == id).ExecuteDeleteAsync(ct);
+            await db.SsoLoginAttempts.Where(x => x.ProviderId == id).ExecuteDeleteAsync(ct);
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
             return Results.Ok(View(provider));
@@ -57,6 +59,8 @@ public static class SsoEndpoints
             if (provider is null) return Results.NotFound();
             provider.ActiveConfiguration = null;
             provider.ActiveRevision = null;
+            await db.SsoSessions.Where(x => x.ProviderId == id).ExecuteDeleteAsync(ct);
+            await db.SsoLoginAttempts.Where(x => x.ProviderId == id).ExecuteDeleteAsync(ct);
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
             return Results.Ok(View(provider));

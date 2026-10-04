@@ -17,7 +17,7 @@ describe('administrator guard', () => {
   });
   it('rejects an unauthenticated user or an ordinary authenticated role', () => {
     expect(TestBed.runInInjectionContext(() => administratorGuard({} as never, {} as never))).toBeInstanceOf(UrlTree);
-    role = 'Member';
-    expect(TestBed.runInInjectionContext(() => administratorGuard({} as never, {} as never))).toBeInstanceOf(UrlTree);
+    role = 'User';
+    expect((TestBed.runInInjectionContext(() => administratorGuard({} as never, {} as never)) as UrlTree).toString()).toBe('/dashboard');
   });
 });

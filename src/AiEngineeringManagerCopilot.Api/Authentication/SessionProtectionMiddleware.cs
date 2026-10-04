@@ -9,7 +9,8 @@ public sealed class SessionProtectionMiddleware(RequestDelegate next)
         if (authPath) context.Response.Headers.CacheControl = "no-store";
         var mutation = !HttpMethods.IsGet(request.Method) && !HttpMethods.IsHead(request.Method) &&
                        !HttpMethods.IsOptions(request.Method);
-        var sessionRequest = context.User.Identity?.AuthenticationType == LocalSessionAuthenticationHandler.Scheme;
+        var sessionRequest = context.User.Identity?.AuthenticationType is
+            LocalSessionAuthenticationHandler.Scheme or SsoSessionAuthenticationHandler.Scheme;
         if (mutation && (authPath || sessionRequest))
         {
             var origin = request.Headers.Origin.ToString();

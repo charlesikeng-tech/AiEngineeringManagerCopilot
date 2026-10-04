@@ -87,12 +87,12 @@ describe('Authentication settings', () => {
     expect(component.providers()[0].testedRevision).toBeNull();
     expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith([], expect.objectContaining({ replaceUrl: true, queryParams: {} }));
   });
-  it('has matching English/French keys and explicitly describes configuration-only scope', () => {
+  it('has matching English/French keys and explicitly describes ordinary-user login scope', () => {
     function keys(value: object, prefix = ''): string[] {
       return Object.entries(value).flatMap(([key, child]) => typeof child === 'object' ? keys(child, `${prefix}${key}.`) : [`${prefix}${key}`]).sort();
     }
     expect(keys(en)).toEqual(keys(fr));
-    expect(en.sso.scope).toContain('does not enable sign-in');
-    expect(fr.sso.scope).toContain('n’active pas la connexion');
+    expect(en.sso.scope).toContain('never grants administrator privileges');
+    expect(fr.sso.scope).toContain('jamais un administrateur');
   });
 });

@@ -6,9 +6,10 @@ import { environment } from '@environments/environment';
 
 export interface AdministratorProfile {
   id: string;
-  email: string;
+  email: string | null;
   name: string;
-  role: 'PlatformAdministrator';
+  role: 'PlatformAdministrator' | 'User';
+  emailVerified?: boolean;
 }
 
 @Injectable({

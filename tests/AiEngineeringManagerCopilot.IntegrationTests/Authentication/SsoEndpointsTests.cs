@@ -225,7 +225,7 @@ public sealed class SsoEndpointsTests
         Assert.Empty(cookies.GetCookieHeader(publicCallback));
     }
 
-    private static Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> Configure(
+    internal static Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> Configure(
         LocalAuthenticationWebApplicationFactory factory, FakeProtocol protocol, string publicApiBaseUrl = "http://localhost") =>
         factory.WithWebHostBuilder(builder =>
         {
@@ -238,7 +238,7 @@ public sealed class SsoEndpointsTests
             });
         });
 
-    private static HttpClient NewClient(Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> app)
+    internal static HttpClient NewClient(Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> app)
     {
         var client = app.CreateClient(new() { HandleCookies = false, AllowAutoRedirect = false, BaseAddress = new Uri("http://localhost") });
         client.DefaultRequestHeaders.Add("Origin", "http://localhost:4200");
@@ -246,13 +246,13 @@ public sealed class SsoEndpointsTests
         return client;
     }
 
-    private static async Task WithDatabase(Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> app, Func<AppDbContext, Task> action)
+    internal static async Task WithDatabase(Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> app, Func<AppDbContext, Task> action)
     {
         using var scope = app.Services.CreateScope();
         await action(scope.ServiceProvider.GetRequiredService<AppDbContext>());
     }
 
-    private static async Task LoginAsync(HttpClient client)
+    internal static async Task LoginAsync(HttpClient client)
     {
         var response = await client.PostAsJsonAsync("/auth/setup", new
         {
@@ -298,13 +298,20 @@ public sealed class SsoEndpointsTests
         return response;
     }
 
-    private sealed class FakeProtocol : SsoProtocolHttpClientFactory, IDisposable
+    internal sealed class FakeProtocol : SsoProtocolHttpClientFactory, IDisposable
     {
         private readonly RSA rsa = RSA.Create(2048);
         public string Nonce = "";
         public string Challenge = "";
         public string Failure = "";
         public string CallbackUrl = "http://localhost/auth/sso/callback";
+        public string Authority = "https://example.auth0.com/";
+        public string Subject = "external-test-user";
+        public string? Email;
+        public string? EmailVerified;
+        public string? Name;
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Nonce, string Challenge)> codes = new();
+        public void RegisterCode(string code, string nonce, string challenge) => codes[code] = (nonce, challenge);
         public int TokenRequests;
         public bool PkceVerified;
         public bool PauseToken;
@@ -321,10 +328,10 @@ public sealed class SsoEndpointsTests
                 if (request.RequestUri!.AbsolutePath.Contains(".well-known"))
                     body = new
                     {
-                        issuer = "https://example.auth0.com/",
-                        authorization_endpoint = "https://example.auth0.com/authorize",
-                        token_endpoint = "https://example.auth0.com/token",
-                        jwks_uri = "https://example.auth0.com/keys",
+                        issuer = owner.Authority,
+                        authorization_endpoint = owner.Authority.TrimEnd('/') + "/authorize",
+                        token_endpoint = owner.Authority.TrimEnd('/') + "/token",
+                        jwks_uri = owner.Authority.TrimEnd('/') + "/keys",
                         response_types_supported = new[] { "code" }, subject_types_supported = new[] { "public" },
                         id_token_signing_alg_values_supported = new[] { "RS256" }
                     };
@@ -342,14 +349,21 @@ public sealed class SsoEndpointsTests
                         await owner.ReleaseToken.Task.WaitAsync(cancellationToken);
                     }
                     var form = QueryHelpers.ParseQuery(await request.Content!.ReadAsStringAsync(cancellationToken));
-                    owner.PkceVerified = Base64UrlEncoder.Encode(SHA256.HashData(Encoding.ASCII.GetBytes(form["code_verifier"].ToString()))) == owner.Challenge;
+                    var flow = owner.codes.TryGetValue(form["code"].ToString(), out var registered) ? registered : (owner.Nonce, owner.Challenge);
+                    owner.PkceVerified = Base64UrlEncoder.Encode(SHA256.HashData(Encoding.ASCII.GetBytes(form["code_verifier"].ToString()))) == flow.Item2;
                     Assert.Equal("authorization_code", form["grant_type"]);
                     Assert.Equal(owner.CallbackUrl, form["redirect_uri"]);
+                    var claims = new List<Claim> { new("sub", owner.Subject) };
+                    if (owner.Failure != "missing-nonce") claims.Add(new("nonce", owner.Failure == "nonce" ? "wrong" : flow.Item1));
+                    if (owner.Email is not null) claims.Add(new("email", owner.Email));
+                    if (owner.EmailVerified is not null) claims.Add(new("email_verified", owner.EmailVerified));
+                    if (owner.Name is not null) claims.Add(new("name", owner.Name));
+                    claims.Add(new("role", "PlatformAdministrator"));
                     var descriptor = new SecurityTokenDescriptor
                     {
-                        Issuer = owner.Failure == "issuer" ? "https://other.auth0.com/" : "https://example.auth0.com/",
+                        Issuer = owner.Failure == "issuer" ? "https://other.auth0.com/" : owner.Authority,
                         Audience = owner.Failure == "audience" ? "wrong-client" : "test-client",
-                        Subject = new ClaimsIdentity([new Claim("sub", "external-test-user"), new Claim("nonce", owner.Failure == "nonce" ? "wrong" : owner.Nonce)]),
+                        Subject = new ClaimsIdentity(claims),
                         IssuedAt = DateTime.UtcNow.AddMinutes(-10),
                         NotBefore = DateTime.UtcNow.AddMinutes(-10),
                         Expires = owner.Failure == "expiry" ? DateTime.UtcNow.AddMinutes(-5) : DateTime.UtcNow.AddMinutes(5),

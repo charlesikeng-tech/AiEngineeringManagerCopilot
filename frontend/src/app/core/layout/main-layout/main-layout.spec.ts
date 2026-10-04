@@ -20,6 +20,7 @@ import { of } from 'rxjs';
 import { routes } from '../../../app.routes';
 import { MainLayout } from './main-layout';
 import { Auth } from '@core/auth/auth';
+import { TeamContext } from '@core/team/team-context';
 import ssoEn from '../../../../../public/i18n/sso/en.json';
 import ssoFr from '../../../../../public/i18n/sso/fr.json';
 
@@ -27,7 +28,9 @@ import ssoFr from '../../../../../public/i18n/sso/fr.json';
 class EmptyPage {}
 
 describe('MainLayout integrations navigation', () => {
+  let role: 'User' | 'PlatformAdministrator';
   beforeEach(() => {
+    role = 'PlatformAdministrator';
     localStorage.removeItem('selectedTeamId');
     TestBed.configureTestingModule({
       imports: [MainLayout],
@@ -46,7 +49,7 @@ describe('MainLayout integrations navigation', () => {
           WarningOutline,
         ]),
         { provide: TeamApi, useValue: { getTeams: () => of([]) } },
-        { provide: Auth, useValue: { logout: () => of(undefined), user: () => ({ role: 'PlatformAdministrator' }) } },
+        { provide: Auth, useValue: { logout: () => of(undefined), user: () => ({ role }) } },
       ],
     });
   });
@@ -87,5 +90,20 @@ describe('MainLayout integrations navigation', () => {
     await TestBed.inject(I18nService).setLanguage('fr');
     fixture.detectChanges();
     expect(item.textContent).toContain('Authentification administrateur');
+  });
+
+  it('never shows provider administration to an ordinary SSO user', () => {
+    role = 'User';
+    const fixture = TestBed.createComponent(MainLayout);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('li[routerlink="/admin/authentication"]')).toBeNull();
+  });
+
+  it('clears team context on logout and returns to general login', () => {
+    const clear = vi.spyOn(TestBed.inject(TeamContext), 'clearTeam');
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    TestBed.createComponent(MainLayout).componentInstance.logout();
+    expect(clear).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith('/login');
   });
 });

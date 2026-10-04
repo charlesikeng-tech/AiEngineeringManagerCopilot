@@ -21,15 +21,20 @@ describe('Protected navigation', () => {
     expect(guard()).toBe(true);
   });
 
+  it('permits an ordinary SSO user', () => {
+    auth.user = () => ({ id: 'ordinary', role: 'User' });
+    expect(guard()).toBe(true);
+  });
+
   it('redirects to setup only when the server explicitly makes it available', async () => {
     auth.setupStatus = () => of({ setupAvailable: true });
     expect((await firstValueFrom(guard() as Observable<UrlTree>)).toString()).toBe('/setup');
     auth.setupStatus = () => of({ setupAvailable: false });
-    expect((await firstValueFrom(guard() as Observable<UrlTree>)).toString()).toBe('/admin/login');
+    expect((await firstValueFrom(guard() as Observable<UrlTree>)).toString()).toBe('/login');
   });
 
   it('never assumes setup eligibility on API failure', async () => {
     auth.setupStatus = () => throwError(() => new Error('Unavailable'));
-    expect((await firstValueFrom(guard() as Observable<UrlTree>)).toString()).toBe('/admin/login');
+    expect((await firstValueFrom(guard() as Observable<UrlTree>)).toString()).toBe('/login');
   });
 });

@@ -11,6 +11,10 @@ public sealed class SsoDeployment(IConfiguration configuration, IWebHostEnvironm
         return (api.TrimEnd('/') + CallbackPath, frontend.TrimEnd('/') + "/admin/authentication");
     }
 
+    public (string Callback, string Frontend) GetLoginUrls() =>
+        (Parse(configuration["Authentication:Sso:PublicApiBaseUrl"], true).TrimEnd('/') + SsoLoginFlow.CallbackPath,
+            Parse(configuration["Authentication:Sso:FrontendOrigin"], false).TrimEnd('/'));
+
     private string Parse(string? value, bool allowPath)
     {
         if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) ||

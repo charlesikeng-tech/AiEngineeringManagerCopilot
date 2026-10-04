@@ -1,14 +1,17 @@
-# Installation-wide SSO provider configuration and connection testing
+# Installation-wide SSO configuration, connection testing and effective login
 
 This increment adds the platform administrator page `/admin/authentication`.
 It saves Auth0, Okta and Microsoft Entra ID drafts, performs **real OIDC
 authorization-code + PKCE** tests, and explicitly activates a successfully
-tested revision. Activation currently means **a verified saved configuration,
-not an enabled login method**. Normal login remains `/admin/login`. There are
-no SSO login buttons, external administrator links, role assignment by email,
-public signup, invitations, user import or ordinary-user provisioning. Provider
-configuration is global to this installation; organization scoping is a later
-increment. Deactivation never disables or deletes the local recovery account.
+tested revision. Activation enables **effective SSO login at `/login`**, using
+only that immutable active snapshot. The approved pilot policy permits anyone
+authorized by that active provider application to create an ordinary app account
+at their **first login (JIT)**. There are no invitations or preapproval checks.
+Restrict application assignments/authorization at the provider accordingly.
+There is no public password signup, organization scoping, user import or
+external administrator linking. Provider configuration is global to this
+installation. Deactivation never disables or deletes the local recovery account
+at `/admin/login`.
 
 ## Operator configuration
 
@@ -46,12 +49,15 @@ host-only. Development uses the two localhost ports on the same site. Continue
 to configure explicit `Cors__AllowedOrigins__0` etc. for the trusted frontend;
 do not use wildcard credentialed CORS or unrelated frontend/API sites.
 
-The exact redirect URI is:
+Register **both** exact redirect URIs in the provider application:
 
 * Development: `http://localhost:5249/auth/sso/callback`
 * Example production: `https://copilot.example.com/api/auth/sso/callback`
+* Development user login: `http://localhost:5249/auth/sso/login/callback`
+* Example production user login: `https://copilot.example.com/api/auth/sso/login/callback`
 
-The page displays the URL derived from the configured API base. Register it
+The administrator page displays both URLs derived from the configured
+API base; the user-login callback adds `/login` before `/callback`. Register both
 **exactly**, including protocol, port and proxy path, at the provider. This
 increment uses a GET callback (`response_mode=query`), not `form_post`. Codes
 and encrypted state necessarily traverse that protocol callback; no access or
@@ -94,11 +100,16 @@ configuration.
   `https://login.microsoftonline.com/{tenantGuid}/v2.0`. Shared `common` /
   `organizations` endpoints, tenant names and sovereign-cloud hosts are
   intentionally rejected. Grant any organizational consent required for
-  `openid`; no Graph API or userinfo permissions are needed.
+  `openid profile email`; no Graph API or userinfo permissions are needed.
 
 Tests request only the `openid` scope. The test identity needs permission to
 authenticate to the provider application; it does **not** need to match the
 local administrator email. External claims are discarded after validation.
+Effective login requests `openid profile email`. ID-token claims supply the
+profile; there is no userinfo/Graph request. The configured client uses
+`client_secret_post` when a secret is saved, or PKCE without a secret for a
+provider-supported public client. The login handler shares the maintained
+framework protocol options/validator and SSRF-protected backchannel with tests.
 
 ## Draft, test and activation workflow
 
@@ -121,8 +132,83 @@ local administrator email. External claims are discarded after validation.
    **Activate verified configuration** separately. Activation atomically
    snapshots that revision, including the encrypted credential. Failed tests
    or subsequent draft edits do not overwrite that active snapshot.
-6. **Deactivate** removes the active copy; the draft remains. An inactive
-   provider can be deleted. Local administrator login/logout is unchanged.
+6. `/login` shows the active provider buttons. **Deactivate** removes the active
+   copy and revokes its SSO sessions/attempts; the draft remains. An inactive
+   provider can be deleted. Local administrator access remains independent.
+
+## User login, account linkage and ownership
+
+The anonymous `GET /auth/sso/login/providers` returns only active snapshot
+`id`, `name`, `type`. No tenant/client identifiers, secrets, drafts or roles are
+disclosed. `POST /auth/sso/login/{id}/start` requires the same exact trusted
+Origin and `X-Session-Protection: 1` as local authentication, and shares its
+per-source-IP 10 attempts/minute limit. It returns a framework-generated
+authorization URL; there are no arbitrary return URLs. Successful callbacks
+redirect only to the configured frontend `/dashboard`; failures go to
+`/login?ssoError=login_failed` or `email_collision`, never raw IdP messages.
+
+The separate login handler uses authorization code, PKCE S256, encrypted/authenticated
+framework state and same-browser nonce/correlation. A random, ten-minute DB
+attempt stores the active revision/snapshot and an optional prior session hash,
+**not** tokens, plaintext PKCE or credentials. It is atomically consumed before
+code exchange. The callback rechecks the active snapshot in the JIT/session
+transaction under the same PostgreSQL advisory lock as provider mutations.
+Invalid signature, issuer, audience, lifetime, nonce, correlation, state, replay,
+expiry, disabled provider or changed active snapshot all fail closed.
+
+`ExternalIdentities` uniquely keys the exact trusted **issuer + subject** pair
+to `users.Id`; never email, name, groups, role claims or first-login order.
+Concurrent first callbacks are serialized and constrained by the unique DB
+index; repeat logins retain the same local ID. Two active configurations using
+the same issuer reuse a pair only after independently validating the selected
+provider's audience and current snapshot. A different issuer or subject creates
+a distinct identity. The IdP's `PlatformAdministrator` claim is ignored: every
+SSO principal is `User`, and linked local-administrator records are rejected.
+
+Email is optional: absent or malformed email yields `NULL`, never a fabricated
+address. Valid email may be saved even when unverified; `EmailVerified` is true
+only for an explicit `email_verified=true` claim, false otherwise. Email is
+profile information, never authorization or account recovery evidence. Name
+is a bounded non-control-character claim or the neutral fallback `SSO user`.
+An email collision with **any existing user**, including the local administrator,
+fails explicitly with `email_collision` and creates no identity/account/session.
+There is no email matching/linking/promotion. The provider administrator must
+resolve the claim or omit it; there is no manual linking UI in this pilot.
+Existing linked users are not overwritten by later email/name claims.
+
+New users have no inherited memberships or seeded/other-owner data. Existing
+owner checks govern every team API; ordinary users can create and own their
+own teams normally. No organization or import behavior is added.
+
+## Revocable sessions and recovery
+
+`SsoSessions` contains only a hash of an opaque random eight-hour token and
+references the user, external identity, provider and active snapshot/revision.
+It does not reference `LocalAdministrators`. Every SSO API request rechecks
+account activity, identity/account consistency and the exact current active
+provider snapshot. Draft edits leave sessions and in-flight logins unaffected.
+Activation (including reactivation) conservatively deletes that provider's
+existing sessions and consumes outstanding attempts; deactivation does likewise.
+Active revision/configuration mismatches also immediately reject a session.
+Deleting accounts/providers cascades the applicable records.
+
+For compatibility, local and SSO sessions share the one `aem.admin.session`
+cookie slot: successful switching rotates it and revokes the presented prior
+session, so no competing local/SSO cookies can select a surprising privilege.
+Local cookies/scheme retain their existing behavior. Both modes protect
+mutations against CSRF and `/auth/current` and `/auth/logout` accept only these
+session schemes, not bearer-only impersonation. Bearer remains preferred when
+explicitly supplied on other API requests. Provider administration still
+requires local scheme + explicit local `PlatformAdministrator` role.
+
+Logout revokes the app session and clears the cookie/team context; it does not
+log out of Okta/Auth0/Entra. A later login can transparently reuse the provider's
+upstream session. No tokens are stored in frontend localStorage. The independent
+local recovery form remains `/admin/login`; provider outage/deactivation cannot
+lock the administrator out. Revocation at the upstream provider alone does not
+revoke a preexisting app session in this pilot: deactivate the provider, disable
+the app account or delete sessions operationally when immediate revocation is
+needed. Backchannel logout and organization lifecycle management are deferred.
 
 Only the newest attempt for a provider can complete. Attempts are single-use;
 replay, timeout, revision changes, session logout/rotation/expiry, inactive
@@ -141,8 +227,9 @@ verified status until a fresh success, not the old active snapshot.
 Credentials use the existing `ISecretProtector` /
 `DataProtectionSecretProtector`; active snapshots contain the same ciphertext,
 not plaintext. They are never returned. Data Protection also authenticates and
-encrypts state containing the PKCE verifier and attempt ID. Neither token nor
-sensitive external claims are persisted.
+encrypts state containing the PKCE verifier and attempt ID. Tokens and PKCE are
+never persisted; effective login stores only issuer/subject and the limited
+profile fields described above.
 
 Existing `AddDataProtection()` defaults persist keys to the host user's profile
 when available (typically `~/.aspnet/DataProtection-Keys` on macOS/Linux), but
@@ -189,6 +276,11 @@ The protocol tests use isolated PostgreSQL schemas, real local authentication,
 the actual framework OIDC handler, fake discovery/JWKS/token HTTP responses and
 RSA-signed ID tokens. They verify code exchange/PKCE and invalid signature,
 issuer, audience, expiry, nonce, state, correlation, revoked session, changed
-revision and replay handling. They are **not live tenant validation**. Operators
+revision and replay handling.
+The effective-login tests also cover JIT concurrency, stable issuer/subject
+linkage across providers, optional/unverified email, administrator email
+collision, owner isolation, logout/account switching, active vs draft changes,
+in-flight changes, revocation, protected/rate-limited starts and prefixed callbacks.
+They are **not live tenant validation**. Operators
 must provide real provider applications/credentials and run the browser test
 for each intended tenant before activation.

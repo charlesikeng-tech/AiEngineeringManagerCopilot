@@ -14,11 +14,12 @@ public static class LocalAuthenticationEndpoints
 {
     public sealed record SetupRequest(string Secret, string Email, string Name, string Password);
     public sealed record LoginRequest(string Email, string Password);
-    public sealed record AdministratorProfile(Guid Id, string Email, string Name, string Role);
+    public sealed record AdministratorProfile(Guid Id, string? Email, string Name, string Role, bool EmailVerified = false);
 
     public static void MapLocalAuthenticationEndpoints(this WebApplication app)
     {
         app.MapSsoEndpoints();
+        app.MapSsoLoginEndpoints();
         var group = app.MapGroup("/auth").WithTags("Local administrator");
         group.MapGet("/setup-status", async (AppDbContext db, IConfiguration config, CancellationToken ct) =>
             Results.Ok(new { setupAvailable = SecretConfigured(config) && !await db.Installations.AnyAsync(ct) }))
@@ -29,16 +30,15 @@ public static class LocalAuthenticationEndpoints
         {
             var id = Guid.Parse(context.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);
-            return user is null ? Results.Unauthorized() : Results.Ok(Profile(user));
-        }).RequireAuthorization("LocalAdministrator");
+            return user is null ? Results.Unauthorized() : Results.Ok(new AdministratorProfile(
+                user.Id, user.Email, user.Name, context.User.FindFirstValue(ClaimTypes.Role)!, user.EmailVerified));
+        }).RequireAuthorization("Session");
         group.MapPost("/logout", async (HttpContext context, AppDbContext db, IWebHostEnvironment env, CancellationToken ct) =>
         {
-            if (context.Request.Cookies.TryGetValue(LocalSessionAuthenticationHandler.CookieName, out var token))
-                await db.AdministratorSessions.Where(x => x.TokenHash == LocalSessionAuthenticationHandler.Hash(token))
-                    .ExecuteDeleteAsync(ct);
+            await RevokePresentedSessionAsync(context, db, ct);
             context.Response.Cookies.Delete(LocalSessionAuthenticationHandler.CookieName, CookieOptions(env));
             return Results.NoContent();
-        }).RequireAuthorization("LocalAdministrator");
+        }).RequireAuthorization("Session");
     }
 
     private static bool SecretConfigured(IConfiguration config)
@@ -78,7 +78,7 @@ public static class LocalAuthenticationEndpoints
             return Results.Conflict(new { error = "Installation is already complete." });
 
         var email = request.Email.Trim().ToLowerInvariant();
-        if (await db.Users.AnyAsync(x => x.Email.ToLower() == email, ct))
+        if (await db.Users.AnyAsync(x => x.Email != null && x.Email.ToLower() == email, ct))
             return Results.BadRequest(new { error = "This email cannot be used for installation." });
 
         var user = new User { Id = Guid.NewGuid(), Email = email, Name = request.Name.Trim(), CreatedAt = DateTimeOffset.UtcNow };
@@ -89,6 +89,7 @@ public static class LocalAuthenticationEndpoints
             IsActive = true, Role = LocalSessionAuthenticationHandler.AdministratorRole
         });
         db.Installations.Add(new Installation { InitializedAt = DateTimeOffset.UtcNow });
+        await RevokePresentedSessionAsync(context, db, ct);
         var token = AddSession(db, user.Id);
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
@@ -131,13 +132,13 @@ public static class LocalAuthenticationEndpoints
         }
 
         var user = await db.Users.SingleAsync(x => x.Id == admin.UserId, ct);
+        if (!user.IsActive) return Results.Unauthorized();
         admin.FailedLoginCount = 0;
         admin.LockoutUntil = null;
         if (result == PasswordVerificationResult.SuccessRehashNeeded)
             admin.PasswordHash = hasher.HashPassword(identityUser, request.Password);
         await db.AdministratorSessions.Where(x => x.ExpiresAt <= DateTimeOffset.UtcNow).ExecuteDeleteAsync(ct);
-        if (context.Request.Cookies.TryGetValue(LocalSessionAuthenticationHandler.CookieName, out var oldToken))
-            await db.AdministratorSessions.Where(x => x.TokenHash == LocalSessionAuthenticationHandler.Hash(oldToken)).ExecuteDeleteAsync(ct);
+        await RevokePresentedSessionAsync(context, db, ct);
         var token = AddSession(db, user.Id);
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
@@ -172,6 +173,14 @@ public static class LocalAuthenticationEndpoints
         SameSite = SameSiteMode.Strict, Path = "/", MaxAge = TimeSpan.FromHours(8), IsEssential = true
     };
 
-    private static void WriteCookie(HttpContext context, IWebHostEnvironment env, string token) =>
+    internal static async Task RevokePresentedSessionAsync(HttpContext context, AppDbContext db, CancellationToken ct)
+    {
+        if (!context.Request.Cookies.TryGetValue(LocalSessionAuthenticationHandler.CookieName, out var token)) return;
+        var hash = LocalSessionAuthenticationHandler.Hash(token);
+        await db.AdministratorSessions.Where(x => x.TokenHash == hash).ExecuteDeleteAsync(ct);
+        await db.SsoSessions.Where(x => x.TokenHash == hash).ExecuteDeleteAsync(ct);
+    }
+
+    internal static void WriteCookie(HttpContext context, IWebHostEnvironment env, string token) =>
         context.Response.Cookies.Append(LocalSessionAuthenticationHandler.CookieName, token, CookieOptions(env));
 }

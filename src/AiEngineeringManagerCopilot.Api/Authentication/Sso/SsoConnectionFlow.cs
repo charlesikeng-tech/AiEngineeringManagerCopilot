@@ -1,12 +1,9 @@
-using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using AiEngineeringManagerCopilot.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
@@ -18,30 +15,20 @@ namespace AiEngineeringManagerCopilot.Api.Authentication.Sso;
 // and token validation. Its validated ticket is deliberately never signed into any scheme.
 public sealed class SsoConnectionFlow(
     IOptionsFactory<OpenIdConnectOptions> optionsFactory,
-    ISecretProtector secrets,
+    SsoOidcHandlerFactory handlers,
     SsoProtocolHttpClientFactory clients,
     SsoDeployment deployment,
-    AppDbContext db,
-    IWebHostEnvironment environment)
+    AppDbContext db)
 {
     public const string Scheme = "SsoConnectionTest";
-    private const string AttemptKey = "sso.attempt";
+    private const string AttemptKey = SsoOidcHandlerFactory.AttemptKey;
 
     public async Task<string> StartAsync(HttpContext context, SsoProvider provider, SsoConnectionTest attempt)
     {
         var urls = deployment.GetUrls();
         using var backchannel = clients.Create(provider.Authority);
         var options = BuildOptions(provider, attempt, urls, backchannel);
-        options.Events.OnRedirectToIdentityProvider = eventContext =>
-        {
-            eventContext.ProtocolMessage.RedirectUri = urls.Callback;
-            var target = new Uri(eventContext.ProtocolMessage.IssuerAddress);
-            if (target.Scheme != "https" || target.Host != new Uri(provider.Authority).Host ||
-                target.Port != 443 || target.UserInfo != "")
-                throw new InvalidOperationException("Untrusted authorization endpoint.");
-            return Task.CompletedTask;
-        };
-        var handler = await HandlerAsync(context, options);
+        var handler = await SsoOidcHandlerFactory.HandlerAsync(context, options, Scheme);
         var properties = new AuthenticationProperties();
         properties.Items[AttemptKey] = attempt.Id.ToString("D");
         await handler.ChallengeAsync(properties);
@@ -108,7 +95,7 @@ public sealed class SsoConnectionFlow(
                 eventContext.HandleResponse();
                 Redirect(context, urls.Frontend, false);
             };
-            var handler = await HandlerAsync(context, options);
+            var handler = await SsoOidcHandlerFactory.HandlerAsync(context, options, Scheme);
             if (!await handler.HandleRequestAsync())
             {
                 await MarkFailedAsync(attempt, ct);
@@ -143,71 +130,9 @@ public sealed class SsoConnectionFlow(
 
     private OpenIdConnectOptions BuildOptions(SsoProvider provider, SsoConnectionTest attempt,
         (string Callback, string Frontend) urls, HttpClient backchannel)
-    {
-        var options = optionsFactory.Create(Scheme);
-        options.CallbackPath = SsoDeployment.CallbackPath;
-        options.Authority = provider.Authority;
-        options.ClientId = provider.ClientId;
-        options.ClientSecret = provider.ProtectedSecret is null ? null : secrets.Unprotect(provider.ProtectedSecret);
-        options.Backchannel = backchannel;
-        options.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
-            provider.Authority.TrimEnd('/') + "/.well-known/openid-configuration",
-            new OpenIdConnectConfigurationRetriever(),
-            new HttpDocumentRetriever(backchannel) { RequireHttps = true });
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true, ValidIssuer = provider.Authority,
-            ValidateAudience = true, ValidAudience = provider.ClientId,
-            ValidateIssuerSigningKey = true, RequireSignedTokens = true,
-            ValidateLifetime = true, RequireExpirationTime = true,
-            ClockSkew = TimeSpan.FromSeconds(30)
-        };
-        options.Events.OnAuthorizationCodeReceived = eventContext =>
-        {
-            eventContext.TokenEndpointRequest!.RedirectUri = urls.Callback;
-            return Task.CompletedTask;
-        };
-        options.Events.OnTokenValidated = eventContext =>
-        {
-            if (eventContext.SecurityToken.Issuer != provider.Authority)
-                eventContext.Fail("Issuer does not match the configured tenant.");
-            return Task.CompletedTask;
-        };
-        options.Events.OnMessageReceived = eventContext =>
-        {
-            var incoming = eventContext.Properties;
-            if (incoming is null || !incoming.Items.TryGetValue(AttemptKey, out var id) || id != attempt.Id.ToString("D"))
-                eventContext.Fail("Invalid connection test state.");
-            return Task.CompletedTask;
-        };
-        options.NonceCookie.SameSite = SameSiteMode.Lax;
-        options.CorrelationCookie.SameSite = SameSiteMode.Lax;
-        // The proxy may strip a public API prefix before the request reaches the handler.
-        var callbackCookiePath = new Uri(urls.Callback).AbsolutePath;
-        options.NonceCookie.Path = callbackCookiePath;
-        options.CorrelationCookie.Path = callbackCookiePath;
-        var secure = environment.IsDevelopment() || environment.IsEnvironment("Test")
-            ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
-        options.NonceCookie.SecurePolicy = secure;
-        options.CorrelationCookie.SecurePolicy = secure;
-        return options;
-    }
-
-    private static async Task<OpenIdConnectHandler> HandlerAsync(HttpContext context, OpenIdConnectOptions options)
-    {
-        var handler = ActivatorUtilities.CreateInstance<OpenIdConnectHandler>(
-            context.RequestServices, new FixedOptions(options), NullLoggerFactory.Instance);
-        await handler.InitializeAsync(new AuthenticationScheme(Scheme, Scheme, typeof(OpenIdConnectHandler)), context);
-        return handler;
-    }
+        => handlers.Create(provider, attempt.Id, Scheme, urls.Callback, SsoDeployment.CallbackPath, backchannel);
 
     private static void Redirect(HttpContext context, string frontend, bool success) =>
         context.Response.Redirect(frontend + "?ssoTest=" + (success ? "success" : "failed"));
 
-    private sealed class FixedOptions(OpenIdConnectOptions options) : IOptionsMonitor<OpenIdConnectOptions>
-    {
-        public OpenIdConnectOptions CurrentValue => options;
-        public OpenIdConnectOptions Get(string? name) => options;
-        public IDisposable? OnChange(Action<OpenIdConnectOptions, string?> listener) => null;
-    }
 }

@@ -42,7 +42,7 @@ export class MainLayout {
     this.auth.logout().subscribe({
       next: () => {
         this.teamContext.clearTeam();
-        void this.router.navigateByUrl('/admin/login');
+        void this.router.navigateByUrl('/login');
       },
     });
   }

@@ -34,13 +34,13 @@ public sealed class LocalSessionAuthenticationHandler(
             join admin in db.LocalAdministrators.AsNoTracking() on session.UserId equals admin.UserId
             join user in db.Users.AsNoTracking() on admin.UserId equals user.Id
             where session.TokenHash == hash && session.ExpiresAt > DateTimeOffset.UtcNow &&
-                  admin.IsActive && admin.Role == AdministratorRole
+                  admin.IsActive && user.IsActive && admin.Role == AdministratorRole
             select new { user.Id, user.Email, user.Name }).SingleOrDefaultAsync(Context.RequestAborted);
 
         if (account is null) return AuthenticateResult.Fail("Invalid or expired session.");
         var identity = new ClaimsIdentity([
             new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
-            new Claim(ClaimTypes.Email, account.Email),
+            new Claim(ClaimTypes.Email, account.Email ?? ""),
             new Claim(ClaimTypes.Name, account.Name),
             new Claim(ClaimTypes.Role, AdministratorRole)
         ], Scheme);

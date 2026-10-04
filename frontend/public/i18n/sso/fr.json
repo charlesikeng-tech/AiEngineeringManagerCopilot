@@ -1,8 +1,9 @@
 {
   "sso": {
     "title": "Authentification administrateur",
-    "scope": "Configuration globale à l’installation et test réel de connexion OIDC uniquement. L’activation conserve une configuration vérifiée pour un prochain lot SSO ; elle n’active pas la connexion, ne crée pas d’utilisateurs et n’accorde aucun rôle. La connexion et la récupération de l’administrateur local restent indépendantes.",
+    "scope": "Configuration OIDC globale à l’installation. L’activation d’une configuration vérifiée permet la connexion SSO et crée un compte utilisateur ordinaire à la première connexion, jamais un administrateur. La récupération locale reste indépendante. Enregistrez les deux URL de retour décrites dans docs/sso.md.",
     "callback": "Enregistrez cette URL de retour exacte dans l’application du fournisseur :",
+    "loginCallback": "Enregistrez également cette URL de retour exacte pour la connexion des utilisateurs :",
     "domains": "Utilisez un nom d’hôte standard *.auth0.com, *.okta.com, *.oktapreview.com ou *.okta-emea.com (sans URL ni domaine personnalisé). Entra ID exige le GUID du tenant. Le test utilise le code d’autorisation avec PKCE et ouvre la page d’authentification du fournisseur.",
     "add": "Ajouter un fournisseur",
     "refresh": "Actualiser",
@@ -34,9 +35,24 @@
     "inactive": "Inactif",
     "empty": "Aucun fournisseur configuré.",
     "saved": "Brouillon enregistré. Testez cette révision avant de l’activer ; la configuration active précédente reste inchangée.",
-    "activated": "Configuration vérifiée activée. La connexion normale utilise toujours le compte administrateur local.",
+    "activated": "Configuration vérifiée activée. Les utilisateurs peuvent se connecter avec ce fournisseur sur la page de connexion.",
     "deactivated": "Fournisseur désactivé. L’accès de l’administrateur local reste inchangé.",
     "testSuccess": "Échange du code d’autorisation et validation du jeton d’identité réussis. L’actualisation affiche le statut vérifié côté serveur ; activez explicitement la configuration lorsque vous êtes prêt.",
+    "login": {
+      "title": "Connexion",
+      "policy": "Connectez-vous avec un fournisseur actif. Votre compte utilisateur ordinaire est créé à la première connexion, sans accès administrateur.",
+      "loading": "Chargement des fournisseurs…",
+      "empty": "Aucun fournisseur SSO actif. Contactez l’administrateur de la plateforme.",
+      "continue": "Continuer avec",
+      "recovery": "Connexion de récupération de l’administrateur local",
+      "logout": "Déconnexion",
+      "errors": {
+        "login_failed": "Connexion échouée ou expirée. Réessayez ; contactez votre administrateur si le problème persiste.",
+        "email_collision": "Cette adresse appartient déjà à un autre compte. Les comptes ne sont jamais liés par e-mail. Demandez à l’administrateur du fournisseur une adresse distincte ou l’omission de la revendication e-mail.",
+        "request_failed": "Impossible de charger les fournisseurs. Vérifiez la connexion et rechargez la page.",
+        "rate_limited": "Trop de tentatives. Réessayez plus tard."
+      }
+    },
     "errors": {
       "invalid_provider": "Configuration invalide. Vérifiez le nom d’hôte standard ou le GUID du tenant, le serveur d’autorisation, l’identifiant client et la mise à jour du secret.",
       "revision_conflict": "Le brouillon a changé dans une autre session. Actualisez et rouvrez-le avant de continuer.",

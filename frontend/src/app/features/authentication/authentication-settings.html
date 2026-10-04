@@ -15,6 +15,9 @@
   </div>
   @if (loaded()) {
     <p>{{ 'sso.callback' | translate }} <code>{{ callbackUrl() }}</code></p>
+    <p>{{ 'sso.loginCallback' | translate }}
+      <code>{{ callbackUrl().replace('/auth/sso/callback', '/auth/sso/login/callback') }}</code>
+    </p>
     <p>{{ 'sso.domains' | translate }}</p>
   }
   <nz-spin [nzSpinning]="pending()">

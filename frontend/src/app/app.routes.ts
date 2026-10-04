@@ -4,6 +4,10 @@ import { administratorGuard } from '@core/auth/administrator-guard';
 
 export const routes: Routes = [
   {
+    path: 'login',
+    loadComponent: () => import('@core/auth/sso-login').then(({ SsoLogin }) => SsoLogin),
+  },
+  {
     path: 'setup',
     data: { setup: true },
     loadComponent: () => import('@core/auth/administrator-access').then(({ AdministratorAccess }) => AdministratorAccess),

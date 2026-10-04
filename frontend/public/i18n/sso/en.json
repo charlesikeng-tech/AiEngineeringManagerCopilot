@@ -1,8 +1,9 @@
 {
   "sso": {
     "title": "Administrator authentication",
-    "scope": "Installation-wide provider configuration and real OIDC connection testing only. Activation stores a verified configuration for a later SSO login increment; it does not enable sign-in, provision users or grant roles. Local administrator login and recovery remain independent.",
+    "scope": "Installation-wide OIDC configuration. Activating a verified snapshot enables SSO login and creates ordinary user accounts on first login. It never grants administrator privileges. Local administrator recovery remains independent. Register both callback URLs documented in docs/sso.md.",
     "callback": "Register this exact callback URL in your provider application:",
+    "loginCallback": "Also register this exact user-login callback URL:",
     "domains": "Use a standard *.auth0.com, *.okta.com, *.oktapreview.com or *.okta-emea.com hostname (no URL/custom domain). Entra ID requires a tenant GUID. Tests use authorization code + PKCE and open the provider's authentication page.",
     "add": "Add provider",
     "refresh": "Refresh",
@@ -34,9 +35,24 @@
     "inactive": "Inactive",
     "empty": "No providers configured.",
     "saved": "Draft saved. Test this revision before activation; the previous active configuration is unchanged.",
-    "activated": "Verified configuration activated. Normal sign-in still uses the local administrator account.",
+    "activated": "Verified configuration activated. Users can sign in through this provider on the login page.",
     "deactivated": "Provider deactivated. Local administrator access is unchanged.",
     "testSuccess": "Authorization code exchange and ID token validation succeeded. Refresh shows server-verified status; activate explicitly when ready.",
+    "login": {
+      "title": "Sign in",
+      "policy": "Sign in with an active provider. Your ordinary user account is created on first login; this never grants administrator access.",
+      "loading": "Loading sign-in providers…",
+      "empty": "No SSO providers are active. Contact your platform administrator.",
+      "continue": "Continue with",
+      "recovery": "Local administrator recovery login",
+      "logout": "Sign out",
+      "errors": {
+        "login_failed": "Sign-in failed or expired. Try again; contact your administrator if the problem persists.",
+        "email_collision": "This email already belongs to another account. Accounts are never linked by email. Ask your provider administrator to supply a distinct email or omit the email claim.",
+        "request_failed": "Unable to load sign-in providers. Check your connection and reload.",
+        "rate_limited": "Too many attempts. Please try again later."
+      }
+    },
     "errors": {
       "invalid_provider": "Invalid provider details. Check the standard hostname or tenant GUID, authorization server, client ID and secret update.",
       "revision_conflict": "The draft changed in another session. Refresh and reopen it before continuing.",

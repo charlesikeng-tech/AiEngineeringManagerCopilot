@@ -58,9 +58,13 @@ public static class AuthenticationServiceCollectionExtensions
                 options.ForwardDefaultSelector = context =>
                     context.Request.Headers.Authorization.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
                         ? JwtBearerDefaults.AuthenticationScheme
-                        : LocalSessionAuthenticationHandler.Scheme)
+                        : context.Request.Cookies[LocalSessionAuthenticationHandler.CookieName]?.StartsWith(
+                            SsoSessionAuthenticationHandler.TokenPrefix, StringComparison.Ordinal) == true
+                            ? SsoSessionAuthenticationHandler.Scheme : LocalSessionAuthenticationHandler.Scheme)
             .AddScheme<AuthenticationSchemeOptions, LocalSessionAuthenticationHandler>(
                 LocalSessionAuthenticationHandler.Scheme, _ => { })
+            .AddScheme<AuthenticationSchemeOptions, SsoSessionAuthenticationHandler>(
+                SsoSessionAuthenticationHandler.Scheme, _ => { })
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters =
@@ -78,14 +82,24 @@ public static class AuthenticationServiceCollectionExtensions
                     };
             });
 
-        services.AddAuthorization(options => options.AddPolicy("LocalAdministrator", policy =>
+        services.AddAuthorization(options =>
         {
+            options.AddPolicy("Session", policy =>
+            {
+                policy.AddAuthenticationSchemes("BearerOrSession");
+                policy.RequireAuthenticatedUser();
+                policy.RequireAssertion(context => context.User.Identity?.AuthenticationType is
+                    LocalSessionAuthenticationHandler.Scheme or SsoSessionAuthenticationHandler.Scheme);
+            });
+            options.AddPolicy("LocalAdministrator", policy =>
+            {
             policy.AddAuthenticationSchemes("BearerOrSession");
             policy.RequireAuthenticatedUser();
             policy.RequireRole(LocalSessionAuthenticationHandler.AdministratorRole);
             policy.RequireAssertion(context =>
                 context.User.Identity?.AuthenticationType == LocalSessionAuthenticationHandler.Scheme);
-        }));
+            });
+        });
 
         if (environment.IsDevelopment())
         {

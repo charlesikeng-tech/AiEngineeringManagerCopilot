@@ -13,6 +13,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<AdministratorSession> AdministratorSessions => Set<AdministratorSession>();
     public DbSet<SsoProvider> SsoProviders => Set<SsoProvider>();
     public DbSet<SsoConnectionTest> SsoConnectionTests => Set<SsoConnectionTest>();
+    public DbSet<ExternalIdentity> ExternalIdentities => Set<ExternalIdentity>();
+    public DbSet<SsoSession> SsoSessions => Set<SsoSession>();
+    public DbSet<SsoLoginAttempt> SsoLoginAttempts => Set<SsoLoginAttempt>();
 
     public DbSet<Team> Teams => Set<Team>();
 

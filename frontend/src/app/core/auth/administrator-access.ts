@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzInputModule } from 'ng-zorro-antd/input';
@@ -11,14 +11,15 @@ import { Auth } from './auth';
 
 @Component({
   selector: 'app-administrator-access',
-  imports: [FormsModule, NzButtonModule, NzInputModule, NzAlertModule],
+  imports: [FormsModule, NzButtonModule, NzInputModule, NzAlertModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="access">
       <h1>{{ setupMode ? 'Installation initiale — Administrateur' : 'Connexion Administrateur' }}</h1>
       <p>{{ setupMode
         ? "Installation unique réservée à l’opérateur de la plateforme. Le secret est fourni par l’exploitant."
-        : "Compte administrateur local, indépendant du futur SSO. Aucun accès public ni inscription." }}</p>
+        : "Compte administrateur local de récupération, indépendant du SSO." }}</p>
+      @if (!setupMode) { <a routerLink="/login">Connexion SSO des utilisateurs</a> }
       @if (error()) { <nz-alert nzType="error" [nzMessage]="error()" nzShowIcon /> }
       @if (ready()) {
         <form (ngSubmit)="submit()">
@@ -67,7 +68,7 @@ export class AdministratorAccess implements OnInit {
   confirmation = '';
 
   ngOnInit() {
-    if (this.auth.user()) { void this.router.navigateByUrl('/dashboard'); return; }
+    if (this.auth.user()?.role === 'PlatformAdministrator') { void this.router.navigateByUrl('/dashboard'); return; }
     if (this.setupMode) {
       this.auth.setupStatus().subscribe({
         next: ({ setupAvailable }) => {

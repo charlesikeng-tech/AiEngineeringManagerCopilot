@@ -2,11 +2,12 @@
 
 This first authentication increment installs exactly one **local platform
 administrator**. There is no public signup, default password, automatic
-promotion of an existing user, or external-user login. The next increment adds
+promotion of an existing user. The SSO increments add
 installation-wide Auth0, Okta and Microsoft Entra provider drafts, real OIDC
 connection testing and explicit configuration activation; see [SSO configuration](sso.md).
-Activation does not yet enable SSO login or provisioning. Local login remains
-independent of those provider configurations.
+Activation enables ordinary-user SSO login and just-in-time accounts at `/login`.
+Local administrator login and recovery remain independent of those configurations.
+SSO can never promote or link an administrator by email or provider claims.
 
 ## Prepare the database and installation secret
 
@@ -59,14 +60,16 @@ any trusted reverse proxy deliberately: unconfigured proxies share one source
 IP and therefore one limiter bucket. Do not trust arbitrary forwarded headers.
 
 Identity Core `PasswordHasher<IdentityUser>` and its password validators handle
-password storage/policy. The existing domain `User` and team-owner foreign keys
-are unchanged. `LocalAdministrators` stores local credentials and the explicit
+password storage/policy. The domain `User` is shared by local and SSO accounts;
+email is now nullable for OIDC identities without an email claim, with a separate
+`EmailVerified` flag (local setup does not verify email). Team-owner foreign keys
+remain unchanged. `LocalAdministrators` stores local credentials and the explicit
 `PlatformAdministrator` role, while `AdministratorSessions` references that
 credential. Identity's validation-only store does not implement account writes;
 all account/session persistence is in these EF tables. There is no role field
 in the public setup request, password reset endpoint, or account-management UI.
 
-Accounts with `IsActive = false` cannot login and all their existing sessions
+Accounts with `LocalAdministrators.IsActive = false` or `users.IsActive = false` cannot login and all their existing sessions
 are rejected on the next request. Deleting a user cascades its local credential
 and sessions, but not the installation marker. Recovery in this increment is
 an operator task: restore an account/database backup, or use a controlled
@@ -106,14 +109,24 @@ using sessions must send both headers too. Authentication responses are
 Existing bearer JWT clients remain supported. When a request contains a Bearer
 header, authenticated endpoints validate it rather than silently falling
 back to a session cookie. `/auth/current` and `/auth/logout` explicitly require
-the local administrator session; a JWT alone cannot impersonate that session.
+an authenticated local or SSO session; a JWT alone cannot impersonate either.
+SSO uses a dedicated `SsoSession` scheme and DB table, not local credentials.
+Both session kinds share one host-only cookie slot (`aem.admin.session`, retained
+for compatibility); an opaque `s.` prefix routes SSO tokens, never assigns roles.
+Successful account switching revokes the presented previous local/SSO session.
+The SSO start also records only its prior session hash so it can revoke that
+session when the Strict cookie is absent on the cross-site callback.
 Existing team ownership checks still apply to the administrator.
 
 The frontend initializes from `/auth/current` without obtaining demo JWTs or
 generating dated reports. Unauthenticated protected navigation redirects to
-`/setup` only if the server reports setup available, otherwise `/admin/login`.
+`/setup` only if the server reports setup available, otherwise `/login`.
 After login/setup it refreshes accessible teams, clearing stale team selection;
-an administrator with no teams starts with no team selected.
+an administrator or ordinary user with no teams starts with no team selected.
+Logout clears the team context and returns to `/login`. `/admin/login` remains
+the independent local recovery form, also accessible while an ordinary user is
+signed in. Only `PlatformAdministrator` sees or can access provider administration;
+the server additionally requires the local authentication scheme.
 The development-only `/dev/token` endpoint is disabled unless the operator
 explicitly sets `Development__EnableToken=true`; no normal UI path calls it.
 
@@ -122,8 +135,11 @@ explicitly sets `Development__EnableToken=true`; no normal UI path calls it.
 * `GET /auth/setup-status`: only the boolean `setupAvailable`.
 * `POST /auth/setup`: installation secret, email, name, password.
 * `POST /auth/login`: email and password.
-* `GET /auth/current`: the authenticated local administrator profile.
-* `POST /auth/logout`: revoke the current server session.
+* `GET /auth/current`: the local/SSO profile, with role `PlatformAdministrator` or
+  `User`, nullable email and truthful `emailVerified`.
+* `POST /auth/logout`: revoke the current local/SSO server session and clear the
+  single cookie. This is **not** an upstream provider logout; a new provider
+  authorization can sign in automatically using its existing upstream session.
 
 With the repository's PostgreSQL test service running on port 5433:
 

@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { environment } from '@environments/environment';
 import { Auth, AdministratorProfile } from './auth';
 
-describe('Local administrator authentication', () => {
+describe('Local and SSO session authentication', () => {
   const profile: AdministratorProfile = {
     id: 'admin-id', name: 'Administrator', email: 'admin@test.example', role: 'PlatformAdministrator',
   };
@@ -25,6 +25,16 @@ describe('Local administrator authentication', () => {
     expect(auth.getToken()).toBeNull();
   });
 
+  it('restores an ordinary SSO profile without inventing an email or acquiring tokens', () => {
+    const ordinary: AdministratorProfile = {
+      id: 'ordinary-id', name: 'SSO user', email: null, emailVerified: false, role: 'User',
+    };
+    auth.loadCurrent().subscribe();
+    http.expectOne(`${environment.apiUrl}/auth/current`).flush(ordinary);
+    expect(auth.user()).toEqual(ordinary);
+    expect(auth.getToken()).toBeNull();
+  });
+
   it('treats unauthenticated startup as a normal signed-out state', () => {
     let restored: AdministratorProfile | null | undefined;
     auth.loadCurrent().subscribe((value) => restored = value);
@@ -34,7 +44,7 @@ describe('Local administrator authentication', () => {
   });
 
   it('stores the profile after login and clears it after server logout', () => {
-    auth.login(profile.email, 'password').subscribe();
+    auth.login(profile.email!, 'password').subscribe();
     const login = http.expectOne(`${environment.apiUrl}/auth/login`);
     expect(login.request.body).toEqual({ email: profile.email, password: 'password' });
     login.flush(profile);
