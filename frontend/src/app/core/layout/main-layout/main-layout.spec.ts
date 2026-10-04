@@ -21,7 +21,7 @@ import {
 import { Auth } from '@core/auth/auth';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { I18nService, LANGUAGE_STORAGE_KEY } from '@core/i18n/i18n.service';
-import { TeamApi } from '@core/team/team-api';
+import { TeamApi } from '@domains/teams/data-access/team-api';
 
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 

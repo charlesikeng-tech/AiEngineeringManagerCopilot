@@ -7,14 +7,14 @@ import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { Observable, of, Subject, throwError } from 'rxjs';
 import { TeamContext } from '@core/team/team-context';
 import { PagedResult } from '@core/models/paged-result';
-import { TeamMember } from '../../models/team.model';
+import { TeamMember } from '@domains/teams/models/team-member';
 import { EngineeringMetric } from '../../models/engineering-metric';
 
 import teamEn from '../../../../../../public/i18n/team/en.json';
 import teamFr from '../../../../../../public/i18n/team/fr.json';
 import { ReportsApi } from '@features/reports/services/reports-api';
 import { MetricsApi } from '../../services/metrics-api';
-import { TeamApi } from '../../services/team-api';
+import { TeamApi } from '@domains/teams/data-access/team-api';
 import { TeamPage } from './team';
 
 describe('team management', () => {

@@ -11,8 +11,8 @@ import {
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { I18nService, LANGUAGE_STORAGE_KEY } from '@core/i18n/i18n.service';
 import { PagedResult } from '@core/models/paged-result';
-import { Team } from '@core/team/models/team';
-import { TeamApi } from '@core/team/team-api';
+import { Team } from '@domains/teams/models/team';
+import { TeamApi } from '@domains/teams/data-access/team-api';
 import { TeamContext } from '@core/team/team-context';
 import { GitHubConnection } from '@features/team/models/github-connection';
 import { GitHubApi } from '@features/team/services/github-api';

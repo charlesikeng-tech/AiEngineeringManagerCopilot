@@ -42,12 +42,11 @@ import { TablePagination } from '@core/components/table-pagination/table-paginat
 
 import {
   CreateTeamMemberRequest,
-  Team,
   TeamMember,
   TeamMemberRole,
   UpdateTeamMemberRequest,
-  UpdateTeamRequest,
-} from '../../models/team.model';
+} from '@domains/teams/models/team-member';
+import { Team, UpdateTeamRequest } from '@domains/teams/models/team';
 
 import { EngineeringMetric, MetricDataStatus, MetricType } from '../../models/engineering-metric';
 
@@ -55,7 +54,7 @@ import { ReportsApi } from '@features/reports/services/reports-api';
 
 import { MetricsApi } from '../../services/metrics-api';
 
-import { TeamApi } from '../../services/team-api';
+import { TeamApi } from '@domains/teams/data-access/team-api';
 
 @Component({
   selector: 'app-team',

@@ -2,6 +2,15 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.0.
 
+## Architecture
+
+Shared team DTOs and request models live in `src/app/domains/teams/models`.
+The single `TeamApi` in `domains/teams/data-access` owns team and member HTTP
+endpoints, including unpaged lists and paginated queries. Import these through
+`@domains/teams/*` from both features and core. Team selection state and the
+selector remain in `core/team`; team pages, connector models/services, and
+metrics remain in `features/team`.
+
 ## Development server
 
 To start a local development server, run:

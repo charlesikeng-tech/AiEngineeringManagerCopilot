@@ -8,8 +8,8 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 
-import { Team } from '../models/team';
-import { TeamApi } from '../team-api';
+import { Team } from '@domains/teams/models/team';
+import { TeamApi } from '@domains/teams/data-access/team-api';
 import { TeamContext } from '../team-context';
 
 @Component({

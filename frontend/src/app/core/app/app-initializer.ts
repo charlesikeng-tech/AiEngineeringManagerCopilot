@@ -2,7 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { catchError, map, Observable, of, switchMap, timeout } from 'rxjs';
 
 import { Auth } from '@core/auth/auth';
-import { TeamApi } from '@core/team/team-api';
+import { TeamApi } from '@domains/teams/data-access/team-api';
 import { TeamContext } from '@core/team/team-context';
 
 @Injectable({

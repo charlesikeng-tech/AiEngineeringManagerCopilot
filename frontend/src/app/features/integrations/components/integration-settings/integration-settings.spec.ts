@@ -15,7 +15,7 @@ import {
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { I18nService, LANGUAGE_STORAGE_KEY } from '@core/i18n/i18n.service';
 import { TeamContext } from '@core/team/team-context';
-import { TeamApi as SelectorTeamApi } from '@core/team/team-api';
+import { TeamApi } from '@domains/teams/data-access/team-api';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { Observable, of, Subject, throwError } from 'rxjs';
@@ -140,7 +140,7 @@ describe('team-scoped integrations', () => {
           SyncOutline,
         ]),
         {
-          provide: SelectorTeamApi,
+          provide: TeamApi,
           useValue: {
             getTeams: () =>
               of([
@@ -248,7 +248,7 @@ describe('team-scoped integrations', () => {
   });
 
   it('does not fetch connections or show forms without a selected team', async () => {
-    TestBed.overrideProvider(SelectorTeamApi, { useValue: { getTeams: () => of([]) } });
+    TestBed.overrideProvider(TeamApi, { useValue: { getTeams: () => of([]) } });
     const fixture = TestBed.createComponent(IntegrationsPage);
     fixture.detectChanges();
     await fixture.whenStable();

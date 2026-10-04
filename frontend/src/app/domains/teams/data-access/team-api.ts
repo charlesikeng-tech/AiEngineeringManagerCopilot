@@ -4,14 +4,12 @@ import { Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
 import { PagedResult } from '@core/models/paged-result';
+import { CreateTeamRequest, Team, UpdateTeamRequest } from '../models/team';
 import {
   CreateTeamMemberRequest,
-  CreateTeamRequest,
-  Team,
   TeamMember,
   UpdateTeamMemberRequest,
-  UpdateTeamRequest,
-} from '../models/team.model';
+} from '../models/team-member';
 
 @Injectable({
   providedIn: 'root',
@@ -19,8 +17,8 @@ import {
 export class TeamApi {
   private readonly http = inject(HttpClient);
 
-  getTeams(): Observable<Team[]> {
-    return this.http.get<Team[]>(`${environment.apiUrl}/teams/`);
+  getTeams(): Observable<readonly Team[]> {
+    return this.http.get<readonly Team[]>(`${environment.apiUrl}/teams`);
   }
 
   getTeamsPage(pageNumber: number, pageSize: number, search = ''): Observable<PagedResult<Team>> {
@@ -47,8 +45,8 @@ export class TeamApi {
     return this.http.delete<void>(`${environment.apiUrl}/teams/${teamId}`);
   }
 
-  getMembers(teamId: string): Observable<TeamMember[]> {
-    return this.http.get<TeamMember[]>(`${environment.apiUrl}/teams/${teamId}/members/`);
+  getMembers(teamId: string): Observable<readonly TeamMember[]> {
+    return this.http.get<readonly TeamMember[]>(`${environment.apiUrl}/teams/${teamId}/members/`);
   }
 
   getMembersPage(
