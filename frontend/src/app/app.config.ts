@@ -2,31 +2,6 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { ApplicationConfig, inject, provideAppInitializer } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
-import {
-  ApiOutline,
-  ArrowDownOutline,
-  ArrowRightOutline,
-  ArrowUpOutline,
-  BarChartOutline,
-  CheckSquareOutline,
-  DashboardOutline,
-  FileTextOutline,
-  GithubOutline,
-  LockOutline,
-  LoginOutline,
-  MenuFoldOutline,
-  MenuUnfoldOutline,
-  MinusOutline,
-  PlusOutline,
-  PoweroffOutline,
-  SafetyCertificateOutline,
-  SlackOutline,
-  SyncOutline,
-  TeamOutline,
-  UserOutline,
-  WarningOutline,
-} from '@ant-design/icons-angular/icons';
-
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 
 import { firstValueFrom } from 'rxjs';
@@ -35,6 +10,7 @@ import { AppInitializer } from '@core/app/app-initializer';
 import { authInterceptor } from '@core/auth/auth-interceptor';
 import { provideFrontendI18n } from '@core/i18n/i18n.providers';
 import { I18nService } from '@core/i18n/i18n.service';
+import { APP_ICONS } from './app.icons';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -45,31 +21,7 @@ export const appConfig: ApplicationConfig = {
 
     ...provideFrontendI18n(),
 
-    provideNzIcons([
-      ApiOutline,
-      DashboardOutline,
-      FileTextOutline,
-      WarningOutline,
-      CheckSquareOutline,
-      TeamOutline,
-      MenuFoldOutline,
-      MenuUnfoldOutline,
-      ArrowUpOutline,
-      ArrowDownOutline,
-      MinusOutline,
-      PlusOutline,
-      GithubOutline,
-      LockOutline,
-      SlackOutline,
-      BarChartOutline,
-      SyncOutline,
-      UserOutline,
-      SafetyCertificateOutline,
-      LockOutline,
-      PoweroffOutline,
-      LoginOutline,
-      ArrowRightOutline,
-    ]),
+    provideNzIcons(APP_ICONS),
 
     provideAppInitializer(() => {
       const initializer = inject(AppInitializer);

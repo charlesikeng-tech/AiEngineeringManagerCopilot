@@ -1,7 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { PlusOutline } from '@ant-design/icons-angular/icons';
-import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { Observable, of, throwError } from 'rxjs';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { I18nService } from '@core/i18n/i18n.service';
@@ -29,7 +27,6 @@ describe('TeamsPage lazy catalog', () => {
       providers: [
         provideRouter([]),
         ...provideI18nTesting('en', { en: teamsEn, fr: teamsFr }),
-        provideNzIcons([PlusOutline]),
         { provide: TeamApi, useValue: { getTeams, getTeamsPage, createTeam } },
       ],
     });
