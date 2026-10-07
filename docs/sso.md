@@ -315,8 +315,10 @@ profile fields described above.
 Existing `AddDataProtection()` defaults persist keys to the host user's profile
 when available (typically `~/.aspnet/DataProtection-Keys` on macOS/Linux), but
 ephemeral containers or hosts without a usable profile need explicit durable
-storage. Set optional `Authentication__DataProtection__KeyRingPath` to a
-persistent, access-restricted directory mounted identically on all API replicas.
+storage. `Authentication__DataProtection__KeyRingPath` is therefore required
+outside the Development and Test environments (startup fails without it): set it
+to a persistent, access-restricted directory mounted identically on all API
+replicas.
 This setting applies to **all** existing Data Protection secrets, including
 integration credentials. When moving key storage, copy the existing key ring;
 keep the same application/content-root discriminator. Do not discard old keys.

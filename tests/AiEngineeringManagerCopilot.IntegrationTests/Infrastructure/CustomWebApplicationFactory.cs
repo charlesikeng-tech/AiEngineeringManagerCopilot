@@ -13,13 +13,18 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Npgsql;
 
 namespace AiEngineeringManagerCopilot.IntegrationTests.Infrastructure;
 
 public class CustomWebApplicationFactory
     : WebApplicationFactory<Program>
 {
-    private static readonly object DatabaseInitializationLock = new();
+    private const string ConnectionString =
+        "Host=localhost;Port=5433;Database=ai_engineering_manager_test;Username=postgres;Password=postgres";
+
+    // Arbitrary application-wide key for pg_advisory_lock.
+    private const long DatabaseInitializationLockKey = 7_420_260_920;
 
     protected virtual int AIAnalysisRequestLimit => int.MaxValue;
 
@@ -45,7 +50,7 @@ public class CustomWebApplicationFactory
 
         builder.UseSetting(
             "ConnectionStrings:Default",
-            "Host=localhost;Port=5433;Database=ai_engineering_manager_test;Username=postgres;Password=postgres");
+            ConnectionString);
         
         builder.UseSetting(
             "Cors:AllowedOrigins:0",
@@ -53,21 +58,37 @@ public class CustomWebApplicationFactory
         
         builder.ConfigureServices(services =>
         {
-            lock (DatabaseInitializationLock)
+            // The unit and integration test assemblies run in parallel
+            // processes against the same database, so an in-process lock
+            // is not enough to serialize migrations: use a PostgreSQL lock.
+            using (var lockConnection = new NpgsqlConnection(ConnectionString))
             {
-                using var serviceProvider =
-                    services.BuildServiceProvider();
+                lockConnection.Open();
 
-                using var scope =
-                    serviceProvider.CreateScope();
+                ExecuteLockCommand(lockConnection, "pg_advisory_lock");
 
-                var dbContext =
-                    scope.ServiceProvider
-                        .GetRequiredService<AppDbContext>();
+                try
+                {
+                    using var serviceProvider =
+                        services.BuildServiceProvider();
 
-                dbContext.Database.Migrate();
+                    using var scope =
+                        serviceProvider.CreateScope();
 
-                SeedTestUser(dbContext);
+                    var dbContext =
+                        scope.ServiceProvider
+                            .GetRequiredService<AppDbContext>();
+
+                    dbContext.Database.Migrate();
+
+                    SeedTestUser(dbContext);
+                }
+                finally
+                {
+                    // Pooled connections keep their session open on close,
+                    // so the lock must be released explicitly.
+                    ExecuteLockCommand(lockConnection, "pg_advisory_unlock");
+                }
             }
             
             services
@@ -118,6 +139,17 @@ public class CustomWebApplicationFactory
             services.AddSingleton<IMicrosoftTeamsWebhookClient>(
                 provider => provider.GetRequiredService<FakeMicrosoftTeamsWebhookClient>());
         });
+    }
+
+    private static void ExecuteLockCommand(
+        NpgsqlConnection connection,
+        string function)
+    {
+        using var command = new NpgsqlCommand(
+            $"SELECT {function}({DatabaseInitializationLockKey})",
+            connection);
+
+        command.ExecuteNonQuery();
     }
 
     private static void SeedTestUser(

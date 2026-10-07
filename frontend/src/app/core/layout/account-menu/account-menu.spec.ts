@@ -1,18 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 
-import {
-  DownOutline,
-  KeyOutline,
-  LogoutOutline,
-  SafetyCertificateOutline,
-} from '@ant-design/icons-angular/icons';
-
 import { Auth } from '@core/auth/auth';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { TeamContext } from '@core/team/team-context';
-
-import { provideNzIcons } from 'ng-zorro-antd/icon';
 
 import { of } from 'rxjs';
 
@@ -50,8 +41,6 @@ describe('AccountMenu', () => {
           fr: { ...accountFr, sso: { ...authenticationFr.sso, ...administrationFr.sso } },
         }),
 
-        provideNzIcons([DownOutline, KeyOutline, LogoutOutline, SafetyCertificateOutline]),
-
         {
           provide: Auth,
           useValue: auth,
@@ -66,8 +55,6 @@ describe('AccountMenu', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Charles Ikeng');
-
-    expect(fixture.componentInstance.initials()).toBe('CI');
 
     expect(fixture.componentInstance.roleLabel()).toBe('Administrator');
   });

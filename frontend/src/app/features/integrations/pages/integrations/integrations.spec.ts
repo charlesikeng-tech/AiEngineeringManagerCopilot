@@ -2,12 +2,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
-import {
-  GithubOutline,
-  SlackOutline,
-  SyncOutline,
-  TeamOutline,
-} from '@ant-design/icons-angular/icons';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { I18nService, LANGUAGE_STORAGE_KEY } from '@core/i18n/i18n.service';
 import { PagedResult } from '@shared/pagination/paged-result';
@@ -18,7 +12,6 @@ import { GitHubConnection } from '@features/integrations/providers/github/models
 import { GitHubApi } from '@features/integrations/providers/github/data-access/github-api';
 import { MicrosoftTeamsApi } from '@features/integrations/providers/microsoft-teams/data-access/microsoft-teams-api';
 import { SlackApi } from '@features/integrations/providers/slack/data-access/slack-api';
-import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import teamEn from '../../../../../../public/i18n/team/en.json';
 import teamFr from '../../../../../../public/i18n/team/fr.json';
@@ -90,7 +83,6 @@ describe('all-team integrations overview', () => {
       providers: [
         provideRouter([]),
         ...provideI18nTesting('en', { en: teamEn, fr: teamFr }),
-        provideNzIcons([GithubOutline, SlackOutline, SyncOutline, TeamOutline]),
         { provide: TeamApi, useValue: { getTeams, getTeamsPage } },
         { provide: GitHubApi, useValue: { getConnection: getGithub } },
         { provide: JiraApi, useValue: { getConnection: getJira } },

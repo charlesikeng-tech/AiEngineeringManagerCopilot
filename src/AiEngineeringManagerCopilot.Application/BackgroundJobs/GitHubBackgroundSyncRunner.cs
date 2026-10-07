@@ -1,11 +1,14 @@
 using AiEngineeringManagerCopilot.Application.Abstractions;
 using AiEngineeringManagerCopilot.Application.GitHub;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace AiEngineeringManagerCopilot.Application.BackgroundJobs;
 
 public sealed class GitHubBackgroundSyncRunner(
     IGitHubConnectionRepository connectionRepository,
-    IGitHubSyncService gitHubSyncService)
+    IServiceScopeFactory scopeFactory,
+    ILogger<GitHubBackgroundSyncRunner> logger)
     : IGitHubBackgroundSyncRunner
 {
     public async Task<GitHubBackgroundSyncResult> RunAsync(
@@ -20,6 +23,14 @@ public sealed class GitHubBackgroundSyncRunner(
 
         foreach (var connection in connections)
         {
+            // One scope per team: a failed sync must not leave tracked
+            // entities in a DbContext reused by the next team.
+            using var scope = scopeFactory.CreateScope();
+
+            var gitHubSyncService =
+                scope.ServiceProvider
+                    .GetRequiredService<IGitHubSyncService>();
+
             try
             {
                 var result = await gitHubSyncService.SyncAsync(
@@ -34,9 +45,15 @@ public sealed class GitHubBackgroundSyncRunner(
 
                 succeeded++;
             }
-            catch (HttpRequestException)
+            catch (Exception exception)
+                when (!cancellationToken.IsCancellationRequested)
             {
                 failed++;
+
+                logger.LogError(
+                    exception,
+                    "GitHub synchronization failed for team {TeamId}.",
+                    connection.TeamId);
             }
         }
 

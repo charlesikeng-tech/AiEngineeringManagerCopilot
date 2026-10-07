@@ -3,6 +3,8 @@ using AiEngineeringManagerCopilot.Application.BackgroundJobs;
 using AiEngineeringManagerCopilot.Application.Jira;
 using AiEngineeringManagerCopilot.Domain.Entities;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AiEngineeringManagerCopilot.UnitTests.BackgroundJobs;
 
@@ -26,7 +28,7 @@ public sealed class JiraBackgroundSyncRunnerTests
             new FakeJiraSyncService();
 
         var runner =
-            new JiraBackgroundSyncRunner(
+            CreateRunner(
                 connectionRepository,
                 jiraSyncService);
 
@@ -65,7 +67,7 @@ public sealed class JiraBackgroundSyncRunnerTests
             };
 
         var runner =
-            new JiraBackgroundSyncRunner(
+            CreateRunner(
                 connectionRepository,
                 jiraSyncService);
 
@@ -82,6 +84,139 @@ public sealed class JiraBackgroundSyncRunnerTests
         result.Processed.Should().Be(2);
         result.Succeeded.Should().Be(1);
         result.Failed.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenSyncTimesOut_ShouldContinueWithOtherConnections()
+    {
+        // Arrange
+        var firstTeamId = Guid.NewGuid();
+        var secondTeamId = Guid.NewGuid();
+
+        var connectionRepository =
+            new FakeJiraConnectionRepository(
+            [
+                CreateConnection(firstTeamId),
+                CreateConnection(secondTeamId)
+            ]);
+
+        // HttpClient reports its timeout as a TaskCanceledException,
+        // not as an HttpRequestException.
+        var jiraSyncService =
+            new FakeJiraSyncService
+            {
+                FailingTeamId = firstTeamId,
+                ExceptionToThrow = new TaskCanceledException("Timeout")
+            };
+
+        var runner =
+            CreateRunner(
+                connectionRepository,
+                jiraSyncService);
+
+        // Act
+        var result = await runner.RunAsync(
+            CancellationToken.None);
+
+        // Assert
+        jiraSyncService.SyncedTeamIds.Should()
+            .ContainInOrder(
+                firstTeamId,
+                secondTeamId);
+
+        result.Processed.Should().Be(2);
+        result.Succeeded.Should().Be(1);
+        result.Failed.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldResolveSyncServiceInADedicatedScopePerConnection()
+    {
+        // Arrange
+        var connectionRepository =
+            new FakeJiraConnectionRepository(
+            [
+                CreateConnection(Guid.NewGuid()),
+                CreateConnection(Guid.NewGuid())
+            ]);
+
+        var jiraSyncService =
+            new FakeJiraSyncService();
+
+        var runner =
+            CreateRunner(
+                connectionRepository,
+                jiraSyncService);
+
+        // Act
+        await runner.RunAsync(
+            CancellationToken.None);
+
+        // Assert
+        jiraSyncService.ScopeCount.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenCancelled_ShouldStopAndPropagateCancellation()
+    {
+        // Arrange
+        var firstTeamId = Guid.NewGuid();
+
+        var connectionRepository =
+            new FakeJiraConnectionRepository(
+            [
+                CreateConnection(firstTeamId),
+                CreateConnection(Guid.NewGuid())
+            ]);
+
+        using var cancellationTokenSource =
+            new CancellationTokenSource();
+
+        await cancellationTokenSource.CancelAsync();
+
+        var jiraSyncService =
+            new FakeJiraSyncService
+            {
+                FailingTeamId = firstTeamId,
+                ExceptionToThrow = new OperationCanceledException(
+                    cancellationTokenSource.Token)
+            };
+
+        var runner =
+            CreateRunner(
+                connectionRepository,
+                jiraSyncService);
+
+        // Act
+        var act = () => runner.RunAsync(
+            cancellationTokenSource.Token);
+
+        // Assert
+        await act.Should().ThrowAsync<OperationCanceledException>();
+
+        jiraSyncService.SyncedTeamIds.Should()
+            .Equal(firstTeamId);
+    }
+
+    private static JiraBackgroundSyncRunner CreateRunner(
+        IJiraConnectionRepository connectionRepository,
+        FakeJiraSyncService jiraSyncService)
+    {
+        var services = new ServiceCollection();
+
+        services.AddScoped<IJiraSyncService>(_ =>
+        {
+            jiraSyncService.ScopeCount++;
+
+            return jiraSyncService;
+        });
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        return new JiraBackgroundSyncRunner(
+            connectionRepository,
+            serviceProvider.GetRequiredService<IServiceScopeFactory>(),
+            NullLogger<JiraBackgroundSyncRunner>.Instance);
     }
 
     private static JiraConnection CreateConnection(
@@ -144,7 +279,12 @@ public sealed class JiraBackgroundSyncRunnerTests
     {
         public List<Guid> SyncedTeamIds { get; } = [];
 
+        public int ScopeCount { get; set; }
+
         public Guid? FailingTeamId { get; set; }
+
+        public Exception ExceptionToThrow { get; set; } =
+            new HttpRequestException("Jira unavailable");
 
         public Task<JiraSyncResult> SyncAsync(
             Guid teamId,
@@ -154,8 +294,7 @@ public sealed class JiraBackgroundSyncRunnerTests
 
             if (teamId == FailingTeamId)
             {
-                throw new HttpRequestException(
-                    "Jira unavailable");
+                throw ExceptionToThrow;
             }
 
             return Task.FromResult(

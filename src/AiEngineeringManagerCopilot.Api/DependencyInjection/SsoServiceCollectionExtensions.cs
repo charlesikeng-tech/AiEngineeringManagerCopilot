@@ -9,11 +9,17 @@ namespace AiEngineeringManagerCopilot.Api.DependencyInjection;
 
 public static class SsoServiceCollectionExtensions
 {
-    public static IServiceCollection AddSsoServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddSsoServices(this IServiceCollection services, IConfiguration configuration,
+        IHostEnvironment environment)
     {
         var keyRingPath = configuration["Authentication:DataProtection:KeyRingPath"];
         if (!string.IsNullOrWhiteSpace(keyRingPath))
             services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(keyRingPath));
+        // Integration credentials are encrypted with this key ring: losing it on a container
+        // redeploy makes every stored GitHub/Jira/webhook secret unreadable, so fail at startup.
+        else if (!environment.IsDevelopment() && !environment.IsEnvironment("Test"))
+            throw new InvalidOperationException(
+                "Data Protection key ring path 'Authentication:DataProtection:KeyRingPath' is not configured.");
         services.AddSingleton<SsoDeployment>();
         services.AddSingleton<SsoProtocolHttpClientFactory>();
         services.AddScoped<SsoConnectionFlow>();

@@ -2,28 +2,10 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 
-import {
-  ApiOutline,
-  CheckSquareOutline,
-  DashboardOutline,
-  DownOutline,
-  FileTextOutline,
-  KeyOutline,
-  LockOutline,
-  LogoutOutline,
-  MenuFoldOutline,
-  MenuUnfoldOutline,
-  SafetyCertificateOutline,
-  TeamOutline,
-  WarningOutline,
-} from '@ant-design/icons-angular/icons';
-
 import { Auth } from '@core/auth/auth';
 import { provideI18nTesting } from '@core/i18n/i18n-testing';
 import { I18nService, LANGUAGE_STORAGE_KEY } from '@core/i18n/i18n.service';
 import { TeamApi } from '@domains/teams/data-access/team-api';
-
-import { provideNzIcons } from 'ng-zorro-antd/icon';
 
 import { of } from 'rxjs';
 
@@ -80,22 +62,6 @@ describe('MainLayout integrations navigation', () => {
           en: { ...accountEn, sso: { ...authenticationEn.sso, ...administrationEn.sso } },
           fr: { ...accountFr, sso: { ...authenticationFr.sso, ...administrationFr.sso } },
         }),
-
-        provideNzIcons([
-          ApiOutline,
-          CheckSquareOutline,
-          DashboardOutline,
-          DownOutline,
-          FileTextOutline,
-          KeyOutline,
-          LockOutline,
-          LogoutOutline,
-          MenuFoldOutline,
-          MenuUnfoldOutline,
-          SafetyCertificateOutline,
-          TeamOutline,
-          WarningOutline,
-        ]),
 
         {
           provide: TeamApi,

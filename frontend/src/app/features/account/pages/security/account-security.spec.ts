@@ -42,7 +42,8 @@ describe('Account security', () => {
     const fixture = TestBed.createComponent(AccountSecurity);
     fixture.detectChanges();
     const component = fixture.componentInstance;
-    expect(fixture.nativeElement.textContent).toContain('Current active Okta');
+    // nz-select only renders its options once opened.
+    expect(component.providers().map((provider) => provider.name)).toEqual(['Current active Okta']);
     expect((fixture.nativeElement.querySelector('#password') as HTMLInputElement).type).toBe('password');
     component.providerId = 'okta';
     component.password = 'ephemeral';

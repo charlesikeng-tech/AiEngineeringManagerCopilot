@@ -34,6 +34,8 @@ public sealed class LocalAuthenticationWebApplicationFactory(
         // test exhausts PostgreSQL connections when the combined auth suite grows.
         builder.UseSetting("ConnectionStrings:Default", $"{ConnectionString};Search Path={schema};Pooling=false");
         builder.UseSetting("Cors:AllowedOrigins:0", "http://localhost:4200");
+        // Required outside Development/Test (e.g. the Production cookie test).
+        builder.UseSetting("Authentication:DataProtection:KeyRingPath", Path.Combine(Path.GetTempPath(), schema));
         builder.ConfigureServices(services =>
         {
             foreach (var descriptor in services.Where(x =>

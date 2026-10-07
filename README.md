@@ -179,11 +179,12 @@ production-ready deployment. The following gaps were identified in the
 | Deployment metrics | Unknown statuses enter the failure-rate denominator; later status updates can change the recorded deployment date. | Define explicit status and reporting-period semantics. |
 | Frontend state | Report/risk streams terminate after an HTTP error; dashboard cancellation can reset loading for a newer request. | Recover within each request and associate state with the active request. |
 | AI output validation | Local parsing does not validate every required field, collection, or enum value. | Reject incomplete or invalid results before persistence. |
-| Secret-protection keys | Data Protection is registered without an explicit persistent/shared key store. | Define key persistence and sharing for the deployment topology. |
+| Secret-protection keys | Outside Development and Test, startup fails unless `Authentication:DataProtection:KeyRingPath` is set. Key files are not encrypted at rest by the application. | Mount the key ring on durable, access-restricted storage shared by all replicas, and configure a managed key-protection provider if required. |
 
 These are known limitations, not completed fixes. Production readiness
-also requires frontend accessibility improvements and pull-request
-validation covering both backend and frontend.
+also requires frontend accessibility improvements. Pull requests are
+validated by the `CI` workflow (backend build and tests against
+PostgreSQL, frontend tests and build).
 
 ------------------------------------------------------------------------
 
