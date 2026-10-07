@@ -182,8 +182,9 @@ production-ready deployment. The following gaps were identified in the
 | Secret-protection keys | Outside Development and Test, startup fails unless `Authentication:DataProtection:KeyRingPath` is set. Key files are not encrypted at rest by the application. | Mount the key ring on durable, access-restricted storage shared by all replicas, and configure a managed key-protection provider if required. |
 
 These are known limitations, not completed fixes. Production readiness
-also requires frontend accessibility improvements and pull-request
-validation covering both backend and frontend.
+also requires frontend accessibility improvements. Pull requests are
+validated by the `CI` workflow (backend build and tests against
+PostgreSQL, frontend tests and build).
 
 ------------------------------------------------------------------------
 
