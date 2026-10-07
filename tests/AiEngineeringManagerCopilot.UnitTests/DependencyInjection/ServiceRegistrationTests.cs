@@ -217,9 +217,35 @@ public sealed class ServiceRegistrationTests
         validate.Should().Throw<OptionsValidationException>();
     }
 
+    [Fact]
+    public void Registration_InProductionWithoutKeyRingPath_ShouldFailAtStartup()
+    {
+        var createBuilder = () => CreateBuilder(
+            "Production",
+            keyRingPath: string.Empty);
+
+        createBuilder.Should()
+            .Throw<InvalidOperationException>()
+            .WithMessage("*KeyRingPath*");
+    }
+
+    [Theory]
+    [InlineData("Development")]
+    [InlineData("Test")]
+    public void Registration_OutsideProductionWithoutKeyRingPath_ShouldUseDefaultKeyStore(
+        string environmentName)
+    {
+        var createBuilder = () => CreateBuilder(
+            environmentName,
+            keyRingPath: string.Empty);
+
+        createBuilder.Should().NotThrow();
+    }
+
     private static WebApplicationBuilder CreateBuilder(
         string environmentName,
-        string provider = "Fake")
+        string provider = "Fake",
+        string? keyRingPath = null)
     {
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
@@ -243,6 +269,8 @@ public sealed class ServiceRegistrationTests
         builder.Configuration["ConnectionStrings:Default"] =
             "Host=localhost;Database=registration_tests";
         builder.Configuration["Cors:AllowedOrigins:0"] = "http://localhost:4200";
+        builder.Configuration["Authentication:DataProtection:KeyRingPath"] =
+            keyRingPath ?? Path.Combine(Path.GetTempPath(), "aem-registration-tests-keys");
 
         builder.Services
             .AddApiConfiguration(builder.Configuration)
